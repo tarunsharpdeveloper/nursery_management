@@ -1,0 +1,161 @@
+const { pool } = require("./db");
+const { hashPassword } = require("./auth");
+
+async function columnExists(tableName, columnName) {
+  const [rows] = await pool.query(
+    `SELECT COUNT(*) AS total
+       FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = :tableName
+        AND COLUMN_NAME = :columnName`,
+    { tableName, columnName }
+  );
+
+  return Number(rows[0].total) > 0;
+}
+
+async function addColumn(tableName, columnName, definition) {
+  if (!(await columnExists(tableName, columnName))) {
+    await pool.query(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`);
+  }
+}
+
+async function ensureAdminSchema() {
+  await pool.query("INSERT IGNORE INTO roles (name) VALUES ('super_admin'), ('staff_user'), ('billing_user')");
+
+  const defaultUsers = [
+    { role: "super_admin", name: "Owner Admin", email: "owner@nursery.local", password: "owner123" },
+    { role: "staff_user", name: "Stock Staff", email: "staff@nursery.local", password: "staff123" },
+    { role: "billing_user", name: "Billing User", email: "billing@nursery.local", password: "billing123" }
+  ];
+
+  for (const user of defaultUsers) {
+    const [roles] = await pool.query("SELECT id FROM roles WHERE name = :role", { role: user.role });
+    const roleId = roles[0].id;
+    const passwordHash = hashPassword(user.password);
+    await pool.query(
+      `INSERT INTO users (role_id, name, email, password_hash)
+       VALUES (:roleId, :name, :email, :passwordHash)
+       ON DUPLICATE KEY UPDATE
+         role_id = VALUES(role_id),
+         name = VALUES(name),
+         password_hash = IF(password_hash = 'change-me', VALUES(password_hash), password_hash),
+         is_active = TRUE`,
+      { roleId, name: user.name, email: user.email, passwordHash }
+    );
+  }
+
+  await addColumn("customers", "is_credit_customer", "BOOLEAN NOT NULL DEFAULT FALSE");
+  await addColumn("customers", "credit_limit", "DECIMAL(10,2) NOT NULL DEFAULT 0");
+  await addColumn("categories", "parent_id", "INT NULL");
+
+  await pool.query("UPDATE orders SET payment_status = 'pending' WHERE payment_status = 'partial'");
+  await pool.query("ALTER TABLE orders MODIFY payment_status ENUM('pending', 'paid', 'failed', 'refunded') NOT NULL DEFAULT 'pending'");
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS employees (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(120) NOT NULL,
+      mobile VARCHAR(30) NOT NULL,
+      gender ENUM('male', 'female', 'other') NOT NULL,
+      joining_date DATE NOT NULL,
+      employee_type ENUM('monthly_salary', 'daily_wage') NOT NULL,
+      monthly_salary DECIMAL(10,2),
+      daily_wage DECIMAL(10,2),
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS gender_wage_rates (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      gender ENUM('male', 'female', 'other') NOT NULL UNIQUE,
+      daily_rate DECIMAL(10,2) NOT NULL,
+      effective_from DATE NOT NULL
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS payments (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      order_id INT,
+      bill_id INT,
+      payment_gateway VARCHAR(120),
+      gateway_payment_id VARCHAR(160),
+      payment_method ENUM('upi', 'credit_card', 'debit_card', 'net_banking', 'cash', 'credit') NOT NULL,
+      payment_status ENUM('pending', 'paid', 'failed', 'refunded') NOT NULL DEFAULT 'pending',
+      amount DECIMAL(10,2) NOT NULL,
+      paid_at DATETIME,
+      remarks TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await addColumn("bills", "customer_id", "INT NULL");
+  await addColumn("bills", "payment_type", "ENUM('cash', 'upi', 'credit') NOT NULL DEFAULT 'cash'");
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS bill_items (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      bill_id INT NOT NULL,
+      product_id INT NOT NULL,
+      quantity INT NOT NULL,
+      unit_price DECIMAL(10,2) NOT NULL,
+      line_total DECIMAL(10,2) NOT NULL
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS customer_ledger (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      customer_id INT NOT NULL,
+      transaction_date DATE NOT NULL,
+      transaction_type ENUM('purchase', 'payment', 'advance', 'adjustment') NOT NULL,
+      debit_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+      credit_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+      reference_type VARCHAR(60),
+      reference_id INT,
+      remarks TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await addColumn("advance_bookings", "booking_number", "VARCHAR(40) NULL");
+  await addColumn("advance_bookings", "total_bill_amount", "DECIMAL(10,2) NOT NULL DEFAULT 0");
+  await addColumn("advance_bookings", "balance_payable", "DECIMAL(10,2) NOT NULL DEFAULT 0");
+  await addColumn("advance_bookings", "delivery_date", "DATE NULL");
+  await addColumn("advance_bookings", "remarks", "TEXT");
+  await addColumn("advance_bookings", "final_bill_id", "INT NULL");
+
+  await addColumn("dispatches", "dispatch_type", "ENUM('bus', 'courier') NULL");
+  await addColumn("dispatches", "bus_number", "VARCHAR(80)");
+  await addColumn("dispatches", "driver_name", "VARCHAR(120)");
+  await addColumn("dispatches", "driver_mobile", "VARCHAR(30)");
+  await addColumn("dispatches", "bus_photo_url", "VARCHAR(500)");
+  await addColumn("dispatches", "courier_company", "VARCHAR(120)");
+  await addColumn("dispatches", "docket_number", "VARCHAR(120)");
+
+  if (await columnExists("attendance", "user_id")) {
+    await pool.query("ALTER TABLE attendance MODIFY user_id INT NULL");
+  }
+  await addColumn("attendance", "employee_id", "INT NULL");
+  await pool.query("ALTER TABLE attendance MODIFY status ENUM('present', 'absent', 'half_day', 'leave') NOT NULL");
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS wage_calculations (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      employee_id INT NOT NULL,
+      wage_month CHAR(7) NOT NULL,
+      present_days DECIMAL(5,2) NOT NULL DEFAULT 0,
+      leave_days DECIMAL(5,2) NOT NULL DEFAULT 0,
+      absent_days DECIMAL(5,2) NOT NULL DEFAULT 0,
+      base_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+      deduction_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+      payable_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+      calculated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+}
+
+module.exports = { ensureAdminSchema };

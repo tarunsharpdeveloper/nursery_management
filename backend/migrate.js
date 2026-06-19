@@ -48,9 +48,30 @@ async function ensureAdminSchema() {
   await addColumn("customers", "is_credit_customer", "BOOLEAN NOT NULL DEFAULT FALSE");
   await addColumn("customers", "credit_limit", "DECIMAL(10,2) NOT NULL DEFAULT 0");
   await addColumn("categories", "parent_id", "INT NULL");
+  await addColumn("categories", "category_type", "ENUM('plant', 'seed') NULL");
+  await addColumn("categories", "photo_urls", "TEXT NULL");
+
+  await addColumn("products", "actual_price", "DECIMAL(10,2) NOT NULL DEFAULT 0");
+  await addColumn("products", "unit", "ENUM('Piece', 'Packet', 'Kg', 'Gram', 'ml', 'litre', 'bag', 'bundle') NULL");
+  await addColumn("products", "media_urls", "LONGTEXT NULL");
+  await addColumn("products", "updated_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
+  await addColumn("products", "is_deleted", "TINYINT(1) NOT NULL DEFAULT 0");
 
   await pool.query("UPDATE orders SET payment_status = 'pending' WHERE payment_status = 'partial'");
   await pool.query("ALTER TABLE orders MODIFY payment_status ENUM('pending', 'paid', 'failed', 'refunded') NOT NULL DEFAULT 'pending'");
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS product_variants (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      product_id INT NOT NULL,
+      unit VARCHAR(50),
+      unit_value VARCHAR(50),
+      actual_price DECIMAL(10,2) NOT NULL DEFAULT 0,
+      selling_price DECIMAL(10,2) NOT NULL DEFAULT 0,
+      available_quantity INT NOT NULL DEFAULT 0,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+    )
+  `);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS employees (

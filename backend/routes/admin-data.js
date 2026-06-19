@@ -12,7 +12,7 @@ async function getDashboard(_req, res, { sendJson }) {
 
 async function listCategories(_req, res, { sendJson }) {
   const [rows] = await pool.query(
-    `SELECT c.id, c.parent_id, c.name, c.description, c.is_active,
+    `SELECT c.id, c.parent_id, c.category_type, c.name, c.description, c.photo_urls, c.is_active,
             p.name AS parent_name,
             COUNT(DISTINCT child.id) AS child_count,
             COUNT(DISTINCT product.id) AS product_count
@@ -20,31 +20,57 @@ async function listCategories(_req, res, { sendJson }) {
        LEFT JOIN categories p ON p.id = c.parent_id
        LEFT JOIN categories child ON child.parent_id = c.id
        LEFT JOIN products product ON product.category_id = c.id
-      GROUP BY c.id, c.parent_id, c.name, c.description, c.is_active, p.name
-      ORDER BY COALESCE(p.name, c.name), c.parent_id IS NOT NULL, c.name`
+       GROUP BY c.id, c.parent_id, c.category_type, c.name, c.description, c.photo_urls, c.is_active, p.name
+       ORDER BY COALESCE(p.name, c.name), c.parent_id IS NOT NULL, c.name`
   );
   sendJson(res, 200, rows);
 }
 
 const categorySchema = z.object({
   parentId: z.number().int().positive().nullable().optional(),
+  categoryType: z.enum(["plant", "seed"]).optional(),
   name: z.string().min(2),
-  description: z.string().optional()
+  description: z.string().optional(),
+  photoUrls: z.string().optional()
 });
 
 async function createCategory(req, res, { readJson, sendJson }) {
   const payload = categorySchema.parse(await readJson(req));
   await pool.query(
-    `INSERT INTO categories (parent_id, name, description)
-     VALUES (:parentId, :name, :description)`,
+    `INSERT INTO categories (parent_id, category_type, name, description, photo_urls)
+     VALUES (:parentId, :categoryType, :name, :description, :photoUrls)`,
     {
       parentId: payload.parentId || null,
+      categoryType: payload.categoryType || null,
       name: payload.name,
-      description: payload.description || null
+      description: payload.description || null,
+      photoUrls: payload.photoUrls || null
     }
   );
 
   sendJson(res, 201, { created: true });
+}
+
+const editCategorySchema = z.object({
+  categoryId: z.number().int().positive(),
+  name: z.string().min(2),
+  description: z.string().optional().nullable()
+});
+
+async function editCategory(req, res, { readJson, sendJson }) {
+  const payload = editCategorySchema.parse(await readJson(req));
+  await pool.query(
+    `UPDATE categories 
+        SET name = :name, 
+            description = :description 
+      WHERE id = :categoryId`,
+    {
+      categoryId: payload.categoryId,
+      name: payload.name,
+      description: payload.description || null
+    }
+  );
+  sendJson(res, 200, { updated: true });
 }
 
 const toggleCategorySchema = z.object({
@@ -61,31 +87,39 @@ async function toggleCategory(req, res, { readJson, sendJson }) {
   sendJson(res, 200, { updated: true });
 }
 
-const productSchema = z.object({
-  categoryId: z.number().int().positive(),
-  productType: z.enum(["plant", "seed"]),
-  name: z.string().min(2),
-  description: z.string().optional(),
-  sellingPrice: z.number().min(0),
-  availableQuantity: z.number().int().min(0),
-  photoUrl: z.string().optional()
+const deleteCategorySchema = z.object({
+  categoryId: z.number().int().positive()
 });
 
-async function createProduct(req, res, { readJson, sendJson }) {
-  const payload = productSchema.parse(await readJson(req));
-  const [result] = await pool.query(
-    `INSERT INTO products
-      (category_id, product_type, name, description, selling_price, available_quantity, photo_url)
-     VALUES (:categoryId, :productType, :name, :description, :sellingPrice, :availableQuantity, :photoUrl)`,
-    {
-      ...payload,
-      description: payload.description || null,
-      photoUrl: payload.photoUrl || null
-    }
+async function deleteCategory(req, res, { readJson, sendJson }) {
+  const payload = deleteCategorySchema.parse(await readJson(req));
+  
+  // Need to check if there are any products attached
+  const [[productCheck]] = await pool.query(
+    "SELECT COUNT(*) AS total FROM products WHERE category_id = :categoryId", 
+    payload
   );
+  if (productCheck.total > 0) {
+    throw new Error("Cannot delete category because it has products linked to it.");
+  }
 
-  sendJson(res, 201, { productId: Number(result.insertId) });
+  // Need to check if there are any subcategories attached
+  const [[childCheck]] = await pool.query(
+    "SELECT COUNT(*) AS total FROM categories WHERE parent_id = :categoryId",
+    payload
+  );
+  if (childCheck.total > 0) {
+    throw new Error("Cannot delete category because it has sub-categories linked to it.");
+  }
+
+  await pool.query(
+    "DELETE FROM categories WHERE id = :categoryId",
+    payload
+  );
+  sendJson(res, 200, { deleted: true });
 }
+
+
 
 async function listInventory(_req, res, { sendJson }) {
   const [rows] = await pool.query(
@@ -232,8 +266,9 @@ module.exports = {
   getDashboard,
   listCategories,
   createCategory,
+  editCategory,
   toggleCategory,
-  createProduct,
+  deleteCategory,
   listInventory,
   listOrders,
   updateOrderStatus,

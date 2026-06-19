@@ -2,7 +2,7 @@ const { loadEnv } = require("./env");
 loadEnv();
 const http = require("http");
 const { readJson, sendJson, sendNoContent, sendError, notFound } = require("./http");
-const { listProducts } = require("./routes/products");
+const { listProducts, getProduct, createProduct, editProduct, toggleProduct, deleteProduct } = require("./routes/products");
 const { createOrder } = require("./routes/orders");
 const { createProduction } = require("./routes/production");
 const { createBill } = require("./routes/billing");
@@ -19,8 +19,9 @@ const {
   getDashboard,
   listCategories,
   createCategory,
+  editCategory,
   toggleCategory,
-  createProduct,
+  deleteCategory,
   listInventory,
   listOrders,
   updateOrderStatus,
@@ -43,9 +44,15 @@ const routes = [
   ["GET", "/api/dashboard", "dashboard:read", getDashboard],
   ["GET", "/api/categories", "products:read", listCategories],
   ["POST", "/api/categories", "products:write", createCategory],
+  ["PATCH", "/api/categories", "products:write", editCategory],
   ["PATCH", "/api/categories/toggle", "products:write", toggleCategory],
+  ["POST", "/api/categories/delete", "products:write", deleteCategory],
   ["GET", "/api/products", "products:read", listProducts],
+  ["POST", "/api/products/get", "products:read", getProduct],
   ["POST", "/api/products", "products:write", createProduct],
+  ["PATCH", "/api/products", "products:write", editProduct],
+  ["PATCH", "/api/products/toggle", "products:write", toggleProduct],
+  ["POST", "/api/products/delete", "products:write", deleteProduct],
   ["GET", "/api/inventory", "inventory:read", listInventory],
   ["GET", "/api/orders", "orders:read", listOrders],
   ["POST", "/api/orders", "orders:write", createOrder],

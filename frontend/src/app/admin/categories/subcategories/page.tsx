@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { Edit2, Plus, Power, PowerOff, RefreshCw, Tags, Trash2, ListTree } from "lucide-react";
+import { Suspense, useEffect, useMemo, useState, useRef } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { ArrowLeft, Edit2, Plus, Power, PowerOff, RefreshCw, Tags, Trash2, ListTree } from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
 import { apiRequest } from "@/lib/api";
 
@@ -13,7 +13,6 @@ type Category = {
   description: string | null;
   photo_urls: string | null;
   is_active: number | boolean;
-  child_count: number;
   product_count: number;
 };
 
@@ -21,10 +20,13 @@ function isActive(c: Category) {
   return Boolean(c.is_active);
 }
 
-export default function AdminCategoriesPage() {
+function SubCategoriesContent() {
+  const searchParams = useSearchParams();
   const router = useRouter();
+  const parentId = Number(searchParams.get("id"));
+
   const [categories, setCategories] = useState<Category[]>([]);
-  const [status, setStatus] = useState("Loading categories...");
+  const [status, setStatus] = useState("Loading...");
   const [busy, setBusy] = useState(false);
 
   const [form, setForm] = useState({ name: "", description: "" });
@@ -32,15 +34,22 @@ export default function AdminCategoriesPage() {
   const [editing, setEditing] = useState<Category | null>(null);
   const [editForm, setEditForm] = useState({ name: "", description: "" });
 
+  const parentCategory = useMemo(
+    () => categories.find(c => c.id === parentId),
+    [categories, parentId]
+  );
+
+  const subCategories = useMemo(
+    () => categories.filter(c => c.parent_id === parentId).sort((a, b) => a.name.localeCompare(b.name)),
+    [categories, parentId]
+  );
+
   async function loadCategories() {
     setBusy(true);
     try {
       const data = await apiRequest<Category[]>("/api/categories");
-      const allCategories = Array.isArray(data) ? data : [];
-      // Only keep top-level categories
-      const topLevel = allCategories.filter(c => !c.parent_id).sort((a, b) => a.name.localeCompare(b.name));
-      setCategories(topLevel);
-      setStatus(`Loaded ${topLevel.length} categories`);
+      setCategories(Array.isArray(data) ? data : []);
+      setStatus(`Loaded successfully`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not load categories");
       setCategories([]);
@@ -50,23 +59,24 @@ export default function AdminCategoriesPage() {
   }
 
   useEffect(() => {
-    loadCategories();
-  }, []);
+    if (parentId) loadCategories();
+  }, [parentId]);
 
   async function handleCreate() {
-    if (!form.name) return;
+    if (!form.name || !parentId) return;
     setBusy(true);
     try {
       await apiRequest("/api/categories", {
         method: "POST",
         body: JSON.stringify({
+          parentId,
           name: form.name,
           description: form.description
         })
       });
       setForm({ name: "", description: "" });
       if (fileInputRef.current) fileInputRef.current.value = "";
-      setStatus("Category saved");
+      setStatus("Sub-category saved");
       await loadCategories();
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Failed to create");
@@ -88,7 +98,7 @@ export default function AdminCategoriesPage() {
         })
       });
       setEditing(null);
-      setStatus("Category updated");
+      setStatus("Sub-category updated");
       await loadCategories();
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Failed to update");
@@ -142,12 +152,47 @@ export default function AdminCategoriesPage() {
     });
   }
 
+  if (!parentId) {
+    return (
+      <AdminShell>
+        <div className="section-header">
+          <div>
+            <p className="eyebrow">Error</p>
+            <h1>Invalid Category ID</h1>
+          </div>
+          <button className="button secondary" onClick={() => router.push("/admin/categories")}>Go Back</button>
+        </div>
+      </AdminShell>
+    );
+  }
+
+  if (!parentCategory && !busy && categories.length > 0) {
+    return (
+      <AdminShell>
+        <div className="section-header">
+          <div>
+            <p className="eyebrow">Error</p>
+            <h1>Category not found</h1>
+          </div>
+          <button className="button secondary" onClick={() => router.push("/admin/categories")}>Go Back</button>
+        </div>
+      </AdminShell>
+    );
+  }
+
   return (
     <AdminShell>
       <div className="section-header">
         <div>
-          <p className="eyebrow">Category Management</p>
-          <h1>Categories</h1>
+          <p className="eyebrow">
+            <button
+              onClick={() => router.push("/admin/categories")}
+              style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4, padding: 0 }}
+            >
+              <ArrowLeft size={14} /> Back to Categories
+            </button>
+          </p>
+          <h1>{parentCategory ? `Subcategories of ${parentCategory.name}` : "Loading..."}</h1>
           <p className="meta">{status}</p>
         </div>
         <button className="button secondary" type="button" onClick={loadCategories} disabled={busy}>
@@ -161,21 +206,21 @@ export default function AdminCategoriesPage() {
         <div className="card-body">
           <div className="form-grid">
             <label className="field">
-              <span>Category Name <span style={{ color: "red" }}>*</span></span>
-              <input value={form.name} onChange={e => setForm(c => ({ ...c, name: e.target.value }))} placeholder="E.g. Plants" />
+              <span>Sub-Category Name <span style={{ color: "red" }}>*</span></span>
+              <input value={form.name} onChange={e => setForm(c => ({ ...c, name: e.target.value }))} placeholder="E.g. Indoor Plants" />
             </label>
             <label className="field">
               <span>Description</span>
               <input value={form.description} onChange={e => setForm(c => ({ ...c, description: e.target.value }))} placeholder="Optional details" />
             </label>
             <label className="field">
-              <span>Image</span>
-              <input type="file" accept="image/*" ref={fileInputRef} />
+              <span>Images (Multiple)</span>
+              <input type="file" accept="image/*" multiple ref={fileInputRef} />
             </label>
           </div>
           <button className="button" type="button" onClick={handleCreate} disabled={busy || !form.name} style={{ marginTop: 16 }}>
             <Plus size={17} />
-            Add Category
+            Add Sub-Category
           </button>
         </div>
       </div>
@@ -207,24 +252,28 @@ export default function AdminCategoriesPage() {
 
       {/* LIST */}
       <div className="card">
+        {/* <div className="card-header">
+          <Tags size={18} />
+          <strong>{parentCategory ? `${parentCategory.name} Sub-Categories` : "Sub-Categories"}</strong>
+        </div> */}
         <div className="table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
                 <th style={{ width: 60 }}>S.No.</th>
                 <th>Name</th>
-                <th>Stats</th>
+                <th>Products</th>
                 <th>Status</th>
                 <th style={{ textAlign: "right" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {categories.length === 0 ? (
+              {subCategories.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: "center", padding: 20 }} className="meta">No categories found</td>
+                  <td colSpan={5} style={{ textAlign: "center", padding: 20 }} className="meta">No sub-categories found</td>
                 </tr>
               ) : null}
-              {categories.map((c, index) => (
+              {subCategories.map((c, index) => (
                 <tr key={c.id}>
                   <td>{index + 1}</td>
                   <td>
@@ -232,7 +281,7 @@ export default function AdminCategoriesPage() {
                     {c.description ? <p className="meta" style={{ margin: "4px 0 0" }}>{c.description}</p> : null}
                   </td>
                   <td>
-                    <span className="meta">{c.product_count} products | {c.child_count} subcategories</span>
+                    <span className="meta">{c.product_count} products</span>
                   </td>
                   <td>
                     <span className={`status-badge ${isActive(c) ? "status-paid" : "status-failed"}`}>
@@ -264,5 +313,13 @@ export default function AdminCategoriesPage() {
         </div>
       </div>
     </AdminShell>
+  );
+}
+
+export default function AdminSubCategoriesPage() {
+  return (
+    <Suspense fallback={<AdminShell><div className="section-header"><h1>Loading...</h1></div></AdminShell>}>
+      <SubCategoriesContent />
+    </Suspense>
   );
 }

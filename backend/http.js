@@ -35,7 +35,7 @@ function sendNoContent(res, statusCode = 204) {
 function sendError(res, error, fallbackMessage = "Request failed") {
   const statusCode = error.name === "ZodError" ? 400 : 500;
   sendJson(res, statusCode, {
-    message: statusCode === 400 ? "Validation failed" : fallbackMessage,
+    message: statusCode === 400 ? "Validation failed" : (error.message || fallbackMessage),
     error: error.name === "ZodError" ? error.errors : error.message
   });
 }

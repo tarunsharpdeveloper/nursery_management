@@ -5,13 +5,15 @@ import type { Product } from "@/lib/types";
 
 export function ProductCard({ product }: { product: Product }) {
   return (
-    <article className="card">
-      <Image className="product-image" src={product.image} alt={product.name} width={900} height={675} />
+    <article className="card product-card">
+      <div className="product-image-wrap">
+        <Image className="product-image" src={product.image} alt={product.name} width={900} height={675} />
+      </div>
       <div className="card-body">
-        <p className="meta">{product.category} · {product.type}</p>
+        <p className="meta">{product.category} - {product.type}</p>
         <h3>{product.name}</h3>
         <p className="meta">{product.description}</p>
-        <p className="price">₹{product.price}</p>
+        <p className="price">Rs. {product.price}</p>
         <div className="row-actions">
           <Link className="button" href={`/products/${product.id}`}>
             Details

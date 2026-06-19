@@ -1,14 +1,20 @@
 import Link from "next/link";
-import { Compass, ExternalLink, Leaf, Mail, MapPin, Phone } from "lucide-react";
+import Image from "next/image";
+import { Compass, ExternalLink, Mail, MapPin, Phone } from "lucide-react";
+import logo from "@/assets/images/logo.png";
 
 export function Footer() {
   return (
     <footer className="footer">
       <div className="footer-brand-col">
         <div className="brand" style={{ color: "white", marginBottom: 14 }}>
-          <span className="brand-mark">
-            <Leaf size={20} />
-          </span>
+          <Image
+            className="brand-logo footer-logo"
+            src={logo}
+            alt="Awantika Seeds logo"
+            width={180}
+            height={180}
+          />
           Awantika Seeds
         </div>
         <p className="meta" style={{ color: "rgba(255, 255, 255, 0.7)", maxWidth: 280 }}>

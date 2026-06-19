@@ -52,16 +52,6 @@ export function AdminDashboard() {
         <div className="stat"><span className="meta">Bookings</span><strong>{stats?.total_bookings ?? 0}</strong></div>
         <div className="stat"><span className="meta">Employees</span><strong>{stats?.total_employees ?? 0}</strong></div>
       </div>
-      <div className="grid modules">
-        {["Products", "Inventory", "Production", "Orders", "Payments", "Billing", "Ledger", "Bookings", "Dispatch", "Employees", "Attendance", "Wages", "Reports"].map((module) => (
-          <div className="card" key={module}>
-            <div className="card-body">
-              <h3>{module}</h3>
-              <p className="meta">Connected to Node backend APIs.</p>
-            </div>
-          </div>
-        ))}
-      </div>
     </>
   );
 }

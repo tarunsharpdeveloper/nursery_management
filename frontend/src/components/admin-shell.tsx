@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { Banknote, BarChart3, Boxes, CalendarCheck, ClipboardList, CreditCard, Factory, NotebookTabs, Package, Receipt, Tags, Truck, Users } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Banknote, BarChart3, Boxes, CalendarCheck, ClipboardList, CreditCard, Factory, Menu, NotebookTabs, Package, Receipt, Tags, Truck, UserCircle, Users } from "lucide-react";
 import { clearAdminSession, getStoredUser, type AdminUser } from "@/lib/api";
 
 const links = [
@@ -28,6 +28,20 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<AdminUser | null>(null);
+  // "open" = full sidebar with labels, "collapsed" = icon-only, "closed" = fully hidden (mobile)
+  const [sidebarState, setSidebarState] = useState<"open" | "collapsed" | "closed">("open");
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    function checkMobile() {
+      const mobile = window.innerWidth <= 780;
+      setIsMobile(mobile);
+      if (mobile) setSidebarState("closed");
+    }
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     const storedUser = getStoredUser();
@@ -38,6 +52,23 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     setUser(storedUser);
   }, [router]);
 
+  // While logged in, intercept browser back button to stay inside admin
+  useEffect(() => {
+    if (!user) return;
+
+    function handlePopState() {
+      router.replace("/admin");
+    }
+
+    window.addEventListener("popstate", handlePopState);
+    // Push a history entry on each admin page so back is always trapped
+    window.history.pushState({ from: "admin-portal" }, "");
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [user, pathname]);
+
   const visibleLinks = useMemo(() => {
     if (!user) return [];
     return links.filter((link) => user.permissions.includes("*") || user.permissions.includes(link.permission));
@@ -45,29 +76,67 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   function logout() {
     clearAdminSession();
+    // Go to login and allow back-button to work normally (to home page)
     router.replace("/admin/login");
   }
+
+  // Close sidebar on route change (mobile only)
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarState("closed");
+    }
+  }, [pathname, isMobile]);
+
+  const toggleSidebar = useCallback(() => {
+    if (isMobile) {
+      setSidebarState((current) => current === "open" ? "closed" : "open");
+    } else {
+      setSidebarState((current) => current === "open" ? "collapsed" : "open");
+    }
+  }, [isMobile]);
+
+  const sidebarClassName = sidebarState === "open" ? "sidebar-open" : sidebarState === "collapsed" ? "sidebar-collapsed" : "sidebar-closed";
 
   if (!user) {
     return <main className="section"><p className="meta">Checking login...</p></main>;
   }
 
   return (
-    <div className="dashboard">
+    <div className={`dashboard ${sidebarClassName}`}>
+      {/* Mobile overlay */}
+      {sidebarState === "open" && isMobile && (
+        <div className="sidebar-overlay" onClick={() => setSidebarState("closed")} />
+      )}
+
       <aside className="sidebar">
-        <h3>Admin Portal</h3>
-        <p className="meta" style={{ color: "rgba(255,255,255,0.7)" }}>{user.name}<br />{user.role}</p>
+        <h3 className="sidebar-label">Admin Portal</h3>
+        <p className="meta sidebar-label" style={{ color: "rgba(255,255,255,0.7)" }}>{user.name}<br />{user.role}</p>
         {visibleLinks.map(({ href, label, icon: Icon }) => (
-          <Link href={href} key={href} style={pathname === href ? { background: "rgba(255,255,255,0.14)", color: "white" } : undefined}>
+          <Link href={href} key={href} title={label} style={pathname === href ? { background: "rgba(255,255,255,0.14)", color: "white" } : undefined}>
             <Icon size={18} />
-            {label}
+            <span className="sidebar-label">{label}</span>
           </Link>
         ))}
-        <button className="button secondary" type="button" onClick={logout} style={{ marginTop: 18, width: "100%" }}>
-          Logout
+        <button className="button secondary" type="button" onClick={logout} style={{ marginTop: 18 }}>
+          <span className="sidebar-label">Logout</span>
         </button>
       </aside>
-      <main className="content">{children}</main>
+
+      <div className="content-wrapper">
+        <header className="admin-header">
+          <div className="admin-header-left">
+            <button className="hamburger-btn" onClick={toggleSidebar}>
+              <Menu size={22} />
+            </button>
+          </div>
+          <div className="admin-user-profile">
+            <UserCircle size={22} />
+            <span className="username">{user.name}</span>
+          </div>
+        </header>
+
+        <main className="content">{children}</main>
+      </div>
     </div>
   );
 }

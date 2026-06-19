@@ -1,9 +1,18 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Compass, ExternalLink, Mail, MapPin, Phone } from "lucide-react";
 import logo from "@/assets/images/logo.png";
 
 export function Footer() {
+  const pathname = usePathname();
+
+  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+    return null;
+  }
+
   return (
     <footer className="footer">
       <div className="footer-brand-col">

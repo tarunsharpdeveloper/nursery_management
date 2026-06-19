@@ -4,11 +4,7 @@ import { notFound } from "next/navigation";
 import { ShoppingCart } from "lucide-react";
 import { products } from "@/lib/demo-data";
 
-export async function generateStaticParams() {
-  return products.map((product) => ({
-    id: String(product.id),
-  }));
-}
+
 
 export default async function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

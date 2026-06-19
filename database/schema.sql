@@ -30,10 +30,11 @@ CREATE TABLE customers (
 
 CREATE TABLE categories (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  parent_id INT,
-  name VARCHAR(120) NOT NULL UNIQUE,
+  name VARCHAR(120) NOT NULL,
   description TEXT,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  parent_id INT NULL,
+  UNIQUE KEY unique_category_name_parent (name, parent_id),
   FOREIGN KEY (parent_id) REFERENCES categories(id)
 );
 

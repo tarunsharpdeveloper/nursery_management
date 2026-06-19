@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, LogIn, ShieldCheck, UserRound } from "lucide-react";
-import { apiRequest, storeAdminSession, type AdminUser } from "@/lib/api";
+import { apiRequest, getStoredUser, storeAdminSession, type AdminUser } from "@/lib/api";
 
 type LoginResponse = {
   token: string;
@@ -16,6 +16,24 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("owner123");
   const [status, setStatus] = useState("Use the role credentials assigned by the owner.");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    // If already logged in, redirect to dashboard
+    if (getStoredUser()) {
+      router.replace("/admin");
+      return;
+    }
+
+    // Push a history entry so the browser back button can be intercepted
+    window.history.pushState({ from: "admin-login" }, "");
+
+    function handlePopState() {
+      router.replace("/");
+    }
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [router]);
 
   async function login() {
     setBusy(true);

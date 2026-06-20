@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Award, BadgeCheck, Headphones, Leaf, PackageCheck, ShieldCheck, Sprout, Truck, Users } from "lucide-react";
 
 const processSteps = [
   {
@@ -17,148 +16,238 @@ const processSteps = [
   }
 ];
 
-const services = [
-  { icon: Sprout, title: "Nursery Production", text: "Fresh saplings and plant stock managed from our nursery workflow." },
-  { icon: Leaf, title: "Seasonal Varieties", text: "Fruit, flower, ornamental, medicinal, and vegetable categories for every season." },
-  { icon: Headphones, title: "Buying Guidance", text: "Practical help for selecting plants, seeds, and care needs before purchase." },
-  { icon: Truck, title: "Order Dispatch", text: "Billing, packing, and dispatch support for online and offline customers." }
-];
-
 export default function AboutPage() {
   return (
     <main>
-      <section className="about-hero">
-        <div>
-          <p className="eyebrow">About Us</p>
-          <h1>Growing trusted nursery supply in Ujjain</h1>
-          <div className="breadcrumb">
-            <Link href="/">Home</Link>
-            <span>/</span>
-            <span>About Us</span>
-          </div>
-        </div>
-      </section>
-
-      <section className="section about-intro">
-        <div className="about-collage">
-          <Image
-            className="about-collage-main"
-            src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=900&q=80"
-            alt="Rows of nursery plants"
-            width={720}
-            height={760}
-          />
-          <Image
-            className="about-collage-small"
-            src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=620&q=80"
-            alt="Healthy green plant leaves"
-            width={360}
-            height={360}
-          />
-          <div className="experience-badge">
-            <strong>Fresh</strong>
-            <span>nursery stock</span>
-          </div>
-        </div>
-
-        <div className="about-intro-copy">
-          <p className="eyebrow">Welcome to Awantika Seeds</p>
-          <h2>We provide quality plants, seeds, and dependable nursery service</h2>
-          <p>
-            Awantika Seeds helps gardeners, farms, and local buyers find healthy plants and reliable seeds with simple ordering, billing, and dispatch support from our Ujjain store.
-          </p>
-          <p>
-            Our focus is practical: stock that is fresh, categories that are easy to browse, and guidance that helps customers choose the right product before they plant.
-          </p>
-
-          <div className="about-check-grid">
-            <span><ShieldCheck size={18} /> Quality checked plants</span>
-            <span><Leaf size={18} /> Plant based nursery supply</span>
-            <span><BadgeCheck size={18} /> Trusted local service</span>
-          </div>
-
-          <div className="specialist-card">
-            <div className="specialist-mark">
-              <Award size={28} />
-            </div>
-            <div>
-              <h3>Nursery and seed specialist</h3>
-              <p className="meta">Plants, seeds, saplings, billing, stock, and customer orders managed under one roof.</p>
+      {/* breadcumb */}
+      <section className="z-index-common breadcumb-wrapper" style={{ backgroundImage: "url('/assets/img/bg/b-1-3.png')" }}>
+        <div className="container">
+          <div className="row justify-content-between align-items-center">
+            <div className="col-auto">
+              <div className="breadcumb-content">
+                <h1 className="breadcumb-title">About Us</h1>
+                <div className="breadcumb-menu-wrap">
+                  <ul className="breadcumb-menu">
+                    <li><Link href="/">Home</Link></li>
+                    <li>About Us</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
+      {/* breadcumb End */}
 
-      <section className="section process-section">
-        <div className="section-header centered">
-          <div>
-            <p className="eyebrow">Our Process</p>
-            <h2>Simple steps from selection to delivery</h2>
+      {/* About Area Start */}
+      <section className="about-layout1 space-top z-index-common space-extra-bottom">
+        <img src="/assets/img/about/about-ele1-1.png" alt="about element" className="about-ele1" />
+        <div className="container">
+          <div className="row">
+            <div className="col-lg-6 mb-30">
+              <div className="img-box1">
+                <div className="img1">
+                  <img className="img" src="/assets/img/about/c-about-1-1.jpg" alt="about 1 1" />
+                </div>
+                <div className="video-thumb1">
+                  <img className="img" src="/assets/img/about/about-1-2.jpg" alt="about 2 2" />
+                  <a href="#" className="play-btn style7 popup-video" tabIndex={0}><i className="fas fa-play"></i></a>
+                </div>
+              </div>
+            </div>
+            <div className="col-lg-6 mb-30">
+              <div className="about-content1">
+                <div className="title-area">
+                  <span className="sec-subtitle">Welcome to Awantika Seeds</span>
+                  <h2 className="sec-title">We provide quality plants, seeds, and dependable nursery service</h2>
+                </div>
+                <div className="about-body">
+                  <p className="about-text">Awantika Seeds helps gardeners, farms, and local buyers find healthy plants and reliable seeds with simple ordering, billing, and dispatch support from our Ujjain store.</p>
+                  <p className="about-text">Our focus is practical: stock that is fresh, categories that are easy to browse, and guidance that helps customers choose the right product before they plant.</p>
+                  <div className="list-style1">
+                    <ul>
+                      <li><i><img src="/assets/img/icons/shield.png" alt="shield" /></i>Quality checked plants</li>
+                      <li><i><img src="/assets/img/icons/marijuana.png" alt="leaf" /></i>Plant based nursery supply</li>
+                      <li><i><img src="/assets/img/icons/microscope.png" alt="badge" /></i>Trusted local service</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="process-grid">
-          {processSteps.map((step, index) => (
-            <div className="process-card" key={step.title}>
-              <span className="process-number">{index + 1}</span>
-              <h3>{step.title}</h3>
-              <p className="meta">{step.text}</p>
+      </section>
+      {/* About Area End */}
+
+      {/* Featue Area */}
+      <section className="space-top space-bottom z-index-common" style={{ backgroundImage: "url('/assets/img/bg/bg-1-1.jpg')" }}>
+        <img src="/assets/img/leafs/feature-3-1.png" alt="feature element 1" className="feature-element1" />
+        <div className="container">
+          <div className="row">
+            <div className="col-lg-7 mx-auto">
+              <div className="title-area text-center">
+                <span className="sec-subtitle">Our Process</span>
+                <h2 className="sec-title">Simple steps from selection to delivery</h2>
+              </div>
             </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="about-stats">
-        <div>
-          <strong>6+</strong>
-          <span>Product Categories</span>
-        </div>
-        <div>
-          <strong>1000+</strong>
-          <span>Local Customers Served</span>
-        </div>
-        <div>
-          <strong>24 hr</strong>
-          <span>Order Follow-up</span>
-        </div>
-        <div>
-          <strong>100%</strong>
-          <span>Nursery Focused</span>
-        </div>
-      </section>
-
-      <section className="section about-services">
-        <div className="section-header centered">
-          <div>
-            <p className="eyebrow">Services and Benefits</p>
-            <h2>Built for gardeners, farms, and nursery buyers</h2>
+          </div>
+          <div className="row justify-content-between align-items-center">
+            <div className="col-xl-6 col-lg-6 mb-30">
+              {processSteps.map((step, index) => (
+                <div className="feature-item style3" key={index}>
+                  <div className="feature-icon">
+                    <img src={`/assets/img/icons/feature-3-${index + 1}.png`} alt={`feature 3 ${index + 1}`} />
+                    <span className="feature-number">{index + 1}.</span>
+                  </div>
+                  <div className="feature-content">
+                    <h3 className="feature-title">{step.title}</h3>
+                    <p className="feature-text">{step.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="col-xl-6 col-lg-auto mb-30">
+              <div className="img-box7">
+                <img src="/assets/img/features/feature-3-1.jpg" alt="feature-img" className="img1" />
+                <a href="#" className="play-btn style5 popup-video"><i className="fas fa-play"></i></a>
+                <img src="/assets/img/leafs/feature-3-2.png" alt="leafs" className="img2" />
+                <img src="/assets/img/leafs/feature-3-3.png" alt="leafs" className="img3" />
+                <img src="/assets/img/leafs/feature-3-4.png" alt="leafs" className="img4" />
+              </div>
+            </div>
           </div>
         </div>
-        <div className="service-grid">
-          {services.map(({ icon: Icon, title, text }) => (
-            <div className="service-card" key={title}>
-              <Icon size={28} />
-              <h3>{title}</h3>
-              <p className="meta">{text}</p>
-            </div>
-          ))}
-        </div>
       </section>
+      {/* Features Area End */}
 
-      <section className="section about-cta">
-        <div>
-          <p className="eyebrow">Need help choosing?</p>
-          <h2>Tell us what you want to grow</h2>
-          <p>We can guide you toward the right plants, seeds, quantities, and pickup or dispatch plan.</p>
+      {/* Counter Area */}
+      <div className="space-extra-bottom space-top">
+        <div className="container">
+          <div className="counter-wrap2">
+            <div className="row justify-content-between">
+              <div className="col-xxl-3 col-xl-4 col-lg-4 col-md-6">
+                <div className="counter-media">
+                  <div className="counter-media__icon">
+                    <img src="/assets/img/icons/count-1-1.png" alt="icon" />
+                  </div>
+                  <div className="media-body">
+                    <h3 className="counter-media__title"><span className="counter-media__number">6</span>+</h3>
+                    <p className="counter-media__text">Product Categories</p>
+                  </div>
+                </div>
+              </div>
+              <div className="col-xxl-3 col-xl-4 col-lg-4 col-md-6">
+                <div className="counter-media">
+                  <div className="counter-media__icon">
+                    <img src="/assets/img/icons/count-1-2.png" alt="icon" />
+                  </div>
+                  <div className="media-body">
+                    <h3 className="counter-media__title"><span className="counter-media__number">1000</span>+</h3>
+                    <p className="counter-media__text">Local Customers Served</p>
+                  </div>
+                </div>
+              </div>
+              <div className="col-xxl-3 col-xl-4 col-lg-4 col-md-6">
+                <div className="counter-media">
+                  <div className="counter-media__icon">
+                    <img src="/assets/img/icons/count-1-3.png" alt="icon" />
+                  </div>
+                  <div className="media-body">
+                    <h3 className="counter-media__title"><span className="counter-media__number">24</span> hr</h3>
+                    <p className="counter-media__text">Order Follow-up</p>
+                  </div>
+                </div>
+              </div>
+              <div className="col-xxl-3 col-xl-4 col-lg-4 col-md-6">
+                <div className="counter-media">
+                  <div className="counter-media__icon">
+                    <img src="/assets/img/icons/count-1-4.png" alt="icon" />
+                  </div>
+                  <div className="media-body">
+                    <h3 className="counter-media__title"><span className="counter-media__number">100</span>%</h3>
+                    <p className="counter-media__text">Nursery Focused</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="hero-actions">
-          <Link className="button" href="/products">
-            Browse Products
-          </Link>
-          <Link className="button secondary" href="/contact">
-            Contact Store
-          </Link>
+      </div>
+      {/* Counter Area End */}
+
+      {/* Services Area */}
+      <section className="space-top space-bottom z-index-common" style={{ backgroundImage: "url('/assets/img/bg/bg-1-1.jpg')" }}>
+        <div className="container">
+          <div className="row">
+            <div className="col-lg-8 mx-auto">
+              <div className="title-area z-index-common text-center">
+                <div className="sec-icon">
+                  <img src="/assets/img/icons/s-1-1.png" alt="icon" />
+                </div>
+                <span className="sec-subtitle">Our Services and Benefits</span>
+                <h2 className="sec-title">Built for gardeners, farms, and nursery buyers</h2>
+              </div>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-xxl-4 col-xl-4 col-lg-7 mx-auto mb-30">
+              <div className="feature-item style4">
+                <div className="feature-content">
+                  <h3 className="feature-title">Nursery Production</h3>
+                  <p className="feature-text">
+                    Fresh saplings and plant stock managed from our nursery workflow.
+                  </p>
+                </div>
+                <div className="feature-icon">
+                  <img src="/assets/img/icons/about-p-i-1-1.png" alt="about-p-i-1-1" />
+                </div>
+              </div>
+              <div className="feature-item style4">
+                <div className="feature-content">
+                  <h3 className="feature-title">Seasonal Varieties</h3>
+                  <p className="feature-text">
+                    Fruit, flower, ornamental, medicinal, and vegetable categories for every season.
+                  </p>
+                </div>
+                <div className="feature-icon">
+                  <img src="/assets/img/icons/about-p-i-1-2.png" alt="about-p-i-1-2" />
+                </div>
+              </div>
+            </div>
+            <div className="col-xxl-4 col-xl-4 col-lg-auto mx-auto mb-30">
+              <div className="img-box8">
+                <img src="/assets/img/about/about-p-1-1.png" alt="feature-img" className="img1" />
+              </div>
+            </div>
+            <div className="col-xxl-4 col-xl-4 col-lg-7 mx-auto mb-30">
+              <div className="feature-item style4">
+                <div className="feature-icon">
+                  <img src="/assets/img/icons/about-p-i-1-4.png" alt="about-p-i-1-4" />
+                </div>
+                <div className="feature-content">
+                  <h3 className="feature-title">Buying Guidance</h3>
+                  <p className="feature-text pe-0">
+                    Practical help for selecting plants, seeds, and care needs before purchase.
+                  </p>
+                </div>
+              </div>
+              <div className="feature-item style4">
+                <div className="feature-icon">
+                  <img src="/assets/img/icons/about-p-i-1-5.png" alt="about-p-i-1-5" />
+                </div>
+                <div className="feature-content">
+                  <h3 className="feature-title">Order Dispatch</h3>
+                  <p className="feature-text pe-0">
+                    Billing, packing, and dispatch support for online and offline customers.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
+      {/* Services Area End */}
+
     </main>
   );
 }

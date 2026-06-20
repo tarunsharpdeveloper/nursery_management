@@ -28,6 +28,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en" className={`${jost.variable} ${epilogue.variable}`}>
+      <head>
+        <link rel="stylesheet" href="/assets/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="/assets/css/fontawesome.min.css" />
+        <link rel="stylesheet" href="/assets/css/magnific-popup.min.css" />
+        <link rel="stylesheet" href="/assets/css/nice-select.min.css" />
+        <link rel="stylesheet" href="/assets/css/slick.min.css" />
+        <link rel="stylesheet" href="/assets/css/jquery-ui.min.css" />
+        <link rel="stylesheet" href="/assets/css/style.css" />
+      </head>
       <body>
         <div className="site-shell">
 

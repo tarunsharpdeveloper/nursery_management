@@ -137,15 +137,6 @@ export default function HomePage() {
 
   return (
     <>
-      {/* ── Load original styles so they apply layout rules onto theme class names ── */}
-      <link rel="stylesheet" href="/assets/css/bootstrap.min.css" />
-      <link rel="stylesheet" href="/assets/css/fontawesome.min.css" />
-      <link rel="stylesheet" href="/assets/css/magnific-popup.min.css" />
-      <link rel="stylesheet" href="/assets/css/nice-select.min.css" />
-      <link rel="stylesheet" href="/assets/css/slick.min.css" />
-      <link rel="stylesheet" href="/assets/css/jquery-ui.min.css" />
-      <link rel="stylesheet" href="/assets/css/style.css" />
-
       {/* ── Hero Slides Area (Awantika Seeds Content) ── */}
       <section className="hero-style1">
         <div className="hero-bg" style={{ backgroundImage: "url('/assets/img/bg/b-1-1.png')" }}></div>

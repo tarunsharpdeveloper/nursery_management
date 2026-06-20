@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Facebook, Instagram, Leaf, Search, ShoppingCart, User } from "lucide-react";
+import { Facebook, Instagram, Leaf, Search, ShoppingCart, User } from "lucide-react";
 import logo from "@/assets/images/logo.png";
 
 export function SiteHeader() {
@@ -43,36 +43,23 @@ export function SiteHeader() {
           <span className="brand-name">Awantika Seeds</span>
         </Link>
 
-        {/* Center: Nav links with dropdowns */}
+        {/* Center: Nav links */}
         <div className="nav-menu">
           <Link href="/" className="nav-link">
-            Home <ChevronDown size={13} className="nav-chevron" />
+            Home
           </Link>
 
-          <div className="nav-dropdown">
-            <span className="nav-link">
-              Products <ChevronDown size={13} className="nav-chevron" />
-            </span>
-            <div className="dropdown-panel">
-              <Link href="/products" className="dropdown-item">All Products</Link>
-              <Link href="/products?type=plant" className="dropdown-item">Plants</Link>
-              <Link href="/products?type=seed" className="dropdown-item">Seeds</Link>
-              <div className="dropdown-divider" />
-              <Link href="/my-orders" className="dropdown-item">My Orders</Link>
-            </div>
-          </div>
+          <Link href="/products" className="nav-link">
+            Products
+          </Link>
 
-          <div className="nav-dropdown">
-            <Link href="/about" className="nav-link">
-              About Us <ChevronDown size={13} className="nav-chevron" />
-            </Link>
-            <div className="dropdown-panel">
-              <Link href="/about" className="dropdown-item">Our Story</Link>
-              <Link href="/contact" className="dropdown-item">Contact Us</Link>
-            </div>
-          </div>
+          <Link href="/about" className="nav-link">
+            About Us
+          </Link>
 
-          <Link href="/contact" className="nav-link">Contact</Link>
+          <Link href="/contact" className="nav-link">
+            Contact
+          </Link>
         </div>
 
         {/* Right: Search + Account + Cart */}

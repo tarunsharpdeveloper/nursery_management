@@ -47,7 +47,7 @@ const routes = [
   ["PATCH", "/api/categories", "products:write", editCategory],
   ["PATCH", "/api/categories/toggle", "products:write", toggleCategory],
   ["POST", "/api/categories/delete", "products:write", deleteCategory],
-  ["GET", "/api/products", "products:read", listProducts],
+  ["GET", "/api/products", null, listProducts],
   ["POST", "/api/products/get", "products:read", getProduct],
   ["POST", "/api/products", "products:write", createProduct],
   ["PATCH", "/api/products", "products:write", editProduct],

@@ -3,6 +3,9 @@ const { pool } = require("../db");
 
 const productionSchema = z.object({
   productId: z.number().int().positive(),
+  categoryId: z.number().int().positive().optional().nullable(),
+  subCategoryId: z.number().int().positive().optional().nullable(),
+  subSubCategoryId: z.number().int().positive().optional().nullable(),
   productionType: z.enum(["plant", "seed"]),
   productionDate: z.string().min(10),
   quantityProduced: z.number().int().positive(),
@@ -12,6 +15,7 @@ const productionSchema = z.object({
 
 async function createProduction(req, res, { readJson, sendJson }) {
   const payload = productionSchema.parse(await readJson(req));
+  console.log("PRODUCTION PAYLOAD RECEIVED:", payload);
   const connection = await pool.getConnection();
 
   try {
@@ -19,9 +23,16 @@ async function createProduction(req, res, { readJson, sendJson }) {
 
     const [entryResult] = await connection.query(
       `INSERT INTO production_entries
-        (product_id, production_type, production_date, quantity_produced, remarks, created_by)
-       VALUES (:productId, :productionType, :productionDate, :quantityProduced, :remarks, :createdBy)`,
-      { ...payload, remarks: payload.remarks || null, createdBy: payload.createdBy || null }
+        (product_id, category_id, sub_category_id, sub_sub_category_id, production_type, production_date, quantity_produced, remarks, created_by)
+       VALUES (:productId, :categoryId, :subCategoryId, :subSubCategoryId, :productionType, :productionDate, :quantityProduced, :remarks, :createdBy)`,
+      { 
+        ...payload, 
+        categoryId: payload.categoryId || null,
+        subCategoryId: payload.subCategoryId || null,
+        subSubCategoryId: payload.subSubCategoryId || null,
+        remarks: payload.remarks || null, 
+        createdBy: payload.createdBy || null 
+      }
     );
     const productionId = Number(entryResult.insertId);
 

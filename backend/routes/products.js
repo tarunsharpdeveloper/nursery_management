@@ -128,6 +128,34 @@ async function createProduct(req, res, { readJson, sendJson }) {
       );
     }
 
+    if (payload.availableQuantity > 0) {
+      const today = new Date().toISOString().split("T")[0];
+      const [entryResult] = await connection.query(
+        `INSERT INTO production_entries
+          (product_id, category_id, production_type, production_date, quantity_produced, remarks)
+         VALUES (:productId, :categoryId, 'plant', :productionDate, :quantityProduced, 'Initial stock on product creation')`,
+        {
+          productId,
+          categoryId: payload.categoryId,
+          productionDate: today,
+          quantityProduced: payload.availableQuantity
+        }
+      );
+
+      const productionId = entryResult.insertId;
+
+      await connection.query(
+        `INSERT INTO stock_ledger
+          (product_id, movement_type, quantity_change, reference_type, reference_id, remarks)
+         VALUES (:productId, 'production', :quantityProduced, 'production_entries', :productionId, 'Initial stock on product creation')`,
+        { 
+          productId, 
+          quantityProduced: payload.availableQuantity, 
+          productionId 
+        }
+      );
+    }
+
     await connection.commit();
     sendJson(res, 201, { productId: Number(productId) });
   } catch (error) {

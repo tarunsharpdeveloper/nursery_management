@@ -17,6 +17,7 @@ const { authenticate, hasPermission } = require("./auth");
 const { login, me } = require("./routes/auth");
 const {
   getDashboard,
+  listCustomers,
   listCategories,
   createCategory,
   editCategory,
@@ -42,6 +43,7 @@ const routes = [
   ["POST", "/api/auth/login", null, login],
   ["GET", "/api/auth/me", "dashboard:read", me],
   ["GET", "/api/dashboard", "dashboard:read", getDashboard],
+  ["GET", "/api/customers", "billing:read", listCustomers],
   ["GET", "/api/categories", "products:read", listCategories],
   ["POST", "/api/categories", "products:write", createCategory],
   ["PATCH", "/api/categories", "products:write", editCategory],

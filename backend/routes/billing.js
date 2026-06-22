@@ -2,20 +2,23 @@ const { z } = require("zod");
 const { pool } = require("../db");
 
 const billingSchema = z.object({
+  customerId: z.number().int().positive().optional().nullable(),
   customer: z.object({
     name: z.string().min(2),
-    phone: z.string().min(8)
-  }),
+    phone: z.string().optional().nullable()
+  }).optional().nullable(),
   billType: z.enum(["cash_sale", "credit_sale"]),
   paymentType: z.enum(["cash", "upi", "credit"]),
+  transactionId: z.string().optional().nullable(),
   items: z.array(
     z.object({
       productId: z.number().int().positive(),
+      variantId: z.number().int().positive().optional().nullable(),
       quantity: z.number().int().positive(),
-      unitPrice: z.number().positive()
+      unitPrice: z.number().min(0)
     })
   ).min(1),
-  createdBy: z.number().int().positive().optional()
+  createdBy: z.number().int().positive().optional().nullable()
 });
 
 async function createBill(req, res, { readJson, sendJson }) {
@@ -25,11 +28,14 @@ async function createBill(req, res, { readJson, sendJson }) {
   try {
     await connection.beginTransaction();
 
-    const [customerResult] = await connection.query(
-      "INSERT INTO customers (name, phone, is_credit_customer) VALUES (:name, :phone, :isCreditCustomer)",
-      { ...payload.customer, isCreditCustomer: payload.billType === "credit_sale" }
-    );
-    const customerId = Number(customerResult.insertId);
+    let customerId = payload.customerId;
+    if (!customerId) {
+      const [customerResult] = await connection.query(
+        "INSERT INTO customers (name, phone, is_credit_customer) VALUES (:name, :phone, :isCreditCustomer)",
+        { ...payload.customer, isCreditCustomer: payload.billType === "credit_sale", phone: payload.customer?.phone || "" }
+      );
+      customerId = Number(customerResult.insertId);
+    }
     const totalAmount = payload.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
     const paidAmount = payload.paymentType === "credit" ? 0 : totalAmount;
     const balanceAmount = totalAmount - paidAmount;
@@ -81,6 +87,18 @@ async function createBill(req, res, { readJson, sendJson }) {
           (customer_id, transaction_date, transaction_type, debit_amount, credit_amount, reference_type, reference_id, remarks)
          VALUES (:customerId, CURDATE(), 'payment', 0, :paidAmount, 'bills', :billId, 'Payment received')`,
         { customerId, paidAmount, billId }
+      );
+
+      await connection.query(
+        `INSERT INTO payments
+          (bill_id, payment_method, payment_status, amount, paid_at, gateway_payment_id)
+         VALUES (:billId, :paymentType, 'paid', :paidAmount, NOW(), :transactionId)`,
+        {
+          billId,
+          paymentType: payload.paymentType,
+          paidAmount,
+          transactionId: payload.transactionId || null
+        }
       );
     }
 

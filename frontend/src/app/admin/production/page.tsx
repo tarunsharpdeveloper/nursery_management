@@ -18,6 +18,41 @@ type Product = {
   name: string;
 };
 
+const selectStyles = {
+  container: (base: any) => ({ ...base, width: '100%' }),
+  control: (base: any, state: any) => ({
+    ...base,
+    minHeight: '50px',
+    height: '50px',
+    borderRadius: '8px',
+    borderColor: state.isFocused ? '#2f6b3f' : '#d7e0d4',
+    boxShadow: state.isFocused ? '0 0 0 1px #2f6b3f' : 'none',
+    '&:hover': {
+      borderColor: state.isFocused ? '#2f6b3f' : '#a3b1a5'
+    }
+  }),
+  valueContainer: (base: any) => ({
+    ...base,
+    height: '48px',
+    padding: '0 12px',
+  }),
+  input: (base: any) => ({
+    ...base,
+    margin: '0px',
+  }),
+  indicatorsContainer: (base: any) => ({
+    ...base,
+    height: '48px',
+  }),
+  placeholder: (base: any) => ({
+    ...base,
+    color: '#9ca3af',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  })
+};
+
 export default function ProductionPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -168,6 +203,7 @@ export default function ProductionPage() {
                 onChange={(option: any) => setForm(f => ({ ...f, productId: option ? option.value : "" }))}
                 isClearable
                 placeholder="Select Product"
+                styles={selectStyles}
               />
             </label>
 
@@ -192,9 +228,10 @@ export default function ProductionPage() {
             </label>
 
             <label className="field">
-              <span>Remarks</span>
-              <textarea 
-                rows={3}
+              <span>Remarks (Optional)</span>
+              <input 
+                type="text"
+                placeholder="Enter any remarks..."
                 value={form.remarks} 
                 onChange={e => setForm(f => ({ ...f, remarks: e.target.value }))}
               />

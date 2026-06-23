@@ -5,9 +5,11 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Facebook, Instagram, Leaf, Search, ShoppingCart, User } from "lucide-react";
 import logo from "@/assets/images/logo.png";
+import { useCart } from "@/context/CartContext";
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const { cartCount } = useCart();
 
   // Hide the customer header on admin pages, EXCEPT the login page
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
@@ -60,6 +62,11 @@ export function SiteHeader() {
           <Link href="/contact" className="nav-link">
             Contact
           </Link>
+
+          <Link href="/my-orders" className="nav-link">
+            My Orders
+          </Link>
+
         </div>
 
         {/* Right: Search + Account + Cart */}
@@ -73,10 +80,11 @@ export function SiteHeader() {
           </Link>
           <Link href="/cart" className="nav-icon-btn nav-cart-btn" title="Shopping Cart">
             <ShoppingCart size={18} />
-            <span className="cart-badge">0</span>
+            <span className="cart-badge">{cartCount}</span>
           </Link>
         </div>
       </nav>
     </>
   );
 }
+

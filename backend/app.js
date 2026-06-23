@@ -3,7 +3,7 @@ loadEnv();
 const http = require("http");
 const { readJson, sendJson, sendNoContent, sendError, notFound } = require("./http");
 const { listProducts, getProduct, createProduct, editProduct, toggleProduct, deleteProduct } = require("./routes/products");
-const { createOrder } = require("./routes/orders");
+const { createOrder, listCustomerOrders } = require("./routes/orders");
 const { createProduction } = require("./routes/production");
 const { createBill } = require("./routes/billing");
 const { createAdvanceBooking } = require("./routes/bookings");
@@ -55,7 +55,8 @@ const routes = [
   ["POST", "/api/products/delete", "products:write", deleteProduct],
   ["GET", "/api/inventory", "inventory:read", listInventory],
   ["GET", "/api/orders", "orders:read", listOrders],
-  ["POST", "/api/orders", "orders:write", createOrder],
+  ["POST", "/api/orders", null, createOrder],
+  ["GET", "/api/customer-orders", null, listCustomerOrders],
   ["PATCH", "/api/orders/status", "orders:write", updateOrderStatus],
   ["POST", "/api/production", "production:write", createProduction],
   ["GET", "/api/payments", "payments:read", listPayments],

@@ -9,6 +9,7 @@ CREATE TABLE roles (
 CREATE TABLE users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   role_id INT NOT NULL,
+  role ENUM('super_admin', 'staff_user', 'billing_user', 'customer') NOT NULL,
   name VARCHAR(120) NOT NULL,
   email VARCHAR(160) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,

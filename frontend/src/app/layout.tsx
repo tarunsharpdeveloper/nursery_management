@@ -6,6 +6,7 @@ import { Jost, Epilogue } from "next/font/google";
 import { ChevronDown, Facebook, Instagram, Leaf, Search, ShoppingCart, User } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { Footer } from "@/components/footer";
+import { CartProvider } from "@/context/CartContext";
 import "./globals.css";
 
 const jost = Jost({
@@ -37,15 +38,16 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <link rel="stylesheet" href="/assets/css/jquery-ui.min.css" />
         <link rel="stylesheet" href="/assets/css/style.css" />
       </head>
-      <body>
-        <div className="site-shell">
-
-          <SiteHeader />
-
-          {children}
-          <Footer />
-        </div>
+      <body suppressHydrationWarning>
+        <CartProvider>
+          <div className="site-shell">
+            <SiteHeader />
+            {children}
+            <Footer />
+          </div>
+        </CartProvider>
       </body>
     </html>
   );
 }
+

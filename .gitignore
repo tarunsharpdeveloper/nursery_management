@@ -6,5 +6,6 @@ frontend/out/
 .env
 .env.local
 .env.*.local
-*.log
+.log
+.zip
 

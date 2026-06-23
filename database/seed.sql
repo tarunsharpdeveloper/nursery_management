@@ -1,11 +1,11 @@
 USE nursery_management;
 
-INSERT INTO roles (name) VALUES ('super_admin'), ('staff_user'), ('billing_user');
+INSERT INTO roles (name) VALUES ('super_admin'), ('staff_user'), ('billing_user'), ('customer');
 
-INSERT INTO users (role_id, name, email, password_hash) VALUES
-(1, 'Owner Admin', 'owner@nursery.local', 'change-me'),
-(2, 'Stock Staff', 'staff@nursery.local', 'change-me'),
-(3, 'Billing User', 'billing@nursery.local', 'change-me');
+INSERT INTO users (role_id, role, name, email, password_hash) VALUES
+(1, 'super_admin', 'Owner Admin', 'owner@nursery.local', 'change-me'),
+(2, 'staff_user', 'Stock Staff', 'staff@nursery.local', 'change-me'),
+(3, 'billing_user', 'Billing User', 'billing@nursery.local', 'change-me');
 
 INSERT INTO categories (name, description) VALUES
 ('Fruit Plants', 'Mango, guava, lemon and seasonal fruit plants'),

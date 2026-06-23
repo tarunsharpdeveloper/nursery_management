@@ -10,7 +10,7 @@ const loginSchema = z.object({
 async function login(req, res, { readJson, sendJson }) {
   const payload = loginSchema.parse(await readJson(req));
   const [rows] = await pool.query(
-    `SELECT u.id, u.name, u.email, u.password_hash, r.name AS role
+    `SELECT u.id, u.name, u.email, u.password_hash, COALESCE(u.role, r.name) AS role
        FROM users u
        JOIN roles r ON r.id = u.role_id
       WHERE u.email = :email AND u.is_active = TRUE

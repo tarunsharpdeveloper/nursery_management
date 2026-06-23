@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiRequest } from "@/lib/api";
 import type { Product, ProductType } from "@/lib/types";
+import { useCart } from "@/context/CartContext";
 
 interface BackendProduct {
   id: number;
@@ -57,6 +58,7 @@ const fallbackProducts: Product[] = [
 ];
 
 export default function ProductsPage() {
+  const { addToCart } = useCart();
   const [products, setProducts] = useState<Product[]>(fallbackProducts);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<ProductType | "all">("all");
@@ -339,9 +341,15 @@ export default function ProductsPage() {
                                 {product.stock.toLocaleString("en-IN")} in stock
                               </span>
                             </span>
-                            <Link href="/cart" className="cart-btn" aria-label="Add to cart">
+                            <button
+                              type="button"
+                              className="cart-btn"
+                              aria-label="Add to cart"
+                              style={{ border: "none", cursor: "pointer" }}
+                              onClick={() => addToCart(product, 1)}
+                            >
                               <i className="fas fa-shopping-basket"></i>
-                            </Link>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -378,13 +386,48 @@ export default function ProductsPage() {
                                 {product.stock} in stock
                               </span>
                             </div>
-                            <div className="product-actions mt-3" style={{ display: "flex", gap: "10px", alignItems: "center", justifyContent: "space-between" }}>
-                              <Link href={`/products/${product.id}`} className="vs-btn style2" style={{ padding: "10px 20px", fontSize: "14px", borderRadius: "30px", flex: "1", textAlign: "center" }}>
+                            <div className="mt-3" style={{ display: "flex", gap: "10px", alignItems: "center", justifyContent: "space-between" }}>
+                              <Link 
+                                href={`/products/${product.id}`} 
+                                className="vs-btn style2" 
+                                style={{ 
+                                  padding: "10px 20px", 
+                                  fontSize: "14px", 
+                                  borderRadius: "30px", 
+                                  flex: "1", 
+                                  textAlign: "center",
+                                  display: "inline-block",
+                                  visibility: "visible",
+                                  opacity: 1,
+                                  transform: "none",
+                                  marginRight: 0
+                                }}
+                              >
                                 Details
                               </Link>
-                              <Link href="/cart" className="cart-btn" style={{ position: "static", transform: "none" }} aria-label="Add to cart">
+                              <button
+                                type="button"
+                                style={{ 
+                                  width: "44px",
+                                  height: "44px",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  backgroundColor: "var(--brand, #8cc63f)",
+                                  color: "#fff",
+                                  borderRadius: "50%",
+                                  fontSize: "16px",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  transition: "background-color 0.3s"
+                                }}
+                                onClick={() => addToCart(product, 1)}
+                                aria-label="Add to cart"
+                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2f6b3f")}
+                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--brand, #8cc63f)")}
+                              >
                                 <i className="fas fa-shopping-basket"></i>
-                              </Link>
+                              </button>
                             </div>
                           </div>
                         </div>

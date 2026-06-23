@@ -22,7 +22,8 @@ const rolePermissions = {
     "billing:read",
     "billing:write",
     "ledger:read"
-  ]
+  ],
+  customer: []
 };
 
 function secret() {

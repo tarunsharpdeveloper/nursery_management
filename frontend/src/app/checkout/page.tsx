@@ -2,146 +2,398 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CreditCard, Landmark, Banknote, Wallet, ShieldCheck, Truck } from "lucide-react";
-import { products } from "@/lib/demo-data";
-
-const cartItems = products.slice(0, 2).map((product) => ({
-  ...product,
-  quantity: product.id === 1 ? 2 : 1
-}));
+import { useCart } from "@/context/CartContext";
+import { apiRequest } from "@/lib/api";
 
 export default function CheckoutPage() {
-  const [paymentMethod, setPaymentMethod] = useState("upi");
-  const [sameAddress, setSameAddress] = useState(true);
+  const { cartItems, subtotal, shipping, total, clearCart } = useCart();
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = subtotal > 1000 ? 0 : 120;
-  const total = subtotal + shipping;
+  const [paymentMethod, setPaymentMethod] = useState("bacs");
+  const [sameAddress, setSameAddress] = useState(true);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [orderId, setOrderId] = useState("");
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    city: "",
+    address: "",
+    zip: "",
+    phone: "",
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePlaceOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (cartItems.length === 0) return;
+
+    setBusy(true);
+    setStatus("");
+
+    try {
+      const response = await apiRequest<{ orderId: number; orderNumber: string }>("/api/orders", {
+        method: "POST",
+        body: JSON.stringify({
+          customer: {
+            name: formData.name,
+            phone: formData.phone,
+            email: formData.email,
+            address: `${formData.address}, ${formData.city} - ${formData.zip}`
+          },
+          items: cartItems.map((item) => ({
+            productId: item.id,
+            quantity: item.quantity,
+            unitPrice: item.selling_price
+          }))
+        })
+      });
+
+      localStorage.setItem("customer_order_lookup", JSON.stringify({
+        email: formData.email,
+        phone: formData.phone,
+        orderNumber: response.orderNumber
+      }));
+
+      setOrderId(response.orderNumber);
+      setIsSubmitted(true);
+      clearCart();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not place order");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (isSubmitted) {
+    return (
+      <main>
+        <section className="z-index-common breadcumb-wrapper" style={{ backgroundImage: "url('/assets/img/bg/b-1-3.png')" }}>
+          <div className="container">
+            <div className="breadcumb-content">
+              <h1 className="breadcumb-title">Order Confirmed</h1>
+            </div>
+          </div>
+        </section>
+
+        <section className="space space-extra-bottom">
+          <div className="container" style={{ textAlign: "center", padding: "80px 20px" }}>
+            <i
+              className="fal fa-badge-check"
+              style={{ fontSize: "70px", color: "var(--brand)", marginBottom: "25px", display: "block" }}
+            ></i>
+            <h2 style={{ marginBottom: "15px" }}>Thank you for your order!</h2>
+            <p style={{ color: "var(--muted)", fontSize: "18px", marginBottom: "10px" }}>
+              Your order has been placed successfully.
+            </p>
+            <p style={{ fontSize: "16px", fontWeight: "600", marginBottom: "30px" }}>
+              Order ID: <span style={{ color: "var(--brand)" }}>{orderId}</span>
+            </p>
+            <p style={{ color: "var(--muted)", maxWidth: "600px", margin: "0 auto 40px auto", lineHeight: "1.7" }}>
+              We have received your details and are preparing your plants/seeds for shipment. A confirmation email has been sent, and our team will get in touch with you shortly.
+            </p>
+            <Link href="/products" className="vs-btn style2">
+              Continue Shopping
+            </Link>
+            <Link href="/my-orders" className="vs-btn" style={{ marginLeft: 12 }}>
+              Track Order
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main>
-      {/* Hero */}
-      <section className="checkout-hero">
-        <div>
-          <h1>Checkout</h1>
-          <div className="breadcrumb">
-            <Link href="/">Home</Link>
-            <span>/</span>
-            <span>Checkout</span>
+      {/* breadcumb */}
+      <section className="z-index-common breadcumb-wrapper" style={{ backgroundImage: "url('/assets/img/bg/b-1-3.png')" }}>
+        <div className="container">
+          <div className="row justify-content-between align-items-center">
+            <div className="col-auto">
+              <div className="breadcumb-content">
+                <h1 className="breadcumb-title">Checkout</h1>
+                <div className="breadcumb-menu-wrap">
+                  <ul className="breadcumb-menu">
+                    <li><Link href="/">Home</Link></li>
+                    <li>Checkout</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
+      {/* breadcumb End */}
 
-      <section className="section checkout-layout">
-        {/* Billing Details */}
-        <div className="checkout-billing">
-          <h2>Billing Details</h2>
-          <div className="checkout-form">
-            <div className="form-grid two">
-              <label className="field">
-                <span>Complete Name</span>
-                <input placeholder="Enter your full name" />
-              </label>
-              <label className="field">
-                <span>Email Address</span>
-                <input type="email" placeholder="you@example.com" />
-              </label>
+      {/* Checkout Area */}
+      <div className="vs-product-wrapper space-top space-extra-bottom">
+        <div className="container">
+          {cartItems.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "80px 20px" }}>
+              <i
+                className="fal fa-shopping-cart"
+                style={{ fontSize: "60px", color: "var(--brand)", marginBottom: "20px", display: "block" }}
+              ></i>
+              <h2>No items in your cart</h2>
+              <p style={{ color: "var(--muted)", marginBottom: "30px" }}>
+                Add items to your cart before proceeding to checkout.
+              </p>
+              <Link href="/products" className="vs-btn">
+                Browse Products
+              </Link>
             </div>
-            <div className="form-grid two">
-              <label className="field">
-                <span>Phone Number</span>
-                <input type="tel" placeholder="+91 ..." />
-              </label>
-              <label className="field">
-                <span>Town / City</span>
-                <input placeholder="e.g. Ujjain" />
-              </label>
-            </div>
-            <div className="form-grid two">
-              <label className="field">
-                <span>Postcode / Zip</span>
-                <input placeholder="456001" />
-              </label>
-              <label className="field">
-                <span>State</span>
-                <input placeholder="Madhya Pradesh" />
-              </label>
-            </div>
-            <label className="field" style={{ marginTop: 4 }}>
-              <span>Street Address</span>
-              <input placeholder="House number and street name" />
-            </label>
-            <label className="field">
-              <span>Order Notes <small>(optional)</small></span>
-              <textarea rows={4} placeholder="Special notes for delivery, e.g. gate code or landmark" />
-            </label>
-            <div className="checkout-checkboxes">
-              <label className="checkout-checkbox">
-                <input type="checkbox" checked={sameAddress} onChange={(e) => setSameAddress(e.target.checked)} />
-                <span>Deliver to the same address</span>
-              </label>
-            </div>
-          </div>
+          ) : (
+            <form action="#" className="woocommerce-checkout mt-40" onSubmit={handlePlaceOrder}>
+              <div className="row">
+                <div className="col-lg-7">
+                  <div className="woocommerce-checkout__form">
+                    <h2 className="h4 summary-title">Billing Details</h2>
+                    <div className="row gx-20">
+                      <div className="col-12 form-group">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Complete Name"
+                          required
+                          name="name"
+                          value={formData.name}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="col-12 form-group">
+                        <input
+                          type="email"
+                          className="form-control"
+                          placeholder="Email Address"
+                          required
+                          name="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="col-12 form-group">
+                        <select className="form-select" defaultValue="IN">
+                          <option value="IN">India (IN)</option>
+                          <option value="US">United States (US)</option>
+                          <option value="AU">Australia (AU)</option>
+                          <option value="GB">United Kingdom (UK)</option>
+                        </select>
+                      </div>
+                      <div className="col-md-6 form-group">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Town / City"
+                          required
+                          name="city"
+                          value={formData.city}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="col-md-6 form-group">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Street Address"
+                          required
+                          name="address"
+                          value={formData.address}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="col-md-6 form-group">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Postcode / Zip"
+                          required
+                          name="zip"
+                          value={formData.zip}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="col-md-6 form-group">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Phone number"
+                          required
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="col-12 form-group">
+                        <input type="checkbox" id="accountNewCreate" />
+                        <label htmlFor="accountNewCreate">Create an account for later use</label>
+                      </div>
+                      <p id="ship-to-different-address">
+                        <input
+                          id="ship-to-different-address-checkbox"
+                          type="checkbox"
+                          name="ship_to_different_address"
+                          checked={sameAddress}
+                          onChange={(e) => setSameAddress(e.target.checked)}
+                        />
+                        <label htmlFor="ship-to-different-address-checkbox">
+                          Deliver to same Address
+                          <span className="checkmark"></span>
+                        </label>
+                      </p>
+
+                      {!sameAddress && (
+                        <div className="shipping_address">
+                          <div className="row">
+                            <div className="col-12 form-group">
+                              <select className="form-select" defaultValue="IN">
+                                <option value="IN">India (IN)</option>
+                                <option value="US">United States (US)</option>
+                                <option value="AU">Australia (AU)</option>
+                                <option value="GB">United Kingdom (UK)</option>
+                              </select>
+                            </div>
+                            <div className="col-md-6 form-group">
+                              <input type="text" className="form-control" placeholder="First Name" />
+                            </div>
+                            <div className="col-md-6 form-group">
+                              <input type="text" className="form-control" placeholder="Last Name" />
+                            </div>
+                            <div className="col-12 form-group">
+                              <input type="text" className="form-control" placeholder="Your Company Name" />
+                            </div>
+                            <div className="col-12 form-group">
+                              <input type="text" className="form-control" placeholder="Street Address" />
+                              <input type="text" className="form-control" placeholder="Apartment, suite, unit etc. (optional)" />
+                            </div>
+                            <div className="col-12 form-group">
+                              <input type="text" className="form-control" placeholder="Town / City" />
+                            </div>
+                            <div className="col-md-6 form-group">
+                              <input type="text" className="form-control" placeholder="State" />
+                            </div>
+                            <div className="col-md-6 form-group">
+                              <input type="text" className="form-control" placeholder="Postcode / Zip" />
+                            </div>
+                            <div className="col-12 form-group">
+                              <input type="text" className="form-control" placeholder="Email Address" />
+                              <input type="text" className="form-control" placeholder="Phone number" />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="col-12 form-group">
+                        <textarea cols={20} rows={5} className="form-control" placeholder="Notes about your order, e.g. special notes for delivery."></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-lg-5">
+                  <div className="cart-totals--cart" style={{ backgroundImage: "url('/assets/img/pattern/my-account-pattern-1-1.png')" }}>
+                    <h2 className="h4 summary-title text-white">Cart Totals</h2>
+                    <div className="cart_totals">
+                      <table>
+                        <tbody>
+                          <tr>
+                            <td>Sub Total</td>
+                            <td data-title="Cart Subtotal">
+                              <span className="amount"><bdi><span>Rs. </span>{subtotal.toFixed(2)}</bdi></span>
+                            </td>
+                          </tr>
+                          <tr className="shipping">
+                            <th>Delivery</th>
+                            <td data-title="Shipping and Handling">
+                              <ul className="woocommerce-shipping-methods list-unstyled">
+                                <li>
+                                  <label htmlFor="free_shipping">{shipping === 0 ? "Free shipping" : `Rs. ${shipping.toFixed(2)}`}</label>
+                                </li>
+                              </ul>
+                            </td>
+                          </tr>
+                        </tbody>
+                        <tfoot>
+                          <tr className="order-total">
+                            <td>Order Total</td>
+                            <td data-title="Total">
+                              <strong><span className="amount"><bdi><span>Rs. </span>{total.toFixed(2)}</bdi></span></strong>
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                    <div className="woocommerce-checkout-payment">
+                      <h2 className="summary-title text-capitalize text-white">Payment Method</h2>
+                      <ul className="wc_payment_methods payment_methods methods">
+                        <li className="wc_payment_method payment_method_bacs">
+                          <input
+                            id="payment_method_bacs"
+                            type="radio"
+                            className="input-radio"
+                            name="payment_method"
+                            value="bacs"
+                            checked={paymentMethod === "bacs"}
+                            onChange={() => setPaymentMethod("bacs")}
+                          />
+                          <label htmlFor="payment_method_bacs">Direct bank transfer</label>
+                        </li>
+                        <li className="wc_payment_method payment_method_cheque">
+                          <input
+                            id="payment_method_cheque"
+                            type="radio"
+                            className="input-radio"
+                            name="payment_method"
+                            value="cheque"
+                            checked={paymentMethod === "cheque"}
+                            onChange={() => setPaymentMethod("cheque")}
+                          />
+                          <label htmlFor="payment_method_cheque">Cheque Payment</label>
+                        </li>
+                        <li className="wc_payment_method payment_method_cod">
+                          <input
+                            id="payment_method_cod"
+                            type="radio"
+                            className="input-radio"
+                            name="payment_method"
+                            value="cod"
+                            checked={paymentMethod === "cod"}
+                            onChange={() => setPaymentMethod("cod")}
+                          />
+                          <label htmlFor="payment_method_cod">Credit Card</label>
+                        </li>
+                        <li className="wc_payment_method payment_method_paypal">
+                          <input
+                            id="payment_method_paypal"
+                            type="radio"
+                            className="input-radio"
+                            name="payment_method"
+                            value="paypal"
+                            checked={paymentMethod === "paypal"}
+                            onChange={() => setPaymentMethod("paypal")}
+                          />
+                          <label htmlFor="payment_method_paypal">Paypal</label>
+                        </li>
+                      </ul>
+                      <div className="form-row place-order">
+                        {status && <p style={{ color: "#ffd6d6", marginBottom: 12 }}>{status}</p>}
+                        <button type="submit" className="vs-btn style2" disabled={busy}>
+                          {busy ? "Placing Order..." : "Place Order"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          )}
         </div>
-
-        {/* Cart Totals & Payment */}
-        <div className="checkout-sidebar">
-          {/* Cart Totals Card */}
-          <div className="checkout-totals-card">
-            <h3>Cart Totals</h3>
-            <div className="checkout-totals-box">
-              <div className="checkout-totals-row">
-                <span>Sub Total</span>
-                <strong>Rs. {subtotal.toLocaleString("en-IN")}</strong>
-              </div>
-              <div className="checkout-totals-row">
-                <span>Delivery</span>
-                <strong>{shipping === 0 ? "Free Shipping" : `Rs. ${shipping}`}</strong>
-              </div>
-              <div className="checkout-totals-row total">
-                <span>Order Total</span>
-                <strong>Rs. {total.toLocaleString("en-IN")}</strong>
-              </div>
-            </div>
-          </div>
-
-          {/* Payment Method Card */}
-          <div className="checkout-totals-card">
-            <h3>Payment Method</h3>
-            <div className="checkout-payment-options">
-              <label className={`checkout-payment-option ${paymentMethod === "upi" ? "active" : ""}`}>
-                <input type="radio" name="payment" value="upi" checked={paymentMethod === "upi"} onChange={() => setPaymentMethod("upi")} />
-                <Wallet size={18} />
-                <span>UPI</span>
-              </label>
-              <label className={`checkout-payment-option ${paymentMethod === "credit_card" ? "active" : ""}`}>
-                <input type="radio" name="payment" value="credit_card" checked={paymentMethod === "credit_card"} onChange={() => setPaymentMethod("credit_card")} />
-                <CreditCard size={18} />
-                <span>Credit Card</span>
-              </label>
-              <label className={`checkout-payment-option ${paymentMethod === "net_banking" ? "active" : ""}`}>
-                <input type="radio" name="payment" value="net_banking" checked={paymentMethod === "net_banking"} onChange={() => setPaymentMethod("net_banking")} />
-                <Landmark size={18} />
-                <span>Net Banking</span>
-              </label>
-              <label className={`checkout-payment-option ${paymentMethod === "cash" ? "active" : ""}`}>
-                <input type="radio" name="payment" value="cash" checked={paymentMethod === "cash"} onChange={() => setPaymentMethod("cash")} />
-                <Banknote size={18} />
-                <span>Cash on Delivery</span>
-              </label>
-            </div>
-            <button className="button checkout-place-order" type="button">
-              Place Order
-            </button>
-          </div>
-
-          {/* Trust badges */}
-          <div className="checkout-trust">
-            <div><ShieldCheck size={18} /> Secure checkout</div>
-            <div><Truck size={18} /> Local dispatch support</div>
-          </div>
-        </div>
-      </section>
+      </div>
+      {/* Checkout Area End */}
     </main>
   );
 }

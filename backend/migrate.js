@@ -21,7 +21,9 @@ async function addColumn(tableName, columnName, definition) {
 }
 
 async function ensureAdminSchema() {
-  await pool.query("INSERT IGNORE INTO roles (name) VALUES ('super_admin'), ('staff_user'), ('billing_user')");
+  await pool.query("INSERT IGNORE INTO roles (name) VALUES ('super_admin'), ('staff_user'), ('billing_user'), ('customer')");
+  await addColumn("users", "role", "ENUM('super_admin', 'staff_user', 'billing_user', 'customer') NULL");
+  await pool.query("ALTER TABLE users MODIFY role ENUM('super_admin', 'staff_user', 'billing_user', 'customer') NULL");
 
   const defaultUsers = [
     { role: "super_admin", name: "Owner Admin", email: "owner@nursery.local", password: "owner123" },
@@ -34,16 +36,25 @@ async function ensureAdminSchema() {
     const roleId = roles[0].id;
     const passwordHash = hashPassword(user.password);
     await pool.query(
-      `INSERT INTO users (role_id, name, email, password_hash)
-       VALUES (:roleId, :name, :email, :passwordHash)
+      `INSERT INTO users (role_id, role, name, email, password_hash)
+       VALUES (:roleId, :role, :name, :email, :passwordHash)
        ON DUPLICATE KEY UPDATE
          role_id = VALUES(role_id),
+         role = VALUES(role),
          name = VALUES(name),
          password_hash = IF(password_hash = 'change-me', VALUES(password_hash), password_hash),
          is_active = TRUE`,
-      { roleId, name: user.name, email: user.email, passwordHash }
+      { roleId, role: user.role, name: user.name, email: user.email, passwordHash }
     );
   }
+
+  await pool.query(`
+    UPDATE users u
+    JOIN roles r ON r.id = u.role_id
+       SET u.role = r.name
+     WHERE u.role IS NULL
+  `);
+  await pool.query("ALTER TABLE users MODIFY role ENUM('super_admin', 'staff_user', 'billing_user', 'customer') NOT NULL");
 
   await addColumn("customers", "is_credit_customer", "BOOLEAN NOT NULL DEFAULT FALSE");
   await addColumn("customers", "credit_limit", "DECIMAL(10,2) NOT NULL DEFAULT 0");

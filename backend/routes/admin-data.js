@@ -10,6 +10,15 @@ async function getDashboard(_req, res, { sendJson }) {
   sendJson(res, 200, { ...products, ...orders, ...bookings, ...employees });
 }
 
+async function listCustomers(_req, res, { sendJson }) {
+  const [rows] = await pool.query(
+    `SELECT id, name, phone, is_credit_customer, credit_limit
+       FROM customers
+      ORDER BY name`
+  );
+  sendJson(res, 200, rows);
+}
+
 async function listCategories(_req, res, { sendJson }) {
   const [rows] = await pool.query(
     `SELECT c.id, c.parent_id, c.category_type, c.name, c.description, c.photo_urls, c.is_active,
@@ -168,9 +177,11 @@ async function listPayments(_req, res, { sendJson }) {
 async function listBills(_req, res, { sendJson }) {
   const [rows] = await pool.query(
     `SELECT b.id, b.bill_number, c.name AS customer, b.bill_type, b.payment_type,
-            b.total_amount, b.paid_amount, b.balance_amount, b.bill_date
+            b.total_amount, b.paid_amount, b.balance_amount, b.bill_date,
+            p.gateway_payment_id AS transaction_id
        FROM bills b
        LEFT JOIN customers c ON c.id = b.customer_id
+       LEFT JOIN payments p ON p.bill_id = b.id
       ORDER BY b.created_at DESC`
   );
   sendJson(res, 200, rows);
@@ -264,6 +275,7 @@ async function listWageSummary(req, res, { sendJson }) {
 
 module.exports = {
   getDashboard,
+  listCustomers,
   listCategories,
   createCategory,
   editCategory,

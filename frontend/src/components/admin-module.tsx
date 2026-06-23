@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Select from "react-select";
 import { RefreshCw, Save } from "lucide-react";
 import { apiRequest } from "@/lib/api";
 
 type Field = {
   name: string;
   label: string;
-  type?: "text" | "number" | "date" | "select" | "textarea";
+  type?: "text" | "number" | "date" | "select" | "searchable-select" | "textarea";
   options?: { label: string; value: string | number }[];
   valueType?: "string" | "number";
   placeholder?: string;
@@ -123,6 +124,18 @@ export function AdminModule({
                         <option key={option.value} value={option.value}>{option.label}</option>
                       ))}
                     </select>
+                  ) : field.type === "searchable-select" ? (
+                    <Select 
+                      options={field.options}
+                      value={field.options?.find(o => String(o.value) === String(values[field.name])) || null}
+                      onChange={(option: any) => {
+                        const nextValue = option ? (field.valueType === "number" ? Number(option.value) : option.value) : "";
+                        setValues((current) => ({ ...current, [field.name]: nextValue }));
+                      }}
+                      isClearable
+                      placeholder={field.placeholder || "Select"}
+                      styles={{ container: (base) => ({ ...base, width: '100%' }) }}
+                    />
                   ) : field.type === "textarea" ? (
                     <textarea
                       rows={3}

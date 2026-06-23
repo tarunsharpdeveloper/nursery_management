@@ -83,6 +83,29 @@ async function ensureAdminSchema() {
       FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
     )
   `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS production_entries (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      product_id INT NOT NULL,
+      category_id INT NULL,
+      sub_category_id INT NULL,
+      sub_sub_category_id INT NULL,
+      production_type ENUM('plant', 'seed') NOT NULL,
+      production_date DATE NOT NULL,
+      quantity_produced INT NOT NULL,
+      remarks TEXT,
+      created_by INT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (product_id) REFERENCES products(id),
+      FOREIGN KEY (category_id) REFERENCES categories(id),
+      FOREIGN KEY (sub_category_id) REFERENCES categories(id),
+      FOREIGN KEY (sub_sub_category_id) REFERENCES categories(id)
+    )
+  `);
+
+  await addColumn("production_entries", "category_id", "INT NULL");
+  await addColumn("production_entries", "sub_category_id", "INT NULL");
+  await addColumn("production_entries", "sub_sub_category_id", "INT NULL");
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS employees (

@@ -308,6 +308,28 @@ textarea:focus-visible {
   color: var(--brand);
 }
 
+.nav-login-btn {
+  align-items: center;
+  background: var(--brand);
+  border: 1px solid var(--brand);
+  border-radius: 8px;
+  color: white;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 800;
+  gap: 7px;
+  min-height: 42px;
+  padding: 8px 16px;
+  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.nav-login-btn:hover {
+  background: var(--brand-dark);
+  border-color: var(--brand-dark);
+  color: white;
+  transform: translateY(-1px);
+}
+
 .nav-cart-btn {
   background: var(--brand);
   border-color: var(--brand);
@@ -2889,6 +2911,7 @@ tbody tr:hover {
   font-size: clamp(36px, 5vw, 64px);
   line-height: 1.02;
   margin-bottom: 18px;
+  color:white;
 }
 
 .login-highlights {
@@ -2938,6 +2961,60 @@ tbody tr:hover {
 .login-button {
   min-height: 46px;
   width: 100%;
+}
+
+.icon-field > div {
+  position: relative;
+}
+
+.icon-field > div > svg {
+  color: var(--muted);
+  left: 13px;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.icon-field input {
+  padding-left: 42px;
+}
+
+.login-error {
+  background: #fff0f0;
+  border: 1px solid #ffd0d0;
+  border-radius: 8px;
+  color: #b42318;
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 18px;
+  padding: 12px 14px;
+}
+
+.login-switch {
+  border-top: 1px solid var(--line);
+  margin-top: 22px;
+  padding-top: 18px;
+  text-align: center;
+}
+
+.login-switch p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.login-switch button {
+  background: transparent;
+  border: 0;
+  color: var(--brand);
+  cursor: pointer;
+  font-weight: 800;
+  margin-left: 8px;
+  padding: 0;
+}
+
+.login-switch button:hover {
+  color: var(--brand-dark);
 }
 
 .role-list {

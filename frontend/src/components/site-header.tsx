@@ -3,13 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Facebook, Instagram, Leaf, Search, ShoppingCart, User } from "lucide-react";
+import { Facebook, Instagram, Leaf, LogIn, Search, ShoppingCart, User } from "lucide-react";
 import logo from "@/assets/images/logo.png";
 import { useCart } from "@/context/CartContext";
+import { useCustomerAuth } from "@/context/CustomerAuthContext";
 
 export function SiteHeader() {
   const pathname = usePathname();
   const { cartCount } = useCart();
+  const { user, logout } = useCustomerAuth();
 
   // Hide the customer header on admin pages, EXCEPT the login page
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
@@ -75,9 +77,19 @@ export function SiteHeader() {
             <Search size={16} />
             <span>Search</span>
           </button>
-          <Link href="/admin" className="nav-icon-btn" title="Account / Admin Portal">
-            <User size={18} />
-          </Link>
+          
+          {user ? (
+            <button onClick={logout} className="nav-icon-btn" title="Logout" style={{ display: 'flex', alignItems: 'center', gap: '4px', border: 'none', background: 'transparent' }}>
+              <User size={18} />
+              <span style={{ fontSize: "12px", fontWeight: "600" }}>Logout</span>
+            </button>
+          ) : (
+            <Link href="/login" className="nav-login-btn" title="Customer Login">
+              <LogIn size={16} />
+              <span>Login</span>
+            </Link>
+          )}
+
           <Link href="/cart" className="nav-icon-btn nav-cart-btn" title="Shopping Cart">
             <ShoppingCart size={18} />
             <span className="cart-badge">{cartCount}</span>
@@ -87,4 +99,3 @@ export function SiteHeader() {
     </>
   );
 }
-

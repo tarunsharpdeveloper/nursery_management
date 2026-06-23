@@ -14,7 +14,7 @@ const { calculateWages } = require("./routes/wages");
 const { getLedger, getReport } = require("./routes/reports");
 const { ensureAdminSchema } = require("./migrate");
 const { authenticate, hasPermission } = require("./auth");
-const { login, me } = require("./routes/auth");
+const { login, me, registerCustomer } = require("./routes/auth");
 const {
   getDashboard,
   listCustomers,
@@ -41,6 +41,7 @@ const helpers = { readJson, sendJson };
 const routes = [
   ["GET", "/api/health", null, (_req, res) => sendJson(res, 200, { status: "ok", service: "nursery-node-backend" })],
   ["POST", "/api/auth/login", null, login],
+  ["POST", "/api/auth/register-customer", null, registerCustomer],
   ["GET", "/api/auth/me", "dashboard:read", me],
   ["GET", "/api/dashboard", "dashboard:read", getDashboard],
   ["GET", "/api/customers", "billing:read", listCustomers],

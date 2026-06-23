@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Facebook, Instagram, Leaf, LogIn, Search, ShoppingCart, User } from "lucide-react";
+import { Facebook, Instagram, Leaf, LogIn, LogOut, Search, ShoppingCart } from "lucide-react";
 import logo from "@/assets/images/logo.png";
 import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
@@ -65,9 +65,11 @@ export function SiteHeader() {
             Contact
           </Link>
 
-          <Link href="/my-orders" className="nav-link">
-            My Orders
-          </Link>
+          {user && (
+            <Link href="/my-orders" className="nav-link">
+              My Orders
+            </Link>
+          )}
 
         </div>
 
@@ -79,9 +81,8 @@ export function SiteHeader() {
           </button>
           
           {user ? (
-            <button onClick={logout} className="nav-icon-btn" title="Logout" style={{ display: 'flex', alignItems: 'center', gap: '4px', border: 'none', background: 'transparent' }}>
-              <User size={18} />
-              <span style={{ fontSize: "12px", fontWeight: "600" }}>Logout</span>
+            <button onClick={logout} className="nav-icon-btn" title="Logout" aria-label="Logout">
+              <LogOut size={18} />
             </button>
           ) : (
             <Link href="/login" className="nav-login-btn" title="Customer Login">

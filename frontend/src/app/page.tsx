@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
 import { apiRequest } from "@/lib/api";
+import { useCart } from "@/context/CartContext";
 import type { Product } from "@/lib/types";
 
 interface BackendProduct {
@@ -67,6 +68,7 @@ const categoryArt: Record<string, string> = {
 };
 
 export default function HomePage() {
+  const { addToCart } = useCart();
   const [products, setProducts] = useState<Product[]>(fallbackProducts);
   const [loading, setLoading] = useState(true);
   const [activeSlide, setActiveSlide] = useState(0);
@@ -134,6 +136,21 @@ export default function HomePage() {
   const categories = useMemo(() => {
     return [...new Set(products.map((product) => product.category))].sort();
   }, [products]);
+
+  const handleAddToCart = (product: Product) => {
+    addToCart(
+      {
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        selling_price: product.price,
+        actual_price: product.price,
+        photo_url: product.image,
+        available_quantity: product.stock,
+      },
+      1
+    );
+  };
 
   return (
     <>
@@ -409,8 +426,12 @@ export default function HomePage() {
                     <span className="product-cate">{prod.category}</span>
                     <span className="product-price">Rs. {prod.price}</span>
                     <div className="product-actions">
-                      <Link href="/cart" className="vs-btn">Add to Cart</Link>
-                      <Link href="/cart" className="cart-btn"><i className="fas fa-shopping-basket"></i></Link>
+                      <button type="button" className="vs-btn" onClick={() => handleAddToCart(prod)}>
+                        Add to Cart
+                      </button>
+                      <button type="button" className="cart-btn" onClick={() => handleAddToCart(prod)} aria-label={`Add ${prod.name} to cart`}>
+                        <i className="fas fa-shopping-basket"></i>
+                      </button>
                     </div>
                   </div>
                 </div>

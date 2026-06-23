@@ -117,7 +117,7 @@ export default function MyOrdersPage() {
               </label>
             </div>
             <button className="vs-btn style2 order-track-submit" type="submit" disabled={busy}>
-              <Search size={17} />
+              <Search size={20} />
               {busy ? "Tracking..." : "Track Order"}
             </button>
           </form>

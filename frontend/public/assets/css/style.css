@@ -2248,7 +2248,7 @@ textarea.is-invalid {
 }
 
 .vs-btn.style2 {
-  padding: 21px 54px;
+  /* padding: 21px 54px; */
 }
 
 .vs-btn.style3 {
@@ -4273,8 +4273,8 @@ a.text-theme:hover,
 
 .widget_categories li a {
   background-color: var(--white-color);
-  padding: 5px 5px 5px 30px;
-  margin: 0 0 0px 0;
+  padding: 15px 16px 10px 30px;
+  /* margin: 0 0 0px 0; */
   border-bottom: 0;
   display: flex;
   align-items: center;
@@ -12360,10 +12360,10 @@ blockquote.vs-quote .quote-author {
   line-height: 85px;
   overflow: hidden;
   border-radius: 0;
-  align-items: center;
+  /* align-items: center; */
   border-radius: 30px;
   border: 1px solid var(--vs-border-color);
-  padding: 5px;
+  /* padding: 5px; */
 }
 
 @media (max-width: 767px) {
@@ -12834,7 +12834,7 @@ blockquote.vs-quote .quote-author {
 .product-style4 .product-img,
 .product-style5 .product-img,
 .product-style6 .product-img {
-  padding-top: 15px;
+  /* padding-top: 15px; */
 }
 
 .product-style1 .product-img .img,
@@ -12919,7 +12919,7 @@ blockquote.vs-quote .quote-author {
 .product-style6 .product-actions {
   display: flex;
   position: absolute;
-  right: 30px;
+  right: 0.4rem;
   bottom: 25px;
   align-items: center;
 }
@@ -12958,7 +12958,7 @@ blockquote.vs-quote .quote-author {
 .product-style4 .product-title,
 .product-style5 .product-title,
 .product-style6 .product-title {
-  font-size: 18px;
+  font-size: 1.4rem;
   margin-bottom: 10px;
   padding-right: 15px;
 }
@@ -12985,7 +12985,7 @@ blockquote.vs-quote .quote-author {
   font-size: 14px;
   font-weight: 500;
   color: var(--text-color);
-  margin-bottom: 5px;
+  margin-bottom: 0.8rem;
 }
 
 .product-style1 .product-price,
@@ -13000,8 +13000,9 @@ blockquote.vs-quote .quote-author {
 .product-style4 .star-rating,
 .product-style5 .star-rating,
 .product-style6 .star-rating {
+  margin-top: 1rem;
   font-size: 10px;
-  margin-bottom: 13px;
+  margin-bottom: 1rem;
 }
 
 .product-style1:hover,
@@ -13746,7 +13747,7 @@ blockquote.vs-quote .quote-author {
 }
 
 .product-style7 .product-title {
-  font-size: 18px;
+  font-size: 1.4rem;
   margin: -0.14em 0 10px 0;
 }
 

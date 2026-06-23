@@ -68,8 +68,11 @@ export default function CartPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {cartItems.map((item) => (
-                      <tr className="cart_item" key={item.id}>
+                    {cartItems.map((item) => {
+                      const cartKey = item.cartKey || String(item.id);
+
+                      return (
+                      <tr className="cart_item" key={cartKey}>
                         <td data-title="Name">
                           <div className="d-flex align-items-center gap-4">
                             <Link className="cart-productimage" href={`/products/${item.id}`}>
@@ -102,28 +105,28 @@ export default function CartPage() {
                             <div className="quantity__field quantity-container">
                               <input
                                 type="number"
-                                id={`quantity-${item.id}`}
+                                id={`quantity-${cartKey}`}
                                 className="qty-input"
                                 step="1"
                                 min="1"
                                 max={item.available_quantity || 99}
                                 name="quantity"
                                 value={item.quantity}
-                                onChange={(e) => updateQuantity(item.id, Number(e.target.value))}
+                                onChange={(e) => updateQuantity(cartKey, Number(e.target.value))}
                                 title="Qty"
                               />
                               <div className="quantity__buttons">
                                 <button
                                   type="button"
                                   className="quantity-plus qty-btn"
-                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  onClick={() => updateQuantity(cartKey, item.quantity + 1)}
                                 >
                                   <i className="fas fa-caret-up"></i>
                                 </button>
                                 <button
                                   type="button"
                                   className="quantity-minus qty-btn"
-                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  onClick={() => updateQuantity(cartKey, item.quantity - 1)}
                                 >
                                   <i className="fas fa-caret-down"></i>
                                 </button>
@@ -141,7 +144,7 @@ export default function CartPage() {
                           <button
                             className="remove ms-3"
                             type="button"
-                            onClick={() => removeFromCart(item.id)}
+                            onClick={() => removeFromCart(cartKey)}
                             aria-label={`Remove ${item.name}`}
                             style={{ border: "none", background: "transparent" }}
                           >
@@ -149,7 +152,8 @@ export default function CartPage() {
                           </button>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </form>

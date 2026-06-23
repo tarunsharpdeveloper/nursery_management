@@ -4084,6 +4084,68 @@ tbody tr:hover {
   font-weight: 700;
 }
 
+.product-variant-picker {
+  margin: 0 0 24px;
+  padding: 18px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background: #f8fbf4;
+}
+
+.product-variant-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.product-variant-heading strong {
+  color: #8cc63f;
+  text-transform: capitalize;
+}
+
+.product-variant-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.product-variant-option {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #d7e0d4;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.product-variant-option span {
+  font-weight: 800;
+  color: #1a1a1a;
+  text-transform: capitalize;
+}
+
+.product-variant-option strong {
+  color: #8cc63f;
+}
+
+.product-variant-option small {
+  color: #617064;
+}
+
+.product-variant-option:hover,
+.product-variant-option.active {
+  border-color: #8cc63f;
+  box-shadow: 0 8px 22px rgba(140, 198, 63, 0.16);
+  transform: translateY(-1px);
+}
+
 .product-about .actions {
   display: flex;
   flex-wrap: wrap;
@@ -4229,7 +4291,7 @@ tbody tr:hover {
   text-align: center;
   border-radius: 30px;
   overflow: hidden;
-  padding: 20px;
+  /* padding: 20px; */
 }
 .product-big-img img { width: 100%; }
 
@@ -4398,7 +4460,8 @@ tbody tr:hover {
 .vs-product.product-style6 .product-content { padding: 20px; }
 .vs-product.product-style6 .star-rating { margin-bottom: 8px; }
 .vs-product.product-style6 .product-title { font-size: 16px; font-weight: 700; margin: 5px 0; line-height: 1.3; }
-.vs-product.product-style6 .product-title a { color: #1a1a1a; }
+.vs-product.product-style6 .product-title a { color: #1a1a1a; 
+font-size: 1.4rem;}
 .vs-product.product-style6 .product-title a:hover { color: #8cc63f; }
 .vs-product.product-style6 .product-cate { display: block; font-size: 13px; color: #888; margin-bottom: 10px; }
 .vs-product.product-style6 .product-price { display: block; font-size: 20px; font-weight: 700; color: #8cc63f; margin-bottom: 15px; }
@@ -4525,7 +4588,7 @@ tbody tr:hover {
 .order-track-submit {
   align-items: center;
   display: inline-flex;
-  gap: 8px;
+  gap: 10px;
   height: 52px;
   justify-content: center;
   min-width: 154px;

@@ -4,6 +4,9 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 export interface CartItem {
   id: number;
+  cartKey?: string;
+  variant_id?: number | null;
+  variant_label?: string | null;
   name: string;
   category: string;
   selling_price: number;
@@ -17,8 +20,8 @@ export interface CartItem {
 interface CartContextType {
   cartItems: CartItem[];
   addToCart: (product: any, quantity: number) => void;
-  removeFromCart: (id: number) => void;
-  updateQuantity: (id: number, quantity: number) => void;
+  removeFromCart: (cartKey: string) => void;
+  updateQuantity: (cartKey: string, quantity: number) => void;
   clearCart: () => void;
   cartCount: number;
   subtotal: number;
@@ -54,18 +57,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = (product: any, qty: number) => {
     setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
+      const cartKey = product.cartKey || String(product.id);
+      const existing = prev.find((item) => (item.cartKey || String(item.id)) === cartKey);
       const limit = product.available_quantity || 99;
       if (existing) {
         const newQty = Math.min(limit, existing.quantity + qty);
         return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: newQty } : item
+          (item.cartKey || String(item.id)) === cartKey ? { ...item, quantity: newQty } : item
         );
       } else {
         return [
           ...prev,
           {
             id: product.id,
+            cartKey,
+            variant_id: product.variant_id || null,
+            variant_label: product.variant_label || null,
             name: product.name,
             category: product.category || "General",
             selling_price: Number(product.selling_price || product.price || 0),
@@ -80,14 +87,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const removeFromCart = (id: number) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  const removeFromCart = (cartKey: string) => {
+    setCartItems((prev) => prev.filter((item) => (item.cartKey || String(item.id)) !== cartKey));
   };
 
-  const updateQuantity = (id: number, qty: number) => {
+  const updateQuantity = (cartKey: string, qty: number) => {
     setCartItems((prev) =>
       prev.map((item) => {
-        if (item.id === id) {
+        if ((item.cartKey || String(item.id)) === cartKey) {
           const limit = item.available_quantity || 99;
           return { ...item, quantity: Math.max(1, Math.min(limit, qty)) };
         }

@@ -86,6 +86,7 @@ export default function ProductDetailsPage({
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
   const [activeThumb, setActiveThumb] = useState(0);
   const [reviewRating, setReviewRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -114,6 +115,15 @@ export default function ProductDetailsPage({
     }
     load();
   }, [id]);
+
+  useEffect(() => {
+    if (!product?.variants?.length) {
+      setSelectedVariantId(null);
+      return;
+    }
+    setSelectedVariantId(product.variants[0].id);
+    setQuantity(1);
+  }, [product?.id]);
 
   // ── Related products (exclude current, show up to 4) ──────────────────
   const related = allProducts
@@ -207,7 +217,16 @@ export default function ProductDetailsPage({
   }
 
   const displayImage = thumbImages[activeThumb] || mainImage;
-  const hasDiscount = Number(product.actual_price) > Number(product.selling_price);
+  const variants = product.variants || [];
+  const selectedVariant = variants.find((variant) => variant.id === selectedVariantId) || null;
+  const selectedVariantLabel = selectedVariant
+    ? [selectedVariant.unit_value, selectedVariant.unit].filter(Boolean).join(" ") || selectedVariant.unit || "Default"
+    : "";
+  const displaySellingPrice = Number(selectedVariant?.selling_price ?? product.selling_price);
+  const displayActualPrice = Number(selectedVariant?.actual_price ?? product.actual_price);
+  const displayStock = Number(selectedVariant?.available_quantity ?? product.available_quantity);
+  const displayUnit = selectedVariant?.unit || product.unit;
+  const hasDiscount = displayActualPrice > displaySellingPrice;
 
   return (
     <main>
@@ -237,7 +256,7 @@ export default function ProductDetailsPage({
       {/* ── Product Details ── */}
       <section className="space space-extra-bottom">
         <div className="container">
-          <div className="row align-items-center">
+          <div className="row ">
 
             {/* Left: Images */}
             <div className="col-lg-6 mb-30">
@@ -285,7 +304,7 @@ export default function ProductDetailsPage({
                 {/* Rating + Stock */}
                 <div className="product-rating">
                   <span className="product-instock">
-                    {product.available_quantity > 0 ? "Available" : "Out of Stock"}
+                    {displayStock > 0 ? "Available" : "Out of Stock"}
                   </span>
                   <StarRating rating={5} />
                   <span className="product-rating__total">(Verified)</span>
@@ -298,16 +317,50 @@ export default function ProductDetailsPage({
                 <span className="product-ml">
                   {product.category}
                   {product.product_type ? ` · ${product.product_type}` : ""}
-                  {product.unit ? ` · ${product.unit}` : ""}
+                  {displayUnit ? ` · ${displayUnit}` : ""}
                 </span>
 
                 {/* Price */}
                 <p className="product-price">
-                  Rs.&nbsp;{Number(product.selling_price).toFixed(2)}
+                  Rs.&nbsp;{displaySellingPrice.toFixed(2)}
                   {hasDiscount && (
-                    <del>Rs.&nbsp;{Number(product.actual_price).toFixed(2)}</del>
+                    <del>Rs.&nbsp;{displayActualPrice.toFixed(2)}</del>
                   )}
                 </p>
+
+                {variants.length > 0 && (
+                  <div className="product-variant-picker">
+                    <div className="product-variant-heading">
+                      <span>Choose Variant</span>
+                      {selectedVariantLabel && <strong>{selectedVariantLabel}</strong>}
+                    </div>
+                    <div className="product-variant-options">
+                      {variants.map((variant) => {
+                        const label =
+                          [variant.unit_value, variant.unit].filter(Boolean).join(" ") ||
+                          variant.unit ||
+                          "Default";
+                        const stock = Number(variant.available_quantity);
+
+                        return (
+                          <button
+                            key={variant.id}
+                            type="button"
+                            className={`product-variant-option${selectedVariantId === variant.id ? " active" : ""}`}
+                            onClick={() => {
+                              setSelectedVariantId(variant.id);
+                              setQuantity(1);
+                            }}
+                          >
+                            <span>{label}</span>
+                            <strong>Rs.&nbsp;{Number(variant.selling_price).toFixed(2)}</strong>
+                            <small>{stock > 0 ? `${stock} in stock` : "Out of stock"}</small>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Description snippet */}
                 {product.description && (
@@ -326,11 +379,11 @@ export default function ProductDetailsPage({
                         id="qty-field"
                         className="qty-input"
                         min={1}
-                        max={product.available_quantity || 99}
+                        max={displayStock || 99}
                         value={quantity}
                         onChange={(e) =>
                           setQuantity(
-                            Math.max(1, Math.min(product.available_quantity || 99, Number(e.target.value)))
+                            Math.max(1, Math.min(displayStock || 99, Number(e.target.value)))
                           )
                         }
                         title="Qty"
@@ -340,7 +393,7 @@ export default function ProductDetailsPage({
                           type="button"
                           className="quantity-plus qty-btn"
                           onClick={() =>
-                            setQuantity((q) => Math.min(product.available_quantity || 99, q + 1))
+                            setQuantity((q) => Math.min(displayStock || 99, q + 1))
                           }
                         >
                           <i className="fas fa-caret-up"></i>
@@ -355,7 +408,7 @@ export default function ProductDetailsPage({
                       </div>
                     </div>
                     <span style={{ color: "var(--muted)", fontSize: "14px" }}>
-                      {product.available_quantity} in stock
+                      {displayStock} in stock
                     </span>
                   </div>
                 </div>
@@ -383,9 +436,22 @@ export default function ProductDetailsPage({
                   <button
                     type="button"
                     className="vs-btn"
-                    disabled={product.available_quantity <= 0}
+                    disabled={displayStock <= 0}
                     onClick={() => {
-                      addToCart(product, quantity);
+                      addToCart(
+                        {
+                          ...product,
+                          cartKey: selectedVariant ? `${product.id}:${selectedVariant.id}` : String(product.id),
+                          variant_id: selectedVariant?.id || null,
+                          variant_label: selectedVariantLabel || null,
+                          name: selectedVariant ? `${product.name} (${selectedVariantLabel})` : product.name,
+                          selling_price: displaySellingPrice,
+                          actual_price: displayActualPrice,
+                          available_quantity: displayStock,
+                          unit: displayUnit,
+                        },
+                        quantity
+                      );
                       router.push("/cart");
                     }}
                   >
@@ -497,12 +563,12 @@ export default function ProductDetailsPage({
             <div className="product-information">
               <div className="product-information__item">
                 <span className="product-information__name">Stock Available</span>
-                <span>{product.available_quantity} units</span>
+                <span>{displayStock} units</span>
               </div>
-              {product.unit && (
+              {displayUnit && (
                 <div className="product-information__item">
                   <span className="product-information__name">Unit</span>
-                  <span style={{ textTransform: "capitalize" }}>{product.unit}</span>
+                  <span style={{ textTransform: "capitalize" }}>{displayUnit}</span>
                 </div>
               )}
               <div className="product-information__item">
@@ -517,8 +583,8 @@ export default function ProductDetailsPage({
                 <div className="product-information__item">
                   <span className="product-information__name">You Save</span>
                   <span style={{ color: "#8cc63f", fontWeight: 700 }}>
-                    Rs.&nbsp;{(Number(product.actual_price) - Number(product.selling_price)).toFixed(2)}
-                    {" "}({Math.round(((Number(product.actual_price) - Number(product.selling_price)) / Number(product.actual_price)) * 100)}% off)
+                    Rs.&nbsp;{(displayActualPrice - displaySellingPrice).toFixed(2)}
+                    {" "}({Math.round(((displayActualPrice - displaySellingPrice) / displayActualPrice) * 100)}% off)
                   </span>
                 </div>
               )}

@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { apiRequest } from "@/lib/api";
 
 export default function CheckoutPage() {
-  const router = useRouter();
   const { cartItems, subtotal, shipping, total, clearCart } = useCart();
-  const { user, isLoaded } = useCustomerAuth();
+  const { user, isLoaded, login } = useCustomerAuth();
 
   const [paymentMethod, setPaymentMethod] = useState("bacs");
   const [sameAddress, setSameAddress] = useState(true);
@@ -37,12 +35,6 @@ export default function CheckoutPage() {
       }));
     }
   }, [user]);
-
-  useEffect(() => {
-    if (isLoaded && !user) {
-      router.push("/login?redirect=/checkout");
-    }
-  }, [isLoaded, user, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -80,6 +72,10 @@ export default function CheckoutPage() {
         orderNumber: response.orderNumber
       }));
 
+      if (!user) {
+        await login(formData.email, formData.phone).catch(() => undefined);
+      }
+
       setOrderId(response.orderNumber);
       setIsSubmitted(true);
       clearCart();
@@ -90,7 +86,7 @@ export default function CheckoutPage() {
     }
   };
 
-  if (!isLoaded || !user) return <div style={{ minHeight: "60vh" }}></div>;
+  if (!isLoaded) return <div style={{ minHeight: "60vh" }}></div>;
 
   if (isSubmitted) {
     return (

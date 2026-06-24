@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
-import { useCustomerAuth } from "@/context/CustomerAuthContext";
 
 const DEFAULT_IMG =
   "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=900&q=80";
@@ -17,7 +16,6 @@ export default function CartPage() {
     shipping,
     total,
   } = useCart();
-  const { user, isLoaded } = useCustomerAuth();
 
   return (
     <main>
@@ -161,7 +159,7 @@ export default function CartPage() {
               </form>
 
               <div className="cart-footer d-flex flex-wrap gap-4 align-items-center justify-content-center justify-content-md-between">
-                <Link href={user ? "/checkout" : "/login?redirect=/checkout"} className="vs-btn style2">PROCEED TO CHECKOUT</Link>
+                <Link href="/checkout" className="vs-btn style2">PROCEED TO CHECKOUT</Link>
                 <Link href="/products" className="vs-btn style2">Continue Shopping</Link>
               </div>
 
@@ -267,7 +265,7 @@ export default function CartPage() {
 
                     {/* Checkout Button */}
                     <Link
-                      href={user ? "/checkout" : "/login?redirect=/checkout"}
+                      href="/checkout"
                       style={{
                         display: "flex",
                         justifyContent: "center",

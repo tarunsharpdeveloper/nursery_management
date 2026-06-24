@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Banknote, BarChart3, Boxes, CalendarCheck, ClipboardList, CreditCard, Factory, Menu, NotebookTabs, Package, Receipt, Tags, Truck, UserCircle, Users, LogOut, User } from "lucide-react";
+import { Banknote, BarChart3, Boxes, CalendarCheck, ClipboardList, CreditCard, Factory, Leaf, LogOut, Menu, NotebookTabs, Package, Receipt, Tags, Truck, UserCircle, Users, User } from "lucide-react";
 import { clearAdminSession, getStoredUser, type AdminUser } from "@/lib/api";
 
 const links = [
@@ -109,15 +109,38 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       )}
 
       <aside className="sidebar">
-        <h2 className="sidebar-label" style={{ color: "white", margin: "10px 0", fontSize: "1.25rem", fontWeight: "bold" }}>Awantika Seeds</h2>
+        <div className="sidebar-brand">
+          <div className="sidebar-brand-icon">
+            <Leaf size={20} />
+          </div>
+          <div className="sidebar-label">
+            <h3>Admin Portal</h3>
+            <span>Nursery Control</span>
+          </div>
+        </div>
 
-        {visibleLinks.map(({ href, label, icon: Icon }) => (
-          <Link href={href} key={href} title={label} style={pathname === href ? { background: "rgba(255,255,255,0.14)", color: "white" } : undefined}>
-            <Icon size={18} />
-            <span className="sidebar-label">{label}</span>
-          </Link>
-        ))}
-        <button className="button secondary" type="button" onClick={logout} style={{ marginTop: 18 }}>
+        <div className="sidebar-profile">
+          <div className="sidebar-avatar">{user.name.charAt(0).toUpperCase()}</div>
+          <div className="sidebar-label">
+            <strong>{user.name}</strong>
+            <span>{user.role.replaceAll("_", " ")}</span>
+          </div>
+        </div>
+
+        <nav className="sidebar-nav" aria-label="Admin navigation">
+          {visibleLinks.map(({ href, label, icon: Icon }) => {
+            const isActive = pathname === href;
+            return (
+              <Link href={href} key={href} title={label} className={isActive ? "active" : undefined}>
+                <Icon size={18} />
+                <span className="sidebar-label">{label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        <button className="sidebar-logout" type="button" onClick={logout} title="Logout">
+          <LogOut size={18} />
           <span className="sidebar-label">Logout</span>
         </button>
       </aside>

@@ -101,10 +101,31 @@ export default function ProductsPage() {
     return [...new Set(products.map((product) => product.category))].sort();
   }, [products]);
 
+  useEffect(() => {
+    const categoryParam = new URLSearchParams(window.location.search).get("category");
+    if (!categoryParam) {
+      setSelectedCategory(null);
+      return;
+    }
+
+    const matchedCategory = categories.find(
+      (category) => category.toLowerCase() === categoryParam.toLowerCase()
+    );
+    setSelectedCategory(matchedCategory || categoryParam);
+  }, [categories]);
+
+  const selectCategory = (category: string | null) => {
+    setSelectedCategory(category);
+    const nextUrl = category ? `/products?category=${encodeURIComponent(category)}` : "/products";
+    window.history.pushState(null, "", nextUrl);
+  };
+
   const filteredProducts = useMemo(() => {
     const search = query.trim().toLowerCase();
     const filtered = products.filter((product) => {
-      const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
+      const matchesCategory = selectedCategory
+        ? product.category.toLowerCase() === selectedCategory.toLowerCase()
+        : true;
       const matchesType = selectedType === "all" ? true : product.type === selectedType;
       const matchesSearch = search
         ? `${product.name} ${product.category} ${product.description}`.toLowerCase().includes(search)
@@ -167,8 +188,8 @@ export default function ProductsPage() {
                   <ul className="widget_categories">
                     <li>
                       <a
-                        href="#"
-                        onClick={(e) => { e.preventDefault(); setSelectedCategory(null); }}
+                        href="/products"
+                        onClick={(e) => { e.preventDefault(); selectCategory(null); }}
                         style={selectedCategory === null ? { backgroundColor: "var(--theme-color)", color: "var(--white-color)" } : {}}
                       >
                         All Categories
@@ -181,12 +202,12 @@ export default function ProductsPage() {
                       </a>
                     </li>
                     {categories.map((category) => {
-                      const isActive = selectedCategory === category;
+                      const isActive = selectedCategory?.toLowerCase() === category.toLowerCase();
                       return (
                         <li key={category}>
                           <a
-                            href="#"
-                            onClick={(e) => { e.preventDefault(); setSelectedCategory(category); }}
+                            href={`/products?category=${encodeURIComponent(category)}`}
+                            onClick={(e) => { e.preventDefault(); selectCategory(category); }}
                             style={isActive ? { backgroundColor: "var(--theme-color)", color: "var(--white-color)" } : {}}
                           >
                             {category}

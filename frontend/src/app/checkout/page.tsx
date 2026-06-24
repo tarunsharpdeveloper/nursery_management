@@ -33,13 +33,18 @@ export default function CheckoutPage() {
       setFormData(prev => ({
         ...prev,
         name: prev.name || user.name || "",
-        email: prev.email || user.email || ""
+        email: prev.email || user.email || "",
+        phone: prev.phone || user.phone || ""
       }));
     }
   }, [user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    if (name === "phone") {
+      setFormData((prev) => ({ ...prev, phone: value.replace(/\D/g, "").slice(0, 10) }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -51,6 +56,10 @@ export default function CheckoutPage() {
     setStatus("");
 
     try {
+      if (!/^\d{10}$/.test(formData.phone)) {
+        throw new Error("Phone number must be exactly 10 digits.");
+      }
+
       const response = await apiRequest<{ orderId: number; orderNumber: string }>("/api/orders", {
         method: "POST",
         body: JSON.stringify({
@@ -240,13 +249,17 @@ export default function CheckoutPage() {
                       </div>
                       <div className="col-md-6 form-group">
                         <input
-                          type="text"
+                          type="tel"
                           className="form-control"
                           placeholder="Phone number"
                           required
                           name="phone"
                           value={formData.phone}
                           onChange={handleInputChange}
+                          inputMode="numeric"
+                          pattern="[0-9]{10}"
+                          maxLength={10}
+                          title="Phone number must be exactly 10 digits."
                         />
                       </div>
                       <div className="col-12 form-group">

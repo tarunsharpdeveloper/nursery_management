@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Facebook, Instagram, Leaf, LogIn, LogOut, Search, ShoppingCart } from "lucide-react";
-import logo from "@/assets/images/logo.png";
+import logo from "@/assets/images/logo.jpeg";
 import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 
@@ -39,12 +39,15 @@ export function SiteHeader() {
           <Image
             src={logo}
             alt="Awantika Seeds"
-            width={80}
-            height={80}
+            width={50}
+            height={50}
             className="brand-logo-img"
             priority
           />
-          <span className="brand-name">Awantika Seeds</span>
+          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1,gap: "7px" }}>
+          <span className="brand-name">Shri Sanviya Hi-Tech Nursery</span>
+          <div style={{display:'flex'}}><span className="brand-name">(Awantika Seeds)</span></div>
+          </div>
         </Link>
 
         {/* Center: Nav links */}

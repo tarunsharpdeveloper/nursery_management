@@ -114,7 +114,7 @@ Version: 1.0.0
   --icon-font: "Font Awesome 5 Pro";
   --main-container: 1320px;
   --container-gutters: 30px;
-  --section-space: 120px;
+  --section-space: 100px;
   --section-space-mobile: 80px;
   --section-title-space: 60px;
   --ripple-ani-duration: 5s;
@@ -6241,11 +6241,12 @@ a.text-theme:hover,
 .breadcumb-content {
   position: relative;
   z-index: 1;
+  margin-left: 50px;
 }
 
 .breadcumb-wrapper {
   background-color: var(--title-color);
-  padding: 140px 0;
+  padding: 80px 0;
   /* Medium devices */
 }
 
@@ -12823,7 +12824,7 @@ blockquote.vs-quote .quote-author {
 .product-style5,
 .product-style6 {
   background-color: var(--white-color);
-  border-radius: 30px;
+  /* border-radius: 30px; */
   margin-bottom: 30px;
   border: 1px solid var(--white-color);
   transition: all 0.3s ease-in-out;

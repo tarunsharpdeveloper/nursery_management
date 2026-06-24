@@ -116,7 +116,7 @@ export default function HomePage() {
           price: Number(product.selling_price),
           stock: Number(product.available_quantity),
           sold: 0,
-          image: product.photo_url || "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=900&q=80",
+          image: product.photo_url || "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg",
           active: Boolean(product.is_active)
         }));
 
@@ -316,10 +316,10 @@ export default function HomePage() {
             <div className="col-lg-6 mb-30">
               <div className="img-box1">
                 <div className="img1">
-                  <img className="img" src="/assets/img/about/c-about-1-1.jpg" alt="about 1" />
+                  <img className="img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRj64W6Yhp2BLcBoHVPk2pQeqJx-HbiJXtTpWPoQpkATQ&s=10" alt="about 1" />
                 </div>
                 <div className="video-thumb1">
-                  <img className="img" src="/assets/img/about/about-1-2.jpg" alt="about 2" />
+                  <img className="img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLvX2WV6_Uck7fxt9yiwYPUV43XfKB_o_FGI74BTJAualpPZ-yEvrP7TF9&s=10" alt="about 2" />
                   <button onClick={() => setVideoOpen(true)} className="play-btn style7 popup-video" style={{ background: "transparent", border: "none" }}><i className="fas fa-play"></i></button>
                 </div>
               </div>
@@ -364,7 +364,7 @@ export default function HomePage() {
       )}
 
       {/* ── Trust / Review Area (Nursery Adaptation) ── */}
-      <section className="space-bottom">
+      {/* <section className="space-bottom">
         <div className="container">
           <div className="position-relative">
             <div className="review-wrap">
@@ -391,7 +391,7 @@ export default function HomePage() {
             <img src="/assets/img/shapes/s-1-1.png" alt="shape" className="shape-1" />
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* ── Dynamic Products Display Area (Live Catalog Data) ── */}
       <section className="space-top space-bottom" style={{ backgroundImage: "url('/assets/img/bg/bg-1-1.jpg')", backgroundSize: "cover" }}>
@@ -541,7 +541,7 @@ export default function HomePage() {
       </div>
 
       {/* ── Brands Bar (Nursery Partners & Species) ── */}
-      <div className="brand-layout1" >
+      {/* <div className="brand-layout1" >
         <div className="container">
           <div className="row">
             <div className="col mx-auto text-center">
@@ -560,10 +560,10 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* ── Top Selling Product Area (Featured Alphonso Mango Plant) ── */}
-      <section className="product-layout2 z-index-common" style={{ backgroundImage: "url('/assets/img/bg/b-1-3.jpg')", backgroundSize: "cover" }}>
+      {/* <section className="product-layout2 z-index-common" style={{ backgroundImage: "url('/assets/img/bg/b-1-3.jpg')", backgroundSize: "cover" }}>
         <img className="ele1" src="/assets/img/products/product-leaf-1-1.png" alt="leaf" />
         <img className="ele2" src="/assets/img/products/product-leaf-1-2.png" alt="leaf" />
         <div className="container">
@@ -630,7 +630,7 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* ── Testimonials Area (Farmers & Gardeners Review) ── */}
       <section className="testimonials space-top space-bottom">
@@ -671,7 +671,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Blog Area (Plant & Farming Advice) ── */}
-      <section className="blog space-bottom">
+      {/* <section className="blog space-bottom">
         <div className="container">
           <div className="row">
             <div className="col-lg-8 mx-auto">
@@ -706,10 +706,10 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* ── Instagram Feed (Nursery Visuals) ── */}
-      <div className="insta-layout1" style={{ paddingBottom: "50px" }}>
+      {/* <div className="insta-layout1" style={{ paddingBottom: "50px" }}>
         <div className="container">
           <h2 className="sec-title2"><i className="fab fa-instagram"></i>Follow <a href="https://www.instagram.com/">@AwantikaSeeds</a></h2>
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
@@ -721,7 +721,7 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </div>
+      </div> */}
     </>
   );
 }

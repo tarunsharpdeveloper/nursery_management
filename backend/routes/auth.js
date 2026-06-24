@@ -10,9 +10,10 @@ const loginSchema = z.object({
 async function login(req, res, { readJson, sendJson }) {
   const payload = loginSchema.parse(await readJson(req));
   const [rows] = await pool.query(
-    `SELECT u.id, u.name, u.email, u.password_hash, COALESCE(u.role, r.name) AS role
+    `SELECT u.id, u.name, u.email, u.password_hash, COALESCE(u.role, r.name) AS role, c.phone
        FROM users u
        JOIN roles r ON r.id = u.role_id
+       LEFT JOIN customers c ON c.email = u.email
       WHERE u.email = :email AND u.is_active = TRUE
       LIMIT 1`,
     { email: payload.email }
@@ -30,7 +31,7 @@ async function login(req, res, { readJson, sendJson }) {
 
   sendJson(res, 200, {
     token,
-    user: { id: user.id, name: user.name, email: user.email, role: user.role, permissions }
+    user: { id: user.id, name: user.name, email: user.email, phone: user.phone || "", role: user.role, permissions }
   });
 }
 
@@ -41,7 +42,7 @@ async function me(req, res, { sendJson }) {
 const registerSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
-  phone: z.string().min(8),
+  phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
   password: z.string().min(6)
 });
 
@@ -101,7 +102,7 @@ async function registerCustomer(req, res, { readJson, sendJson }) {
 
     sendJson(res, 201, {
       token,
-      user: { id: userId, name: payload.name, email: payload.email, role: 'customer', permissions: permissionsForRole('customer') }
+      user: { id: userId, name: payload.name, email: payload.email, phone: payload.phone, role: 'customer', permissions: permissionsForRole('customer') }
     });
   } catch (error) {
     await connection.rollback();

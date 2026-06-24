@@ -158,8 +158,8 @@ export default function MyOrdersPage() {
                   </div>
 
                   <div className="order-products">
-                    {order.items.map((item) => (
-                      <div className="order-product" key={`${order.id}-${item.product_name}`}>
+                    {order.items.map((item, index) => (
+                      <div className="order-product" key={`${order.id}-${item.product_name}-${index}`}>
                         <div className="order-product-image">
                           {item.photo_url ? (
                             <img src={item.photo_url} alt={item.product_name} />

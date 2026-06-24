@@ -24,6 +24,12 @@ export function storeAdminSession(token: string, user: AdminUser) {
   localStorage.setItem("admin_user", JSON.stringify(user));
 }
 
+export function setStoredUser(user: AdminUser) {
+  if (typeof window !== "undefined") {
+    localStorage.setItem("admin_user", JSON.stringify(user));
+  }
+}
+
 export function clearAdminSession() {
   localStorage.removeItem("admin_token");
   localStorage.removeItem("admin_user");

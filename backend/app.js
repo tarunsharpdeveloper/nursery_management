@@ -14,7 +14,7 @@ const { calculateWages } = require("./routes/wages");
 const { getLedger, getReport } = require("./routes/reports");
 const { ensureAdminSchema } = require("./migrate");
 const { authenticate, hasPermission } = require("./auth");
-const { login, me, registerCustomer } = require("./routes/auth");
+const { login, me, registerCustomer, updateProfile, updatePassword } = require("./routes/auth");
 const {
   getDashboard,
   listCustomers,
@@ -43,6 +43,8 @@ const routes = [
   ["POST", "/api/auth/login", null, login],
   ["POST", "/api/auth/register-customer", null, registerCustomer],
   ["GET", "/api/auth/me", "dashboard:read", me],
+  ["PATCH", "/api/auth/profile", "dashboard:read", updateProfile],
+  ["PATCH", "/api/auth/password", "dashboard:read", updatePassword],
   ["GET", "/api/dashboard", "dashboard:read", getDashboard],
   ["GET", "/api/customers", "billing:read", listCustomers],
   ["GET", "/api/categories", "products:read", listCategories],

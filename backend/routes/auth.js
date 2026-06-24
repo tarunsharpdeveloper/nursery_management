@@ -111,4 +111,57 @@ async function registerCustomer(req, res, { readJson, sendJson }) {
   }
 }
 
-module.exports = { login, me, registerCustomer };
+const updateProfileSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email()
+});
+
+async function updateProfile(req, res, { readJson, sendJson }) {
+  const payload = updateProfileSchema.parse(await readJson(req));
+  
+  const [existing] = await pool.query(
+    "SELECT id FROM users WHERE email = :email AND id != :id",
+    { email: payload.email, id: req.user.id }
+  );
+  if (existing.length) {
+    sendJson(res, 400, { message: "Email is already taken" });
+    return;
+  }
+
+  await pool.query(
+    "UPDATE users SET name = :name, email = :email WHERE id = :id",
+    { name: payload.name, email: payload.email, id: req.user.id }
+  );
+
+  sendJson(res, 200, { message: "Profile updated successfully" });
+}
+
+const updatePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(6)
+});
+
+async function updatePassword(req, res, { readJson, sendJson }) {
+  const payload = updatePasswordSchema.parse(await readJson(req));
+  
+  const [rows] = await pool.query(
+    "SELECT password_hash FROM users WHERE id = :id",
+    { id: req.user.id }
+  );
+  const user = rows[0];
+
+  if (!user || !verifyPassword(payload.currentPassword, user.password_hash)) {
+    sendJson(res, 400, { message: "Incorrect current password" });
+    return;
+  }
+
+  const newHash = hashPassword(payload.newPassword);
+  await pool.query(
+    "UPDATE users SET password_hash = :hash WHERE id = :id",
+    { hash: newHash, id: req.user.id }
+  );
+
+  sendJson(res, 200, { message: "Password updated successfully" });
+}
+
+module.exports = { login, me, registerCustomer, updateProfile, updatePassword };

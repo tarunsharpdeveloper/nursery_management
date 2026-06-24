@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Banknote, BarChart3, Boxes, CalendarCheck, ClipboardList, CreditCard, Factory, Menu, NotebookTabs, Package, Receipt, Tags, Truck, UserCircle, Users } from "lucide-react";
+import { Banknote, BarChart3, Boxes, CalendarCheck, ClipboardList, CreditCard, Factory, Menu, NotebookTabs, Package, Receipt, Tags, Truck, UserCircle, Users, LogOut, User } from "lucide-react";
 import { clearAdminSession, getStoredUser, type AdminUser } from "@/lib/api";
 
 const links = [
@@ -109,8 +109,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       )}
 
       <aside className="sidebar">
-        <h3 className="sidebar-label">Admin Portal</h3>
-        <p className="meta sidebar-label" style={{ color: "rgba(255,255,255,0.7)" }}>{user.name}<br />{user.role}</p>
+        <h2 className="sidebar-label" style={{ color: "white", margin: "10px 0", fontSize: "1.25rem", fontWeight: "bold" }}>Awantika Seeds</h2>
+
         {visibleLinks.map(({ href, label, icon: Icon }) => (
           <Link href={href} key={href} title={label} style={pathname === href ? { background: "rgba(255,255,255,0.14)", color: "white" } : undefined}>
             <Icon size={18} />
@@ -129,9 +129,28 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <Menu size={22} />
             </button>
           </div>
-          <div className="admin-user-profile">
-            <UserCircle size={22} />
-            <span className="username">{user.name}</span>
+          <div className="admin-user-profile nav-dropdown" style={{ cursor: "pointer" }}>
+            <style>{`
+              .admin-dropdown-panel {
+                background: #1d3424 !important;
+                border-color: #1d3424 !important;
+              }
+              .admin-dropdown-item {
+                color: rgba(255, 255, 255, 0.86) !important;
+              }
+              .admin-dropdown-item:hover {
+                background-color: rgba(255, 255, 255, 0.14) !important;
+                color: white !important;
+              }
+            `}</style>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <UserCircle size={22} />
+              <span className="username">{user.name}</span>
+            </div>
+            <div className="dropdown-panel admin-dropdown-panel" style={{ right: "-12px", left: "auto", minWidth: "150px" }}>
+              <Link href="/admin/profile" className="dropdown-item admin-dropdown-item" style={{ display: "flex", alignItems: "center", gap: "8px" }}><User size={16} /> Profile</Link>
+              <button onClick={logout} className="dropdown-item admin-dropdown-item" style={{ width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}><LogOut size={16} /> Logout</button>
+            </div>
           </div>
         </header>
 

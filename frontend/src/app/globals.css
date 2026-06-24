@@ -308,6 +308,28 @@ textarea:focus-visible {
   color: var(--brand);
 }
 
+.nav-login-btn {
+  align-items: center;
+  background: var(--brand);
+  border: 1px solid var(--brand);
+  border-radius: 8px;
+  color: white;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 800;
+  gap: 7px;
+  min-height: 42px;
+  padding: 8px 16px;
+  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.nav-login-btn:hover {
+  background: var(--brand-dark);
+  border-color: var(--brand-dark);
+  color: white;
+  transform: translateY(-1px);
+}
+
 .nav-cart-btn {
   background: var(--brand);
   border-color: var(--brand);
@@ -2889,6 +2911,7 @@ tbody tr:hover {
   font-size: clamp(36px, 5vw, 64px);
   line-height: 1.02;
   margin-bottom: 18px;
+  color:white;
 }
 
 .login-highlights {
@@ -2938,6 +2961,60 @@ tbody tr:hover {
 .login-button {
   min-height: 46px;
   width: 100%;
+}
+
+.icon-field > div {
+  position: relative;
+}
+
+.icon-field > div > svg {
+  color: var(--muted);
+  left: 13px;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.icon-field input {
+  padding-left: 42px;
+}
+
+.login-error {
+  background: #fff0f0;
+  border: 1px solid #ffd0d0;
+  border-radius: 8px;
+  color: #b42318;
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 18px;
+  padding: 12px 14px;
+}
+
+.login-switch {
+  border-top: 1px solid var(--line);
+  margin-top: 22px;
+  padding-top: 18px;
+  text-align: center;
+}
+
+.login-switch p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.login-switch button {
+  background: transparent;
+  border: 0;
+  color: var(--brand);
+  cursor: pointer;
+  font-weight: 800;
+  margin-left: 8px;
+  padding: 0;
+}
+
+.login-switch button:hover {
+  color: var(--brand-dark);
 }
 
 .role-list {
@@ -4084,6 +4161,68 @@ tbody tr:hover {
   font-weight: 700;
 }
 
+.product-variant-picker {
+  margin: 0 0 24px;
+  padding: 18px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background: #f8fbf4;
+}
+
+.product-variant-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.product-variant-heading strong {
+  color: #8cc63f;
+  text-transform: capitalize;
+}
+
+.product-variant-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.product-variant-option {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #d7e0d4;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.product-variant-option span {
+  font-weight: 800;
+  color: #1a1a1a;
+  text-transform: capitalize;
+}
+
+.product-variant-option strong {
+  color: #8cc63f;
+}
+
+.product-variant-option small {
+  color: #617064;
+}
+
+.product-variant-option:hover,
+.product-variant-option.active {
+  border-color: #8cc63f;
+  box-shadow: 0 8px 22px rgba(140, 198, 63, 0.16);
+  transform: translateY(-1px);
+}
+
 .product-about .actions {
   display: flex;
   flex-wrap: wrap;
@@ -4229,7 +4368,7 @@ tbody tr:hover {
   text-align: center;
   border-radius: 30px;
   overflow: hidden;
-  padding: 20px;
+  /* padding: 20px; */
 }
 .product-big-img img { width: 100%; }
 
@@ -4398,7 +4537,8 @@ tbody tr:hover {
 .vs-product.product-style6 .product-content { padding: 20px; }
 .vs-product.product-style6 .star-rating { margin-bottom: 8px; }
 .vs-product.product-style6 .product-title { font-size: 16px; font-weight: 700; margin: 5px 0; line-height: 1.3; }
-.vs-product.product-style6 .product-title a { color: #1a1a1a; }
+.vs-product.product-style6 .product-title a { color: #1a1a1a; 
+font-size: 1.4rem;}
 .vs-product.product-style6 .product-title a:hover { color: #8cc63f; }
 .vs-product.product-style6 .product-cate { display: block; font-size: 13px; color: #888; margin-bottom: 10px; }
 .vs-product.product-style6 .product-price { display: block; font-size: 20px; font-weight: 700; color: #8cc63f; margin-bottom: 15px; }
@@ -4525,7 +4665,7 @@ tbody tr:hover {
 .order-track-submit {
   align-items: center;
   display: inline-flex;
-  gap: 8px;
+  gap: 10px;
   height: 52px;
   justify-content: center;
   min-width: 154px;

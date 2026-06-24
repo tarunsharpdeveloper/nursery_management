@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CalendarDays, PackageCheck, Search, Truck } from "lucide-react";
+import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { apiRequest } from "@/lib/api";
 
 type CustomerOrder = {
@@ -27,6 +29,9 @@ type CustomerOrder = {
 };
 
 export default function MyOrdersPage() {
+  const router = useRouter();
+  const { user, isLoaded } = useCustomerAuth();
+
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [orderNumber, setOrderNumber] = useState("");
@@ -60,19 +65,17 @@ export default function MyOrdersPage() {
   }
 
   useEffect(() => {
-    const raw = localStorage.getItem("customer_order_lookup");
-    if (!raw) return;
-
-    try {
-      const lookup = JSON.parse(raw) as { email?: string; phone?: string; orderNumber?: string };
-      setEmail(lookup.email || "");
-      setPhone(lookup.phone || "");
-      setOrderNumber(lookup.orderNumber || "");
-      loadOrders(lookup.email || "", lookup.phone || "", lookup.orderNumber || "");
-    } catch {
-      localStorage.removeItem("customer_order_lookup");
+    if (isLoaded) {
+      if (!user) {
+        router.push("/login?redirect=/my-orders");
+      } else {
+        setEmail(user.email || "");
+        loadOrders(user.email || "", "", "");
+      }
     }
-  }, []);
+  }, [isLoaded, user, router]);
+
+  if (!isLoaded || !user) return <div style={{ minHeight: "60vh" }}></div>;
 
   return (
     <main>
@@ -117,7 +120,7 @@ export default function MyOrdersPage() {
               </label>
             </div>
             <button className="vs-btn style2 order-track-submit" type="submit" disabled={busy}>
-              <Search size={17} />
+              <Search size={20} />
               {busy ? "Tracking..." : "Track Order"}
             </button>
           </form>
@@ -155,8 +158,8 @@ export default function MyOrdersPage() {
                   </div>
 
                   <div className="order-products">
-                    {order.items.map((item) => (
-                      <div className="order-product" key={`${order.id}-${item.product_name}`}>
+                    {order.items.map((item, index) => (
+                      <div className="order-product" key={`${order.id}-${item.product_name}-${index}`}>
                         <div className="order-product-image">
                           {item.photo_url ? (
                             <img src={item.photo_url} alt={item.product_name} />

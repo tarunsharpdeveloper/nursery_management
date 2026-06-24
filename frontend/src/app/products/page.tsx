@@ -314,7 +314,7 @@ export default function ProductsPage() {
                     {filteredProducts.map((product) => (
                       <div className="col-12 mb-30" key={product.id}>
                         <div className="vs-product product-style7">
-                          <div className="product-img" style={{ width: "230px", height: "100%", minHeight: "200px" }}>
+                          <div className="product-img" style={{ width: "32%", height: "100%", minHeight: "200px" }}>
                             <Link href={`/products/${product.id}`} style={{ width: "100%" }}>
                               <img
                                 src={product.image}

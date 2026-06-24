@@ -2248,7 +2248,7 @@ textarea.is-invalid {
 }
 
 .vs-btn.style2 {
-  padding: 21px 54px;
+  /* padding: 21px 54px; */
 }
 
 .vs-btn.style3 {
@@ -12360,10 +12360,10 @@ blockquote.vs-quote .quote-author {
   line-height: 85px;
   overflow: hidden;
   border-radius: 0;
-  align-items: center;
+  /* align-items: center; */
   border-radius: 30px;
   border: 1px solid var(--vs-border-color);
-  padding: 5px;
+  /* padding: 5px; */
 }
 
 @media (max-width: 767px) {

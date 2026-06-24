@@ -24,7 +24,10 @@ type AdminModuleProps = {
   fields?: Field[];
   columns: { key: string; label: string }[];
   initialValues?: Record<string, string | number>;
+  values?: Record<string, string | number>;
+  onValuesChange?: (values: Record<string, string | number>) => void;
   transformSubmit?: (values: Record<string, string | number>) => unknown;
+  onSuccess?: () => void;
 };
 
 function formatCell(value: unknown) {
@@ -44,12 +47,25 @@ export function AdminModule({
   fields = [],
   columns,
   initialValues = {},
-  transformSubmit
+  values: externalValues,
+  onValuesChange,
+  transformSubmit,
+  onSuccess
 }: AdminModuleProps) {
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
-  const [values, setValues] = useState<Record<string, string | number>>(initialValues);
+  const [internalValues, setInternalValues] = useState<Record<string, string | number>>(initialValues);
   const [status, setStatus] = useState("Loading...");
   const [busy, setBusy] = useState(false);
+
+  const values = externalValues !== undefined ? externalValues : internalValues;
+
+  const updateValues = (nextValues: Record<string, string | number> | ((current: Record<string, string | number>) => Record<string, string | number>)) => {
+    if (onValuesChange) {
+      onValuesChange(typeof nextValues === "function" ? nextValues(values) : nextValues);
+    } else {
+      setInternalValues(nextValues);
+    }
+  };
 
   const canSubmit = Boolean(submitPath && fields.length);
   const normalizedFields = useMemo(() => fields, [fields]);
@@ -79,6 +95,8 @@ export function AdminModule({
       });
       setStatus("Saved successfully");
       await loadRows();
+      if (!externalValues) setInternalValues(initialValues);
+      if (onSuccess) onSuccess();
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not save");
     } finally {
@@ -116,7 +134,7 @@ export function AdminModule({
                       value={values[field.name] ?? ""}
                       onChange={(event) => {
                         const nextValue = field.valueType === "number" ? Number(event.target.value) : event.target.value;
-                        setValues((current) => ({ ...current, [field.name]: nextValue }));
+                        updateValues((current) => ({ ...current, [field.name]: nextValue }));
                       }}
                     >
                       <option value="">Select</option>
@@ -130,18 +148,45 @@ export function AdminModule({
                       value={field.options?.find(o => String(o.value) === String(values[field.name])) || null}
                       onChange={(option: any) => {
                         const nextValue = option ? (field.valueType === "number" ? Number(option.value) : option.value) : "";
-                        setValues((current) => ({ ...current, [field.name]: nextValue }));
+                        updateValues((current) => ({ ...current, [field.name]: nextValue }));
                       }}
                       isClearable
                       placeholder={field.placeholder || "Select"}
-                      styles={{ container: (base) => ({ ...base, width: '100%' }) }}
+                      styles={{ 
+                        container: (base) => ({ ...base, width: '100%' }),
+                        control: (base, state) => ({
+                          ...base,
+                          minHeight: '50px',
+                          height: '50px',
+                          borderRadius: '8px',
+                          borderColor: state.isFocused ? 'rgba(47, 107, 63, 0.65)' : 'var(--line)',
+                          boxShadow: state.isFocused ? '0 0 0 1px rgba(47, 107, 63, 0.24)' : 'none',
+                          '&:hover': {
+                            borderColor: state.isFocused ? 'rgba(47, 107, 63, 0.65)' : 'var(--line)'
+                          }
+                        }),
+                        valueContainer: (base) => ({
+                          ...base,
+                          height: '48px',
+                          padding: '0 11px'
+                        }),
+                        indicatorsContainer: (base) => ({
+                          ...base,
+                          height: '48px'
+                        }),
+                        input: (base) => ({
+                          ...base,
+                          margin: 0,
+                          padding: 0
+                        })
+                      }}
                     />
                   ) : field.type === "textarea" ? (
                     <textarea
                       rows={3}
                       placeholder={field.placeholder}
                       value={values[field.name] ?? ""}
-                      onChange={(event) => setValues((current) => ({ ...current, [field.name]: event.target.value }))}
+                      onChange={(event) => updateValues((current) => ({ ...current, [field.name]: event.target.value }))}
                     />
                   ) : (
                     <input
@@ -150,7 +195,7 @@ export function AdminModule({
                       value={values[field.name] ?? ""}
                       onChange={(event) => {
                         const nextValue = field.valueType === "number" ? Number(event.target.value) : event.target.value;
-                        setValues((current) => ({ ...current, [field.name]: nextValue }));
+                        updateValues((current) => ({ ...current, [field.name]: nextValue }));
                       }}
                     />
                   )}

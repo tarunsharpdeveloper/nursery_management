@@ -34,11 +34,12 @@ const selectStyles = {
   valueContainer: (base: any) => ({
     ...base,
     height: '48px',
-    padding: '0 12px',
+    padding: '0 11px',
   }),
   input: (base: any) => ({
     ...base,
     margin: '0px',
+    padding: '0px',
   }),
   indicatorsContainer: (base: any) => ({
     ...base,

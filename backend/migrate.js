@@ -20,7 +20,16 @@ async function addColumn(tableName, columnName, definition) {
   }
 }
 
+async function modifyColumnEnum(tableName, columnName, newDefinition) {
+  try {
+    await pool.query(`ALTER TABLE ${tableName} MODIFY ${columnName} ${newDefinition}`);
+  } catch (e) {
+    console.error(`Error modifying column ${columnName} on ${tableName}:`, e.message);
+  }
+}
+
 async function ensureAdminSchema() {
+  await modifyColumnEnum("stock_ledger", "movement_type", "ENUM('production', 'sale', 'online_order', 'advance_booking', 'adjustment') NOT NULL");
   await pool.query("INSERT IGNORE INTO roles (name) VALUES ('super_admin'), ('staff_user'), ('billing_user'), ('customer')");
   await addColumn("users", "role", "ENUM('super_admin', 'staff_user', 'billing_user', 'customer') NULL");
   await pool.query("ALTER TABLE users MODIFY role ENUM('super_admin', 'staff_user', 'billing_user', 'customer') NULL");
@@ -177,6 +186,7 @@ async function ensureAdminSchema() {
   `);
 
   await addColumn("advance_bookings", "booking_number", "VARCHAR(40) NULL");
+  await addColumn("advance_bookings", "variant_id", "INT NULL");
   await addColumn("advance_bookings", "total_bill_amount", "DECIMAL(10,2) NOT NULL DEFAULT 0");
   await addColumn("advance_bookings", "balance_payable", "DECIMAL(10,2) NOT NULL DEFAULT 0");
   await addColumn("advance_bookings", "delivery_date", "DATE NULL");
@@ -190,6 +200,7 @@ async function ensureAdminSchema() {
   await addColumn("dispatches", "bus_photo_url", "VARCHAR(500)");
   await addColumn("dispatches", "courier_company", "VARCHAR(120)");
   await addColumn("dispatches", "docket_number", "VARCHAR(120)");
+  await addColumn("dispatches", "advance_booking_id", "INT NULL");
 
   if (await columnExists("attendance", "user_id")) {
     await pool.query("ALTER TABLE attendance MODIFY user_id INT NULL");

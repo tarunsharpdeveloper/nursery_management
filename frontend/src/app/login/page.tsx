@@ -227,10 +227,11 @@ function CustomerLoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/";
+  const mode = searchParams.get("mode");
 
   const { login, register, user, isLoaded } = useCustomerAuth();
 
-  const [isLoginView, setIsLoginView] = useState(true);
+  const [isLoginView, setIsLoginView] = useState(mode !== "signup");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({

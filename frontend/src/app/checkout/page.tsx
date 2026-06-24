@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { apiRequest } from "@/lib/api";
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const { cartItems, subtotal, shipping, total, clearCart } = useCart();
   const { user, isLoaded, login } = useCustomerAuth();
 
@@ -248,7 +250,17 @@ export default function CheckoutPage() {
                         />
                       </div>
                       <div className="col-12 form-group">
-                        <input type="checkbox" id="accountNewCreate" />
+                        <input
+                          type="checkbox"
+                          id="accountNewCreate"
+                          checked={Boolean(user)}
+                          disabled={Boolean(user)}
+                          onChange={(event) => {
+                            if (event.target.checked && !user) {
+                              router.push("/login?redirect=/checkout&mode=signup");
+                            }
+                          }}
+                        />
                         <label htmlFor="accountNewCreate">Create an account for later use</label>
                       </div>
                       <p id="ship-to-different-address">
@@ -412,6 +424,7 @@ export default function CheckoutPage() {
         </div>
       </div>
       {/* Checkout Area End */}
+
     </main>
   );
 }

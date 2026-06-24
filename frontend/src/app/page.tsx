@@ -649,7 +649,7 @@ export default function HomePage() {
               { name: "Preeti S. (Gardener)", title: "High Germination Flower Seeds", avatar: "/assets/img/testimonials/testi-1-2.png", text: "The germination rate of the Marigold and Petunia seeds was close to 90%. My garden is completely transformed. Highly recommended nursery!" },
               { name: "Rajesh K. (Landscaper)", title: "Smooth Billing &amp; Dispatch Log", avatar: "/assets/img/testimonials/testi-1-3.png", text: "For commercial landscaping projects, we need clear billing logs. Their system generates invoice receipts, orders, and dispatch slips in one place." }
             ].map((testi, idx) => (
-              <div className="col" key={idx} style={{ flex: "1 1 300px" }}>
+              <div className="col" key={idx} style={{ flex: "1 1 440px" }}>
                 <div className="testi-style1">
                   <div className="star-rating">
                     <span style={{ width: "100%" }}>Rated 5 out of 5</span>

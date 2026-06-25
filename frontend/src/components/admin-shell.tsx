@@ -7,7 +7,7 @@ import { Banknote, BarChart3, Boxes, CalendarCheck, ClipboardList, CreditCard, F
 import { clearAdminSession, getStoredUser, type AdminUser } from "@/lib/api";
 
 const links = [
-  { href: "/admin", label: "Dashboard", icon: ClipboardList, permission: "dashboard:read" },
+  { href: "/admin/dashboard", label: "Dashboard", icon: ClipboardList, permission: "dashboard:read" },
   { href: "/admin/products", label: "Products", icon: Package, permission: "products:read" },
   { href: "/admin/categories", label: "Categories", icon: Tags, permission: "products:read" },
   { href: "/admin/inventory", label: "Inventory", icon: Boxes, permission: "inventory:read" },
@@ -57,7 +57,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     function handlePopState() {
-      router.replace("/admin");
+      router.replace("/admin/dashboard");
     }
 
     window.addEventListener("popstate", handlePopState);

@@ -20,7 +20,7 @@ export default function AdminLoginPage() {
   useEffect(() => {
     // If already logged in, redirect to dashboard
     if (getStoredUser()) {
-      router.replace("/admin");
+      router.replace("/admin/dashboard");
       return;
     }
 
@@ -43,7 +43,7 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ email, password })
       });
       storeAdminSession(response.token, response.user);
-      router.replace("/admin");
+      router.replace("/admin/dashboard");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Login failed");
     } finally {

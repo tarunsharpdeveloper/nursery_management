@@ -190,48 +190,33 @@ export default function HomePage() {
         <div className="hero-leaf3 wow fadeInUp" data-wow-delay="1.2s">
           <img src="/assets/img/hero/h-1-4.png" alt="hero leaf 3" />
         </div>
-        <div className="container">
-          {/* Slide 0 */}
-          {activeSlide === 0 && (
-            <div className="row gy-4 justify-content-between align-items-center animate-fade">
+        <div className="container" style={{ position: "relative" }}>
+          {[
+            { title: "High-Quality Plants & Saplings", text: "Premium organic saplings and custom-crafted fruit plants directly from our central nursery fields.", subtitle: "100% Certified Nursery Stock & Seeds.", img: "assets\\img\\hero\\h-1-1.png", imgAlt: "saplings" },
+            { title: "Pure & Certified Seeds Selection", text: "High-yield hybrid vegetable and flower seeds optimized for regional Indian soil conditions.", subtitle: "Tested for High Germination Rates.", img: "assets\\img\\hero\\h-1-22.png", imgAlt: "seeds display" },
+            { title: "Premium Nursery & Farm Supplies", text: "A complete range of organic garden soils, compost mixes, nutrients and planting assistance.", subtitle: "Direct Dispatch & Billing Ledger Support.", img: "assets\\img\\hero\\h-1-23.png", imgAlt: "nursery showcase" }
+          ].map((slide, idx) => (
+            <div
+              key={idx}
+              className="row gy-4 justify-content-between align-items-center"
+              style={{
+                opacity: activeSlide === idx ? 1 : 0,
+                visibility: activeSlide === idx ? "visible" : "hidden",
+                transition: "opacity 0.6s ease, visibility 0.6s ease",
+                position: activeSlide === idx ? "relative" : "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                pointerEvents: activeSlide === idx ? "auto" : "none"
+              }}
+            >
               <div className="col-xxl-6 col-xl-6 col-lg-8 mx-auto">
                 <div className="hero-content">
-                  <h1 className="hero-title">High-Quality Plants &amp; Saplings</h1>
-                  <p className="hero-text">Premium organic saplings and custom-crafted fruit plants directly from our central nursery fields.</p>
+                  <h1 className="hero-title">{slide.title}</h1>
+                  <p className="hero-text">{slide.text}</p>
                   <span className="hero-subtitle">
                     <img src="/assets/img/icons/i-1-1.png" alt="icon" />
-                    100% Certified Nursery Stock &amp; Seeds.
-                  </span>
-                  <div className="d-flex">
-                    <Link href="/products" className="vs-btn style1">Starfeature-imgt Shopping<i className="fas fa-long-arrow-right"></i></Link>
-                  </div>
-                </div>
-              </div>
-              <div className="col-xxl-auto col-xl-6 col-lg-8 mx-auto">
-                <div className="hero-img">
-                  <img src="assets\img\hero\h-1-1.png" alt="saplings" />
-                  <span className="circle"></span>
-                  {/* <div className="hero-certificate">
-                    <img src="/assets/img/logos/l-1-1.png" alt="logo" />
-                  </div> */}
-                  {/* <div className="hero-leaf">
-                    <img src="/assets/img/hero/h-1-2.png" alt="leaf decoration" />
-                  </div> */}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Slide 1 */}
-          {activeSlide === 1 && (
-            <div className="row gy-4 justify-content-between align-items-center animate-fade">
-              <div className="col-xxl-6 col-xl-6 col-lg-8 mx-auto">
-                <div className="hero-content">
-                  <h1 className="hero-title">Pure &amp; Certified Seeds Selection</h1>
-                  <p className="hero-text">High-yield hybrid vegetable and flower seeds optimized for regional Indian soil conditions.</p>
-                  <span className="hero-subtitle">
-                    <img src="/assets/img/icons/i-1-1.png" alt="icon" />
-                    Tested for High Germination Rates.
+                    {slide.subtitle}
                   </span>
                   <div className="d-flex">
                     <Link href="/products" className="vs-btn style1">Start Shopping<i className="fas fa-long-arrow-right"></i></Link>
@@ -240,49 +225,12 @@ export default function HomePage() {
               </div>
               <div className="col-xxl-auto col-xl-6 col-lg-8 mx-auto">
                 <div className="hero-img">
-                  <img src="assets\img\hero\h-1-22.png" alt="seeds display" />
+                  <img src={slide.img} alt={slide.imgAlt} />
                   <span className="circle"></span>
-                  {/* <div className="hero-certificate">
-                    <img src="/assets/img/logos/l-1-1.png" alt="logo" />
-                  </div> */}
-                  {/* <div className="hero-leaf">
-                    <img src="/assets/img/hero/h-1-2.png" alt="leaf decoration" />
-                  </div> */}
                 </div>
               </div>
             </div>
-          )}
-
-          {/* Slide 2 */}
-          {activeSlide === 2 && (
-            <div className="row gy-4 justify-content-between align-items-center animate-fade">
-              <div className="col-xxl-6 col-xl-6 col-lg-8 mx-auto">
-                <div className="hero-content">
-                  <h1 className="hero-title">Premium Nursery &amp; Farm Supplies</h1>
-                  <p className="hero-text">A complete range of organic garden soils, compost mixes, nutrients and planting assistance.</p>
-                  <span className="hero-subtitle">
-                    <img src="/assets/img/icons/i-1-1.png" alt="icon" />
-                    Direct Dispatch &amp; Billing Ledger Support.
-                  </span>
-                  <div className="d-flex">
-                    <Link href="/products" className="vs-btn style1">Start Shopping<i className="fas fa-long-arrow-right"></i></Link>
-                  </div>
-                </div>
-              </div>
-              <div className="col-xxl-auto col-xl-6 col-lg-8 mx-auto">
-                <div className="hero-img">
-                  <img src="assets\img\hero\h-1-23.png" alt="nursery showcase" />
-                  <span className="circle"></span>
-                  {/* <div className="hero-certificate">
-                    <img src="/assets/img/logos/l-1-1.png" alt="logo" />
-                  </div> */}
-                  {/* <div className="hero-leaf">
-                    <img src="/assets/img/hero/h-1-2.png" alt="leaf decoration" />
-                  </div> */}
-                </div>
-              </div>
-            </div>
-          )}
+          ))}
         </div>
 
         {/* Manual Slides Select */}

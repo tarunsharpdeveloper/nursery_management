@@ -183,7 +183,7 @@ export default function HomePage() {
     <>
       {/* ── Hero Slides Area (Awantika Seeds Content) ── */}
       <section className="hero-style1">
-        <div className="hero-bg" style={{ backgroundColor:'white'}}></div>
+        <div className="hero-bg" style={{backgroundImage:'assets\img\bg\b-1-1' }}></div>
         <div className="hero-leaf2 wow fadeInUp" data-wow-delay="1s">
           <img src="/assets/img/hero/h-1-3.png" alt="hero leaf 2" />
         </div>
@@ -203,14 +203,14 @@ export default function HomePage() {
                     100% Certified Nursery Stock &amp; Seeds.
                   </span>
                   <div className="d-flex">
-                    <Link href="/products" className="vs-btn style1">Start Shopping<i className="fas fa-long-arrow-right"></i></Link>
+                    <Link href="/products" className="vs-btn style1">Starfeature-imgt Shopping<i className="fas fa-long-arrow-right"></i></Link>
                   </div>
                 </div>
               </div>
               <div className="col-xxl-auto col-xl-6 col-lg-8 mx-auto">
                 <div className="hero-img">
-                  <img src="https://nurserylive.com/cdn/shop/products/nurserylive-ficus-lyrata--plant_600x600.jpg?v=1634219500" alt="saplings" />
-                  {/* <span className="circle"></span> */}
+                  <img src="assets\img\hero\h-1-1.png" alt="saplings" />
+                  <span className="circle"></span>
                   {/* <div className="hero-certificate">
                     <img src="/assets/img/logos/l-1-1.png" alt="logo" />
                   </div> */}
@@ -240,8 +240,8 @@ export default function HomePage() {
               </div>
               <div className="col-xxl-auto col-xl-6 col-lg-8 mx-auto">
                 <div className="hero-img">
-                  <img src="https://nurserylive.com/cdn/shop/files/hibiscus-yellows_600x600.jpg?v=1751755422" alt="seeds display" />
-                  {/* <span className="circle"></span> */}
+                  <img src="assets\img\hero\h-1-22.png" alt="seeds display" />
+                  <span className="circle"></span>
                   {/* <div className="hero-certificate">
                     <img src="/assets/img/logos/l-1-1.png" alt="logo" />
                   </div> */}
@@ -271,8 +271,8 @@ export default function HomePage() {
               </div>
               <div className="col-xxl-auto col-xl-6 col-lg-8 mx-auto">
                 <div className="hero-img">
-                  <img src="https://nurserylive.com/cdn/shop/files/miniature-rose-pink_af4e62e8-27e9-4f8c-98d6-9ce07342ce9d_600x600.jpg?v=1752562400" alt="nursery showcase" />
-                  {/* <span className="circle"></span> */}
+                  <img src="assets\img\hero\h-1-23.png" alt="nursery showcase" />
+                  <span className="circle"></span>
                   {/* <div className="hero-certificate">
                     <img src="/assets/img/logos/l-1-1.png" alt="logo" />
                   </div> */}
@@ -519,8 +519,8 @@ export default function HomePage() {
             </div>
             <div className="col-lg-6 mx-auto">
               <div className="img-box2" style={{ display: 'block', maxWidth: '100%', overflow: 'hidden' }}>
-                {/* <div className="img-circle" style={{ backgroundImage: "url('/assets/img/features/feature-1-2.png')" }}></div> */}
-                <img src="https://nurserylive.com/cdn/shop/products/nurserylive-sansevieria-trifasciata-snake-plant-var-laurentii-plant-826987_600x600.jpg?v=1682111002" style={{ maxWidth: '700px', width: '100%', height: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }} alt="feature" />
+                <div className="img-circle" style={{ backgroundImage: "url('/assets/img/features/feature-1-2.png')" }}></div>
+                <img src="assets\img\features\feature-1-3.png" alt="feature" />
               </div>
             </div>
           </div>

@@ -8092,8 +8092,8 @@ blockquote.vs-quote .quote-author {
 
 .hero-img .circle {
   border-radius: 50%;
-  width: 542px;
-  height: 542px;
+  width: 590px;
+  height: 590px;
   background-color: var(--white-color);
   display: inline-block;
   position: absolute;
@@ -8836,8 +8836,8 @@ blockquote.vs-quote .quote-author {
 .img-box2 .img-circle {
   bottom: auto;
   position: absolute;
-  width: 537.24px;
-  height: 536.08px;
+  width: 567.24px;
+  height: 580.08px;
   background-color: var(--theme-color2);
   border-radius: 50%;
   z-index: -1;
@@ -9027,7 +9027,7 @@ blockquote.vs-quote .quote-author {
 }
 
 .img-box8::before {
-  --circle-size: 610px;
+  /* --circle-size: 610px; */
   min-width: var(--circle-size);
   min-height: var(--circle-size);
   width: var(--circle-size);

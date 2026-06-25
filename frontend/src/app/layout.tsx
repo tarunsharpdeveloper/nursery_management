@@ -24,7 +24,12 @@ const epilogue = Epilogue({
 
 export const metadata: Metadata = {
   title: "Awantika Seeds",
-  description: "Premium plants and seeds — Ujjain, Madhya Pradesh"
+  description: "Premium plants and seeds — Ujjain, Madhya Pradesh",
+  icons: {
+    icon: "/logo.jpeg",
+    shortcut: "/logo.jpeg",
+    apple: "/logo.jpeg"
+  }
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

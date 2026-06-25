@@ -8830,6 +8830,7 @@ blockquote.vs-quote .quote-author {
   text-align: center;
   display: inline-block;
   margin-bottom: 30px;
+  
 }
 
 .img-box2 .img-circle {
@@ -9070,7 +9071,7 @@ blockquote.vs-quote .quote-author {
 }
 
 .img-box1 .img1::before {
-  position: absolute;
+  /* position: absolute; */
   content: "";
   width: 291px;
   height: 178px;

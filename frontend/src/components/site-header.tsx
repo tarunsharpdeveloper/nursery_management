@@ -56,12 +56,12 @@ export function SiteHeader() {
             Home
           </Link>
 
-          <Link href="/products" className="nav-link">
-            Products
+           <Link href="/about" className="nav-link">
+            About Us
           </Link>
 
-          <Link href="/about" className="nav-link">
-            About Us
+          <Link href="/products" className="nav-link">
+            Products
           </Link>
 
           <Link href="/contact" className="nav-link">

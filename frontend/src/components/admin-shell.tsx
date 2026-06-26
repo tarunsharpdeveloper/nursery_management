@@ -8,10 +8,10 @@ import { clearAdminSession, getStoredUser, type AdminUser } from "@/lib/api";
 
 const links = [
   { href: "/admin", label: "Dashboard", icon: ClipboardList, permission: "dashboard:read" },
+  { href: "/admin/categories", label: "Product Category", icon: Tags, permission: "products:read" },
   { href: "/admin/products", label: "Products", icon: Package, permission: "products:read" },
-  { href: "/admin/categories", label: "Categories", icon: Tags, permission: "products:read" },
-  { href: "/admin/inventory", label: "Inventory", icon: Boxes, permission: "inventory:read" },
-  { href: "/admin/production", label: "Production", icon: Factory, permission: "production:write" },
+  // { href: "/admin/inventory", label: "Inventory", icon: Boxes, permission: "inventory:read" },
+  { href: "/admin/production", label: "Inventory / Production", icon: Factory, permission: "production:write" },
   { href: "/admin/orders", label: "Orders", icon: ClipboardList, permission: "orders:read" },
   { href: "/admin/payments", label: "Payments", icon: CreditCard, permission: "payments:read" },
   { href: "/admin/billing", label: "Billing", icon: Receipt, permission: "billing:read" },
@@ -115,17 +115,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="sidebar-label">
             <h3>Admin Portal</h3>
-            <span>Nursery Control</span>
+            <span>Sanviya Hi-Tech Nursery</span>
           </div>
         </div>
 
-        <div className="sidebar-profile">
+        {/* <div className="sidebar-profile">
           <div className="sidebar-avatar">{user.name.charAt(0).toUpperCase()}</div>
           <div className="sidebar-label">
             <strong>{user.name}</strong>
             <span>{user.role.replaceAll("_", " ")}</span>
           </div>
-        </div>
+        </div> */}
 
         <nav className="sidebar-nav" aria-label="Admin navigation">
           {visibleLinks.map(({ href, label, icon: Icon }) => {
@@ -139,10 +139,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <button className="sidebar-logout" type="button" onClick={logout} title="Logout">
-          <LogOut size={18} />
-          <span className="sidebar-label">Logout</span>
-        </button>
       </aside>
 
       <div className="content-wrapper">

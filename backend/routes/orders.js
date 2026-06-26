@@ -12,6 +12,7 @@ const orderSchema = z.object({
   items: z.array(
     z.object({
       productId: z.number().int().positive(),
+      variantId: z.number().int().positive().optional().nullable(),
       quantity: z.number().int().positive(),
       unitPrice: z.number().positive()
     })
@@ -85,19 +86,33 @@ async function createOrder(req, res, { readJson, sendJson }) {
 
     for (const item of payload.items) {
       await connection.query(
-        `INSERT INTO order_items (order_id, product_id, quantity, unit_price, line_total)
-         VALUES (:orderId, :productId, :quantity, :unitPrice, :lineTotal)`,
-        { ...item, orderId, lineTotal: item.quantity * item.unitPrice }
+        `INSERT INTO order_items (order_id, product_id, variant_id, quantity, unit_price, line_total)
+         VALUES (:orderId, :productId, :variantId, :quantity, :unitPrice, :lineTotal)`,
+        { ...item, orderId, variantId: item.variantId || null, lineTotal: item.quantity * item.unitPrice }
       );
-      const [stockResult] = await connection.query(
-        `UPDATE products
-            SET available_quantity = available_quantity - :quantity
-          WHERE id = :productId AND available_quantity >= :quantity`,
-        item
-      );
-      if (stockResult.affectedRows === 0) {
-        throw new Error("One or more products do not have enough stock");
+
+      if (item.variantId) {
+        const [stockResult] = await connection.query(
+          `UPDATE product_variants
+              SET available_quantity = available_quantity - :quantity
+            WHERE id = :variantId AND available_quantity >= :quantity`,
+          item
+        );
+        if (stockResult.affectedRows === 0) {
+          throw new Error("One or more product variants do not have enough stock");
+        }
+      } else {
+        const [stockResult] = await connection.query(
+          `UPDATE products
+              SET available_quantity = available_quantity - :quantity
+            WHERE id = :productId AND available_quantity >= :quantity`,
+          item
+        );
+        if (stockResult.affectedRows === 0) {
+          throw new Error("One or more products do not have enough stock");
+        }
       }
+
       await connection.query(
         `INSERT INTO stock_ledger (product_id, movement_type, quantity_change, reference_type, reference_id, remarks)
          VALUES (:productId, 'online_order', :quantityChange, 'orders', :orderId, 'Online checkout order')`,

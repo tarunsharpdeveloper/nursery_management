@@ -2,7 +2,7 @@ const { z } = require("zod");
 const { pool } = require("../db");
 
 async function getDashboard(_req, res, { sendJson }) {
-  const [[products]] = await pool.query("SELECT COUNT(*) AS total_products, COALESCE(SUM(available_quantity), 0) AS total_stock FROM products");
+  const [[products]] = await pool.query("SELECT COUNT(*) AS total_products, COALESCE(SUM(available_quantity), 0) AS total_stock FROM products WHERE is_deleted = 0");
   const [[orders]] = await pool.query("SELECT COUNT(*) AS total_orders, COALESCE(SUM(total_amount), 0) AS order_value FROM orders");
   const [[bookings]] = await pool.query("SELECT COUNT(*) AS total_bookings FROM advance_bookings");
   const [[employees]] = await pool.query("SELECT COUNT(*) AS total_employees FROM employees WHERE is_active = TRUE");
@@ -12,7 +12,7 @@ async function getDashboard(_req, res, { sendJson }) {
 
 async function listCustomers(_req, res, { sendJson }) {
   const [rows] = await pool.query(
-    `SELECT id, name, phone, is_credit_customer, credit_limit
+    `SELECT id, name, phone, email, address, is_credit_customer, credit_limit
        FROM customers
       ORDER BY name`
   );
@@ -28,7 +28,7 @@ async function listCategories(_req, res, { sendJson }) {
        FROM categories c
        LEFT JOIN categories p ON p.id = c.parent_id
        LEFT JOIN categories child ON child.parent_id = c.id
-       LEFT JOIN products product ON product.category_id = c.id
+       LEFT JOIN products product ON product.category_id = c.id AND product.is_deleted = 0
        GROUP BY c.id, c.parent_id, c.category_type, c.name, c.description, c.photo_urls, c.is_active, p.name
        ORDER BY COALESCE(p.name, c.name), c.parent_id IS NOT NULL, c.name`
   );
@@ -63,7 +63,8 @@ async function createCategory(req, res, { readJson, sendJson }) {
 const editCategorySchema = z.object({
   categoryId: z.number().int().positive(),
   name: z.string().min(2),
-  description: z.string().optional().nullable()
+  description: z.string().optional().nullable(),
+  photoUrls: z.string().optional().nullable()
 });
 
 async function editCategory(req, res, { readJson, sendJson }) {
@@ -71,12 +72,14 @@ async function editCategory(req, res, { readJson, sendJson }) {
   await pool.query(
     `UPDATE categories 
         SET name = :name, 
-            description = :description 
+            description = :description,
+            photo_urls = CASE WHEN :photoUrls IS NOT NULL THEN :photoUrls ELSE photo_urls END
       WHERE id = :categoryId`,
     {
       categoryId: payload.categoryId,
       name: payload.name,
-      description: payload.description || null
+      description: payload.description || null,
+      photoUrls: payload.photoUrls || null
     }
   );
   sendJson(res, 200, { updated: true });
@@ -137,6 +140,7 @@ async function listInventory(_req, res, { sendJson }) {
             p.available_quantity AS current_balance
        FROM products p
        LEFT JOIN stock_ledger s ON s.product_id = p.id
+      WHERE p.is_deleted = 0
       GROUP BY p.id, p.name, p.available_quantity
       ORDER BY p.name`
   );
@@ -145,12 +149,64 @@ async function listInventory(_req, res, { sendJson }) {
 
 async function listOrders(_req, res, { sendJson }) {
   const [rows] = await pool.query(
-    `SELECT o.id, o.order_number, c.name AS customer, o.status, o.payment_status, o.total_amount, o.created_at
+    `SELECT o.id, o.order_number, c.name AS customer, o.status, o.payment_status, o.total_amount, o.created_at,
+            GROUP_CONCAT(p.name SEPARATOR ', ') AS products
        FROM orders o
        JOIN customers c ON c.id = o.customer_id
+       LEFT JOIN order_items oi ON oi.order_id = o.id
+       LEFT JOIN products p ON p.id = oi.product_id
+      WHERE o.is_deleted = 0
+      GROUP BY o.id
       ORDER BY o.created_at DESC`
   );
   sendJson(res, 200, rows);
+}
+
+const deleteOrderSchema = z.object({
+  orderId: z.number().int().positive()
+});
+
+async function deleteOrder(req, res, { readJson, sendJson }) {
+  const payload = deleteOrderSchema.parse(await readJson(req));
+  await pool.query("UPDATE orders SET is_deleted = 1 WHERE id = ?", [payload.orderId]);
+  sendJson(res, 200, { deleted: true });
+}
+
+const getOrderSchema = z.object({
+  orderId: z.number().int().positive()
+});
+
+async function getOrder(req, res, { readJson, sendJson }) {
+  const payload = getOrderSchema.parse(await readJson(req));
+  
+  const [orderRows] = await pool.query(
+    `SELECT o.id, o.order_number, o.order_source, o.status, o.payment_status, o.total_amount, o.created_at,
+            c.name AS customer_name, c.phone, c.email, c.address
+       FROM orders o
+       JOIN customers c ON c.id = o.customer_id
+      WHERE o.id = ?`,
+    [payload.orderId]
+  );
+
+  if (orderRows.length === 0) {
+    throw new Error("Order not found");
+  }
+  
+  const order = orderRows[0];
+
+  const [items] = await pool.query(
+    `SELECT oi.id, oi.quantity, oi.unit_price, oi.line_total,
+            p.name AS product_name, p.product_type,
+            v.unit, v.unit_value
+       FROM order_items oi
+       JOIN products p ON p.id = oi.product_id
+       LEFT JOIN product_variants v ON v.id = oi.variant_id
+      WHERE oi.order_id = ?`,
+    [payload.orderId]
+  );
+  
+  order.items = items;
+  sendJson(res, 200, order);
 }
 
 const orderStatusSchema = z.object({
@@ -182,9 +238,58 @@ async function listBills(_req, res, { sendJson }) {
        FROM bills b
        LEFT JOIN customers c ON c.id = b.customer_id
        LEFT JOIN payments p ON p.bill_id = b.id
+      WHERE b.is_deleted = 0
       ORDER BY b.created_at DESC`
   );
   sendJson(res, 200, rows);
+}
+
+const deleteBillSchema = z.object({
+  billId: z.number().int().positive()
+});
+
+async function deleteBill(req, res, { readJson, sendJson }) {
+  const payload = deleteBillSchema.parse(await readJson(req));
+  await pool.query("UPDATE bills SET is_deleted = 1 WHERE id = ?", [payload.billId]);
+  sendJson(res, 200, { deleted: true });
+}
+
+const getBillSchema = z.object({
+  billId: z.number().int().positive()
+});
+
+async function getBill(req, res, { readJson, sendJson }) {
+  const payload = getBillSchema.parse(await readJson(req));
+  
+  const [billRows] = await pool.query(
+    `SELECT b.id, b.bill_number, b.bill_type, b.payment_type,
+            b.total_amount, b.paid_amount, b.balance_amount, b.bill_date,
+            c.name AS customer_name, c.phone, c.address,
+            p.gateway_payment_id AS transaction_id
+       FROM bills b
+       LEFT JOIN customers c ON c.id = b.customer_id
+       LEFT JOIN payments p ON p.bill_id = b.id
+      WHERE b.id = ? AND b.is_deleted = 0`,
+    [payload.billId]
+  );
+
+  if (billRows.length === 0) {
+    throw new Error("Bill not found");
+  }
+  
+  const bill = billRows[0];
+
+  const [items] = await pool.query(
+    `SELECT bi.id, bi.quantity, bi.unit_price, bi.line_total,
+            p.name AS product_name, p.product_type
+       FROM bill_items bi
+       JOIN products p ON p.id = bi.product_id
+      WHERE bi.bill_id = ?`,
+    [payload.billId]
+  );
+  
+  bill.items = items;
+  sendJson(res, 200, bill);
 }
 
 async function listBookings(_req, res, { sendJson }) {
@@ -224,6 +329,53 @@ async function listDispatches(_req, res, { sendJson }) {
       ORDER BY d.id DESC`
   );
   sendJson(res, 200, rows);
+}
+
+const dispatchStatusSchema = z.object({
+  dispatchId: z.number().int().positive(),
+  status: z.enum(["pending", "dispatched", "delivered"])
+});
+
+async function updateDispatchStatus(req, res, { readJson, sendJson }) {
+  const payload = dispatchStatusSchema.parse(await readJson(req));
+  await pool.query("UPDATE dispatches SET status = :status WHERE id = :dispatchId", payload);
+
+  const [dispatchRows] = await pool.query(
+    "SELECT order_id, advance_booking_id FROM dispatches WHERE id = :dispatchId",
+    payload
+  );
+
+  if (dispatchRows.length > 0) {
+    const dispatch = dispatchRows[0];
+    
+    if (dispatch.order_id) {
+      let orderStatus;
+      if (payload.status === "pending") orderStatus = "approved";
+      else if (payload.status === "dispatched") orderStatus = "dispatch";
+      else if (payload.status === "delivered") orderStatus = "delivered";
+      
+      if (orderStatus) {
+        await pool.query(
+          "UPDATE orders SET status = :orderStatus WHERE id = :orderId",
+          { orderStatus, orderId: dispatch.order_id }
+        );
+      }
+    } else if (dispatch.advance_booking_id) {
+      let bookingStatus;
+      if (payload.status === "pending") bookingStatus = "booked";
+      else if (payload.status === "dispatched") bookingStatus = "ready";
+      else if (payload.status === "delivered") bookingStatus = "delivered";
+      
+      if (bookingStatus) {
+        await pool.query(
+          "UPDATE advance_bookings SET status = :bookingStatus WHERE id = :bookingId",
+          { bookingStatus, bookingId: dispatch.advance_booking_id }
+        );
+      }
+    }
+  }
+
+  sendJson(res, 200, { updated: true });
 }
 
 async function listEmployees(_req, res, { sendJson }) {
@@ -287,12 +439,17 @@ module.exports = {
   deleteCategory,
   listInventory,
   listOrders,
+  getOrder,
   updateOrderStatus,
+  deleteOrder,
   listPayments,
   listBills,
+  getBill,
+  deleteBill,
   listBookings,
   updateBookingStatus,
   listDispatches,
+  updateDispatchStatus,
   listEmployees,
   listAttendance,
   listWageSummary

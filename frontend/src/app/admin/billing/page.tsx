@@ -4,8 +4,9 @@ import { useEffect, useState, useMemo } from "react";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
 import { AdminShell } from "@/components/admin-shell";
-import { RefreshCw, Save } from "lucide-react";
+import { RefreshCw, Save, Trash2, Eye } from "lucide-react";
 import { apiRequest } from "@/lib/api";
+import Link from "next/link";
 
 type Customer = { id: number; name: string; phone?: string };
 type Variant = { id: number; product_id: number; unit: string; unit_value: string; selling_price: number };
@@ -20,6 +21,8 @@ const selectStyles = {
     borderRadius: '8px',
     borderColor: state.isFocused ? '#2f6b3f' : '#d7e0d4',
     boxShadow: state.isFocused ? '0 0 0 1px #2f6b3f' : 'none',
+    fontSize: '14px',
+    fontFamily: 'inherit',
     '&:hover': {
       borderColor: state.isFocused ? '#2f6b3f' : '#a3b1a5'
     }
@@ -32,6 +35,7 @@ const selectStyles = {
   input: (base: any) => ({
     ...base,
     margin: '0px',
+    padding: '0px',
   }),
   indicatorsContainer: (base: any) => ({
     ...base,
@@ -43,6 +47,23 @@ const selectStyles = {
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
+  }),
+  menu: (base: any) => ({
+    ...base,
+    zIndex: 9999
+  }),
+  menuList: (base: any) => ({
+    ...base,
+    maxHeight: '200px',
+    overflowY: 'auto'
+  }),
+  option: (base: any) => ({
+    ...base,
+    fontSize: '14px',
+  }),
+  singleValue: (base: any) => ({
+    ...base,
+    fontSize: '14px',
   })
 };
 
@@ -101,7 +122,7 @@ export default function BillingPage() {
       setForm(f => ({ ...f, unitPrice: "" }));
       return;
     }
-    
+
     let price = selectedProduct.selling_price;
     if (form.variantId) {
       const variant = selectedProduct.variants.find(v => v.id === form.variantId);
@@ -194,6 +215,8 @@ export default function BillingPage() {
                 options={customerOptions}
                 placeholder="Search or enter new name"
                 styles={selectStyles}
+                menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                menuPosition="fixed"
                 value={form.customerId ? customerOptions.find(o => o.value === form.customerId) : form.customerName ? { label: form.customerName, value: "new" } : null}
                 onChange={(option: any) => {
                   if (!option) {
@@ -255,6 +278,8 @@ export default function BillingPage() {
                 options={productOptions}
                 placeholder="Select product"
                 styles={selectStyles}
+                menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                menuPosition="fixed"
                 value={productOptions.find(o => o.value === form.productId) || null}
                 onChange={(option: any) => setForm(f => ({ ...f, productId: option ? option.value : null, variantId: null }))}
               />
@@ -268,6 +293,8 @@ export default function BillingPage() {
                   options={variantOptions}
                   placeholder="Select variant (optional)"
                   styles={selectStyles}
+                  menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                  menuPosition="fixed"
                   value={variantOptions.find(o => o.value === form.variantId) || null}
                   onChange={(option: any) => setForm(f => ({ ...f, variantId: option ? option.value : null }))}
                 />
@@ -325,6 +352,7 @@ export default function BillingPage() {
               <th>Paid</th>
               <th>Balance</th>
               <th>Date</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -339,10 +367,37 @@ export default function BillingPage() {
                 <td>₹{Number(row.paid_amount).toLocaleString("en-IN")}</td>
                 <td>₹{Number(row.balance_amount).toLocaleString("en-IN")}</td>
                 <td>{row.bill_date ? new Date(row.bill_date).toLocaleDateString("en-IN") : "-"}</td>
+                <td>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <Link href={`/admin/billing/view?id=${row.id}`} className="button secondary" title="View Bill" style={{ padding: '6px 8px', minHeight: 'auto', height: 'auto' }}>
+                      <Eye size={16} color="#52525b" />
+                    </Link>
+                    <button 
+                      className="button secondary" 
+                      title="Delete Bill"
+                      style={{ padding: '6px 8px', minHeight: 'auto', height: 'auto', color: '#ef4444', borderColor: '#fee2e2', backgroundColor: '#fef2f2' }}
+                      onClick={async () => {
+                        if (confirm(`Are you sure you want to delete bill ${row.bill_number}?`)) {
+                          try {
+                            await apiRequest("/api/bills/delete", {
+                              method: "POST",
+                              body: JSON.stringify({ billId: row.id })
+                            });
+                            loadData();
+                          } catch (e) {
+                            alert("Failed to delete bill");
+                          }
+                        }
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </td>
               </tr>
             )) : (
               <tr>
-                <td colSpan={9}>No records found</td>
+                <td colSpan={10}>No records found</td>
               </tr>
             )}
           </tbody>

@@ -48,6 +48,14 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
 
   const payload = await response.json().catch(() => ({}));
 
+  if (response.status === 401) {
+    clearAdminSession();
+    if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+      window.location.href = "/admin/login";
+    }
+    throw new Error("Session expired. Please log in again.");
+  }
+
   if (!response.ok) {
     throw new Error(payload.message || "API request failed");
   }

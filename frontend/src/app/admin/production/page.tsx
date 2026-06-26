@@ -10,6 +10,7 @@ type Category = {
   id: number;
   parent_id: number | null;
   name: string;
+  is_active?: number | boolean;
 };
 
 type Product = {
@@ -27,6 +28,8 @@ const selectStyles = {
     borderRadius: '8px',
     borderColor: state.isFocused ? '#2f6b3f' : '#d7e0d4',
     boxShadow: state.isFocused ? '0 0 0 1px #2f6b3f' : 'none',
+    fontSize: '14px',
+    fontFamily: 'inherit',
     '&:hover': {
       borderColor: state.isFocused ? '#2f6b3f' : '#a3b1a5'
     }
@@ -51,6 +54,15 @@ const selectStyles = {
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
+  }),
+  menu: (base: any) => ({
+    ...base,
+    zIndex: 9999
+  }),
+  menuList: (base: any) => ({
+    ...base,
+    maxHeight: '200px',
+    overflowY: 'auto'
   })
 };
 
@@ -61,10 +73,9 @@ export default function ProductionPage() {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("Loading...");
 
+  const [categoryPath, setCategoryPath] = useState<number[]>([]);
+
   const [form, setForm] = useState({
-    categoryId: "",
-    subCategoryId: "",
-    subSubCategoryId: "",
     productId: "",
     productionType: "plant",
     productionDate: new Date().toISOString().slice(0, 10),
@@ -95,23 +106,31 @@ export default function ProductionPage() {
     loadData();
   }, []);
 
-  const topLevelCats = useMemo(() => categories.filter(c => !c.parent_id), [categories]);
-  
-  const subCats = useMemo(() => {
-    if (!form.categoryId) return [];
-    return categories.filter(c => c.parent_id === Number(form.categoryId));
-  }, [categories, form.categoryId]);
+  const activeCategories = useMemo(() => categories.filter(c => c.is_active !== 0 && c.is_active !== false), [categories]);
 
-  const subSubCats = useMemo(() => {
-    if (!form.subCategoryId) return [];
-    return categories.filter(c => c.parent_id === Number(form.subCategoryId));
-  }, [categories, form.subCategoryId]);
+  const dropdowns = useMemo(() => {
+    const list = [];
+
+    const l0 = activeCategories.filter(c => !c.parent_id).sort((a, b) => a.name.localeCompare(b.name));
+    if (l0.length > 0) list.push(l0);
+
+    for (const selectedId of categoryPath) {
+      if (!selectedId) break;
+      const children = activeCategories.filter(c => c.parent_id === selectedId).sort((a, b) => a.name.localeCompare(b.name));
+      if (children.length > 0) {
+        list.push(children);
+      } else {
+        break;
+      }
+    }
+    return list;
+  }, [activeCategories, categoryPath]);
 
   const filteredProducts = useMemo(() => {
-    let targetCategoryId = form.subSubCategoryId || form.subCategoryId || form.categoryId;
+    const targetCategoryId = categoryPath.length > 0 ? categoryPath[categoryPath.length - 1] : null;
     if (!targetCategoryId) return products;
     return products.filter(p => p.category_id === Number(targetCategoryId));
-  }, [products, form.categoryId, form.subCategoryId, form.subSubCategoryId]);
+  }, [products, categoryPath]);
 
   async function submitForm() {
     if (!form.productId || !form.quantityProduced || !form.productionDate) {
@@ -124,9 +143,9 @@ export default function ProductionPage() {
       await apiRequest("/api/production", {
         method: "POST",
         body: JSON.stringify({
-          categoryId: form.categoryId ? Number(form.categoryId) : undefined,
-          subCategoryId: form.subCategoryId ? Number(form.subCategoryId) : undefined,
-          subSubCategoryId: form.subSubCategoryId ? Number(form.subSubCategoryId) : undefined,
+          categoryId: categoryPath[0] || undefined,
+          subCategoryId: categoryPath[1] || undefined,
+          subSubCategoryId: categoryPath[2] || undefined,
           productId: Number(form.productId),
           productionType: form.productionType,
           productionDate: form.productionDate,
@@ -150,7 +169,6 @@ export default function ProductionPage() {
         <div>
           <p className="eyebrow">Production Management</p>
           <h1>Plant and Seed Production Entry</h1>
-          <p className="meta">{status}</p>
         </div>
         <button className="button secondary" type="button" onClick={loadData} disabled={busy}>
           <RefreshCw size={17} />
@@ -161,58 +179,48 @@ export default function ProductionPage() {
       <form className="card" style={{ marginBottom: 20 }}>
         <div className="card-body">
           <div className="form-grid">
-            <label className="field">
-              <span>Category</span>
-              <select 
-                value={form.categoryId} 
-                onChange={e => setForm(f => ({ ...f, categoryId: e.target.value, subCategoryId: "", subSubCategoryId: "", productId: "" }))}
-              >
-                <option value="">Select Category</option>
-                {topLevelCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </label>
-
-            <label className="field">
-              <span>Subcategory</span>
-              <select 
-                value={form.subCategoryId} 
-                onChange={e => setForm(f => ({ ...f, subCategoryId: e.target.value, subSubCategoryId: "", productId: "" }))}
-                disabled={!form.categoryId || subCats.length === 0}
-              >
-                <option value="">Select Subcategory</option>
-                {subCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </label>
-
-            <label className="field">
-              <span>Sub-Subcategory</span>
-              <select 
-                value={form.subSubCategoryId} 
-                onChange={e => setForm(f => ({ ...f, subSubCategoryId: e.target.value, productId: "" }))}
-                disabled={!form.subCategoryId || subSubCats.length === 0}
-              >
-                <option value="">Select Sub-Subcategory</option>
-                {subSubCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </label>
+            {dropdowns.map((options, idx) => (
+              <label key={idx} className="field">
+                <span>{idx === 0 ? "Category" : idx === 1 ? "Subcategory" : `Level ${idx + 1} Subcategory`}</span>
+                <select
+                  value={categoryPath[idx] || ""}
+                  onChange={e => {
+                    const val = Number(e.target.value);
+                    if (!val) {
+                      setCategoryPath(categoryPath.slice(0, idx));
+                    } else {
+                      const newPath = categoryPath.slice(0, idx);
+                      newPath.push(val);
+                      setCategoryPath(newPath);
+                    }
+                    setForm(f => ({ ...f, productId: "" })); // clear product selection when category changes
+                  }}
+                >
+                  <option value="">{`Select ${idx === 0 ? "Category" : "Subcategory"}`}</option>
+                  {options.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </label>
+            ))}
 
             <label className="field">
               <span>Product</span>
-              <Select 
+              <Select
                 options={filteredProducts.map(p => ({ value: String(p.id), label: p.name }))}
                 value={form.productId ? { value: form.productId, label: filteredProducts.find(p => String(p.id) === form.productId)?.name } : null}
                 onChange={(option: any) => setForm(f => ({ ...f, productId: option ? option.value : "" }))}
                 isClearable
                 placeholder="Select Product"
                 styles={selectStyles}
+                menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                menuPosition="fixed"
               />
             </label>
 
             <label className="field">
               <span>Date</span>
-              <input 
-                type="date" 
-                value={form.productionDate} 
+              <input
+                type="date"
+                value={form.productionDate}
                 onChange={e => setForm(f => ({ ...f, productionDate: e.target.value }))}
                 required
               />
@@ -220,9 +228,9 @@ export default function ProductionPage() {
 
             <label className="field">
               <span>Quantity Produced</span>
-              <input 
-                type="number" 
-                value={form.quantityProduced} 
+              <input
+                type="number"
+                value={form.quantityProduced}
                 onChange={e => setForm(f => ({ ...f, quantityProduced: e.target.value }))}
                 required
               />
@@ -230,15 +238,15 @@ export default function ProductionPage() {
 
             <label className="field">
               <span>Remarks (Optional)</span>
-              <input 
+              <input
                 type="text"
                 placeholder="Enter any remarks..."
-                value={form.remarks} 
+                value={form.remarks}
                 onChange={e => setForm(f => ({ ...f, remarks: e.target.value }))}
               />
             </label>
           </div>
-          
+
           <button className="button" type="button" onClick={submitForm} disabled={busy || !form.productId || !form.quantityProduced} style={{ marginTop: 16 }}>
             <Save size={17} />
             Save and Increase Stock

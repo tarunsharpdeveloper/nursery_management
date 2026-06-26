@@ -2,7 +2,8 @@
 
 import { Suspense, useEffect, useMemo, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, Edit2, Plus, Power, PowerOff, RefreshCw, Tags, Trash2, ListTree } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, Edit2, Plus, Power, PowerOff, RefreshCw, Tags, Trash2, ListTree, MoreVertical, ChevronDown } from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
 import { apiRequest } from "@/lib/api";
 
@@ -20,6 +21,14 @@ function isActive(c: Category) {
   return Boolean(c.is_active);
 }
 
+const fileToBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
+
 function SubCategoriesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -31,8 +40,30 @@ function SubCategoriesContent() {
 
   const [form, setForm] = useState({ name: "", description: "" });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [createPreview, setCreatePreview] = useState<string[]>([]);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
   const [editing, setEditing] = useState<Category | null>(null);
   const [editForm, setEditForm] = useState({ name: "", description: "" });
+  const [editPreview, setEditPreview] = useState<string[]>([]);
+  const [openActionId, setOpenActionId] = useState<number | null>(null);
+
+  const handleCreateFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const urls = Array.from(e.target.files).map(f => URL.createObjectURL(f));
+      setCreatePreview(urls);
+    } else {
+      setCreatePreview([]);
+    }
+  };
+
+  const handleEditFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const urls = Array.from(e.target.files).map(f => URL.createObjectURL(f));
+      setEditPreview(urls);
+    } else {
+      setEditPreview([]);
+    }
+  };
 
   const parentCategory = useMemo(
     () => categories.find(c => c.id === parentId),
@@ -43,6 +74,21 @@ function SubCategoriesContent() {
     () => categories.filter(c => c.parent_id === parentId).sort((a, b) => a.name.localeCompare(b.name)),
     [categories, parentId]
   );
+
+  const breadcrumbs = useMemo(() => {
+    const crumbs = [];
+    let currentId: number | null = parentId;
+    while (currentId) {
+      const cat = categories.find(c => c.id === currentId);
+      if (cat) {
+        crumbs.unshift(cat);
+        currentId = cat.parent_id;
+      } else {
+        break;
+      }
+    }
+    return crumbs;
+  }, [categories, parentId]);
 
   async function loadCategories() {
     setBusy(true);
@@ -66,15 +112,24 @@ function SubCategoriesContent() {
     if (!form.name || !parentId) return;
     setBusy(true);
     try {
+      let photoUrls = null;
+      if (fileInputRef.current?.files?.length) {
+        const files = Array.from(fileInputRef.current.files);
+        const base64s = await Promise.all(files.map(fileToBase64));
+        photoUrls = JSON.stringify(base64s);
+      }
+
       await apiRequest("/api/categories", {
         method: "POST",
         body: JSON.stringify({
           parentId,
           name: form.name,
-          description: form.description
+          description: form.description,
+          photoUrls
         })
       });
       setForm({ name: "", description: "" });
+      setCreatePreview([]);
       if (fileInputRef.current) fileInputRef.current.value = "";
       setStatus("Sub-category saved");
       await loadCategories();
@@ -89,15 +144,24 @@ function SubCategoriesContent() {
     if (!editing || !editForm.name) return;
     setBusy(true);
     try {
+      let photoUrls = editing.photo_urls;
+      if (editFileInputRef.current?.files?.length) {
+        const files = Array.from(editFileInputRef.current.files);
+        const base64s = await Promise.all(files.map(fileToBase64));
+        photoUrls = JSON.stringify(base64s);
+      }
+
       await apiRequest("/api/categories", {
         method: "PATCH",
         body: JSON.stringify({
           categoryId: editing.id,
           name: editForm.name,
-          description: editForm.description
+          description: editForm.description,
+          photoUrls
         })
       });
       setEditing(null);
+      setEditPreview([]);
       setStatus("Sub-category updated");
       await loadCategories();
     } catch (error) {
@@ -146,6 +210,7 @@ function SubCategoriesContent() {
 
   function startEdit(c: Category) {
     setEditing(c);
+    setEditPreview([]);
     setEditForm({
       name: c.name,
       description: c.description || ""
@@ -184,16 +249,21 @@ function SubCategoriesContent() {
     <AdminShell>
       <div className="section-header">
         <div>
-          <p className="eyebrow">
-            <button
-              onClick={() => router.push("/admin/categories")}
-              style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4, padding: 0 }}
-            >
-              <ArrowLeft size={14} /> Back to Categories
-            </button>
-          </p>
-          <h1>{parentCategory ? `Subcategories of ${parentCategory.name}` : "Loading..."}</h1>
-          <p className="meta">{status}</p>
+          <div className="eyebrow" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+            <Link href="/admin/categories" style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "#3b82f6", textDecoration: "none" }}>
+              <ArrowLeft size={14} /> Product Categories
+            </Link>
+            {breadcrumbs.map(crumb => (
+              <span key={crumb.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ color: "#94a3b8" }}>/</span>
+                <Link href={`/admin/categories/subcategories?id=${crumb.id}`} style={{ color: crumb.id === parentId ? "inherit" : "#3b82f6", textDecoration: "none", pointerEvents: crumb.id === parentId ? "none" : "auto", fontWeight: crumb.id === parentId ? 600 : 400 }}>
+                  {crumb.name}
+                </Link>
+              </span>
+            ))}
+          </div>
+          <h1 style={{ marginTop: 0 }}>{parentCategory ? `Subcategories of ${parentCategory.name}` : "Loading..."}</h1>
+
         </div>
         <button className="button secondary" type="button" onClick={loadCategories} disabled={busy}>
           <RefreshCw size={17} />
@@ -215,8 +285,15 @@ function SubCategoriesContent() {
             </label>
             <label className="field">
               <span>Images (Multiple)</span>
-              <input type="file" accept="image/*" multiple ref={fileInputRef} />
+              <input type="file" accept="image/*" multiple ref={fileInputRef} onChange={handleCreateFileChange} />
             </label>
+            {createPreview.length > 0 && (
+              <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap", gridColumn: "1 / -1" }}>
+                {createPreview.map((url, i) => (
+                  <img key={i} src={url} alt="preview" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid var(--line)" }} />
+                ))}
+              </div>
+            )}
           </div>
           <button className="button" type="button" onClick={handleCreate} disabled={busy || !form.name} style={{ marginTop: 16 }}>
             <Plus size={17} />
@@ -228,7 +305,7 @@ function SubCategoriesContent() {
       {/* EDIT MODAL/INLINE FORM */}
       {editing && (
         <div className="card" style={{ marginBottom: 30, border: "2px solid #3b82f6" }}>
-          <div className="card-header" style={{padding: 10, background: "rgba(59, 130, 246, 0.1)" }}>
+          <div className="card-header" style={{ padding: 10, background: "rgba(59, 130, 246, 0.1)" }}>
             <strong>Editing: {editing.name}</strong>
           </div>
           <div className="card-body">
@@ -241,17 +318,47 @@ function SubCategoriesContent() {
                 <span>Description</span>
                 <input value={editForm.description} onChange={e => setEditForm(c => ({ ...c, description: e.target.value }))} />
               </label>
+              <label className="field" style={{ gridColumn: "1 / -1" }}>
+                <span>Update Images (Replaces existing)</span>
+                <input type="file" accept="image/*" multiple ref={editFileInputRef} onChange={handleEditFileChange} />
+              </label>
             </div>
+            {editPreview.length > 0 ? (
+              <div style={{ marginTop: 16 }}>
+                <span className="meta">New Image Preview:</span>
+                <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                  {editPreview.map((url, i) => (
+                    <img key={i} src={url} alt="preview" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid var(--line)" }} />
+                  ))}
+                </div>
+              </div>
+            ) : editing.photo_urls ? (
+              <div style={{ marginTop: 16 }}>
+                <span className="meta">Current Images:</span>
+                <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                  {(() => {
+                    try {
+                      const urls = JSON.parse(editing.photo_urls);
+                      return (Array.isArray(urls) ? urls : [urls]).map((url, i) => (
+                        <img key={i} src={url} alt="category" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid var(--line)" }} />
+                      ));
+                    } catch {
+                      return <img src={editing.photo_urls} alt="category" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid var(--line)" }} />;
+                    }
+                  })()}
+                </div>
+              </div>
+            ) : null}
             <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
               <button className="button" type="button" onClick={handleSaveEdit} disabled={busy || !editForm.name}>Save Changes</button>
-              <button className="button secondary" type="button" onClick={() => setEditing(null)}>Cancel</button>
+              <button className="button secondary" type="button" onClick={() => { setEditing(null); setEditPreview([]); }}>Cancel</button>
             </div>
           </div>
         </div>
       )}
 
       {/* LIST */}
-      <div className="card">
+      <div className="card" style={{ overflow: "visible" }}>
         {/* <div className="card-header">
           <Tags size={18} />
           <strong>{parentCategory ? `${parentCategory.name} Sub-Categories` : "Sub-Categories"}</strong>
@@ -289,22 +396,20 @@ function SubCategoriesContent() {
                     </span>
                   </td>
                   <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                    <button className="button secondary" type="button" onClick={() => router.push(`/admin/categories/subcategories?id=${c.id}`)} disabled={busy} style={{ padding: "4px 8px", fontSize: 13, marginRight: 8, borderColor: "#3b82f6", color: "#3b82f6" }}>
-                      <ListTree size={14} />
-                      Subcategories
-                    </button>
-                    <button className="button secondary" type="button" onClick={() => startEdit(c)} disabled={busy} style={{ padding: "4px 8px", fontSize: 13, marginRight: 8 }}>
-                      <Edit2 size={14} />
-                      Edit
-                    </button>
-                    <button className="button secondary" type="button" onClick={() => deleteCategory(c)} disabled={busy} style={{ padding: "4px 8px", fontSize: 13, marginRight: 8, color: "#ef4444" }}>
-                      <Trash2 size={14} />
-                      Delete
-                    </button>
-                    <button className="button secondary" type="button" onClick={() => toggleCategory(c)} disabled={busy} style={{ padding: "4px 8px", fontSize: 13 }}>
-                      {isActive(c) ? <PowerOff size={14} /> : <Power size={14} />}
-                      {isActive(c) ? "Disable" : "Enable"}
-                    </button>
+                    <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
+                      <button className="button secondary" type="button" title="Subcategories" onClick={() => router.push(`/admin/categories/subcategories?id=${c.id}`)} disabled={busy} style={{ padding: "6px" }}>
+                        <ListTree size={16} color="#3b82f6" />
+                      </button>
+                      <button className="button secondary" type="button" title="Edit" onClick={() => startEdit(c)} disabled={busy} style={{ padding: "6px" }}>
+                        <Edit2 size={16} />
+                      </button>
+                      <button className="button secondary" type="button" title="Delete" onClick={() => deleteCategory(c)} disabled={busy} style={{ padding: "6px" }}>
+                        <Trash2 size={16} color="#ef4444" />
+                      </button>
+                      <button className="button secondary" type="button" title={isActive(c) ? "Disable" : "Enable"} onClick={() => toggleCategory(c)} disabled={busy} style={{ padding: "6px" }}>
+                        {isActive(c) ? <PowerOff size={16} /> : <Power size={16} />}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

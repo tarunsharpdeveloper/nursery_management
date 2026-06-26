@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useMemo, DragEvent } from "react";
 import { AdminShell } from "@/components/admin-shell";
 import { apiRequest } from "@/lib/api";
-import { Edit2, Plus, Power, PowerOff, RefreshCw, Box, Trash2, Eye, X, UploadCloud } from "lucide-react";
+import { Edit2, Plus, Power, PowerOff, RefreshCw, Box, Trash2, Eye, X, UploadCloud, MoreVertical, ChevronDown } from "lucide-react";
 
 type Category = {
   id: number;
@@ -73,9 +73,7 @@ export default function AdminProductsPage() {
   const [status, setStatus] = useState("Loading...");
   const [busy, setBusy] = useState(false);
 
-  const [selectedL1, setSelectedL1] = useState<number | "">("");
-  const [selectedL2, setSelectedL2] = useState<number | "">("");
-  const [selectedL3, setSelectedL3] = useState<number | "">("");
+  const [categoryPath, setCategoryPath] = useState<number[]>([]);
 
   const [form, setForm] = useState({
     name: "",
@@ -94,6 +92,7 @@ export default function AdminProductsPage() {
 
   const [editing, setEditing] = useState<Product | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [openActionId, setOpenActionId] = useState<number | null>(null);
 
   async function loadData() {
     setBusy(true);
@@ -104,7 +103,7 @@ export default function AdminProductsPage() {
       const prods = await apiRequest<Product[]>("/api/products");
       setProducts(Array.isArray(prods) ? prods : []);
 
-      setStatus("Loaded successfully");
+      setStatus("");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Failed to load data");
     } finally {
@@ -117,11 +116,25 @@ export default function AdminProductsPage() {
   }, []);
 
   const activeCategories = useMemo(() => categories.filter(c => c.is_active !== 0 && c.is_active !== false), [categories]);
-  const l1Categories = useMemo(() => activeCategories.filter(c => !c.parent_id).sort((a, b) => a.name.localeCompare(b.name)), [activeCategories]);
-  const l2Categories = useMemo(() => selectedL1 ? activeCategories.filter(c => c.parent_id === selectedL1).sort((a, b) => a.name.localeCompare(b.name)) : [], [activeCategories, selectedL1]);
-  const l3Categories = useMemo(() => selectedL2 ? activeCategories.filter(c => c.parent_id === selectedL2).sort((a, b) => a.name.localeCompare(b.name)) : [], [activeCategories, selectedL2]);
+  const dropdowns = useMemo(() => {
+    const list = [];
 
-  const targetCategoryId = selectedL3 || selectedL2 || selectedL1;
+    const l0 = activeCategories.filter(c => !c.parent_id).sort((a, b) => a.name.localeCompare(b.name));
+    if (l0.length > 0) list.push(l0);
+
+    for (const selectedId of categoryPath) {
+      if (!selectedId) break;
+      const children = activeCategories.filter(c => c.parent_id === selectedId).sort((a, b) => a.name.localeCompare(b.name));
+      if (children.length > 0) {
+        list.push(children);
+      } else {
+        break;
+      }
+    }
+    return list;
+  }, [activeCategories, categoryPath]);
+
+  const targetCategoryId = categoryPath.length > 0 ? categoryPath[categoryPath.length - 1] : "";
 
   // Drag and drop handlers
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
@@ -166,9 +179,27 @@ export default function AdminProductsPage() {
     setVariants([...variants, { unit: "", unit_value: "", actual_price: "", selling_price: "", available_quantity: "0" }]);
   };
   const removeVariant = (index: number) => {
+    const oldQty = Number(variants[index].available_quantity) || 0;
+    if (oldQty > 0) {
+      setForm(f => ({
+        ...f,
+        availableQuantity: String(Math.max(0, (Number(f.availableQuantity) || 0) - oldQty))
+      }));
+    }
     setVariants(variants.filter((_, i) => i !== index));
   };
   const updateVariant = (index: number, field: keyof Variant, value: string) => {
+    if (field === "available_quantity") {
+      const oldQty = Number(variants[index].available_quantity) || 0;
+      const newQty = Number(value) || 0;
+      const diff = newQty - oldQty;
+      if (diff !== 0) {
+        setForm(f => ({
+          ...f,
+          availableQuantity: String(Math.max(0, (Number(f.availableQuantity) || 0) + diff))
+        }));
+      }
+    }
     const newV = [...variants];
     newV[index] = { ...newV[index], [field]: value };
     setVariants(newV);
@@ -254,9 +285,7 @@ export default function AdminProductsPage() {
       curr = categories.find(c => c.id === curr?.parent_id);
     }
 
-    setSelectedL1(path[0] || "");
-    setSelectedL2(path[1] || "");
-    setSelectedL3(path[2] || "");
+    setCategoryPath(path);
 
     setForm({
       name: p.name,
@@ -368,7 +397,7 @@ export default function AdminProductsPage() {
     setEditing(null);
     setForm({ name: "", description: "", sellingPrice: "", actualPrice: "", availableQuantity: "", unit: "" });
     setVariants([]);
-    setSelectedL1(""); setSelectedL2(""); setSelectedL3("");
+    setCategoryPath([]);
     setMediaItems([]);
     setErrors({});
   }
@@ -416,7 +445,7 @@ export default function AdminProductsPage() {
         <div>
           <p className="eyebrow">Product Management</p>
           <h1>Products</h1>
-          {/* <p className="meta">{status}</p> */}
+
         </div>
         {/* <button className="button secondary" type="button" onClick={loadData} disabled={busy}>
           <RefreshCw size={17} />
@@ -431,40 +460,42 @@ export default function AdminProductsPage() {
           </div>
         )}
         <div className="card-body">
-          {/* Row 1: Categories (3 columns) */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 16 }}>
-            <label className="field">
-              <span>Category <span style={{ color: "red" }}>*</span></span>
-              <select value={selectedL1} onChange={e => { setSelectedL1(Number(e.target.value) || ""); setSelectedL2(""); setSelectedL3(""); setErrors(err => ({ ...err, category: "" })); }}>
-                <option value="">-- Select Category --</option>
-                {l1Categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              {errors.category && <span style={{ color: "red", fontSize: 12, marginTop: 4 }}>{errors.category}</span>}
-            </label>
-
-            <label className="field">
-              <span>Subcategory <span style={{ color: "red" }}>*</span></span>
-              <select value={selectedL2} onChange={e => { setSelectedL2(Number(e.target.value) || ""); setSelectedL3(""); setErrors(err => ({ ...err, category: "" })); }} disabled={l2Categories.length === 0}>
-                <option value="">-- Select Subcategory --</option>
-                {l2Categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </label>
-
-            <label className="field">
-              <span>Sub-Subcategory <span style={{ color: "red" }}>*</span></span>
-              <select value={selectedL3} onChange={e => { setSelectedL3(Number(e.target.value) || ""); setErrors(err => ({ ...err, category: "" })); }} disabled={l3Categories.length === 0}>
-                <option value="">-- Select --</option>
-                {l3Categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </label>
+          {/* Row 1: Categories (Dynamic) */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(250px, 1fr))", gap: 16, marginBottom: 16 }}>
+            {dropdowns.map((options, idx) => (
+              <label key={idx} className="field">
+                <span>
+                  {idx === 0 ? "Category" : idx === 1 ? "Subcategory" : `Level ${idx + 1} Subcategory`}
+                  {idx === 0 ? <span style={{ color: "#ef4444" }}> *</span> : null}
+                </span>
+                <select
+                  value={categoryPath[idx] || ""}
+                  onChange={e => {
+                    const val = Number(e.target.value);
+                    setErrors(err => ({ ...err, category: "" }));
+                    if (!val) {
+                      setCategoryPath(categoryPath.slice(0, idx));
+                    } else {
+                      const newPath = categoryPath.slice(0, idx);
+                      newPath.push(val);
+                      setCategoryPath(newPath);
+                    }
+                  }}
+                >
+                  <option value="">{`-- Select ${idx === 0 ? "Category" : "Subcategory"} --`}</option>
+                  {options.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                {idx === 0 && errors.category && <div style={{ color: "#ef4444", fontSize: 12, fontWeight: 500, lineHeight: 1 }}>{errors.category}</div>}
+              </label>
+            ))}
           </div>
 
           {/* Row 2: Product Name, Unit, Prices (4 columns) */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 16 }}>
             <label className="field">
-              <span>Product Name <span style={{ color: "red" }}>*</span></span>
+              <span>Product Name <span style={{ color: "#ef4444" }}>*</span></span>
               <input value={form.name} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setErrors(err => ({ ...err, name: "" })); }} placeholder="E.g. Rose Plant" />
-              {errors.name && <span style={{ color: "red", fontSize: 12, marginTop: 4 }}>{errors.name}</span>}
+              {errors.name && <div style={{ color: "#ef4444", fontSize: 12, fontWeight: 500, lineHeight: 1 }}>{errors.name}</div>}
             </label>
 
             <label className="field">
@@ -476,28 +507,28 @@ export default function AdminProductsPage() {
             </label>
 
             <label className="field">
-              <span>Actual Price <span style={{ color: "red" }}>*</span></span>
+              <span>Actual Price <span style={{ color: "#ef4444" }}>*</span></span>
               <input type="number" min="0" step="0.01" value={form.actualPrice} onChange={e => { setForm(f => ({ ...f, actualPrice: e.target.value })); setErrors(err => ({ ...err, actualPrice: "" })); }} />
-              {errors.actualPrice && <span style={{ color: "red", fontSize: 12, marginTop: 4 }}>{errors.actualPrice}</span>}
+              {errors.actualPrice && <div style={{ color: "#ef4444", fontSize: 12, fontWeight: 500, lineHeight: 1 }}>{errors.actualPrice}</div>}
             </label>
 
             <label className="field">
-              <span>Selling Price <span style={{ color: "red" }}>*</span></span>
+              <span>Selling Price <span style={{ color: "#ef4444" }}>*</span></span>
               <input type="number" min="0" step="0.01" value={form.sellingPrice} onChange={e => { setForm(f => ({ ...f, sellingPrice: e.target.value })); setErrors(err => ({ ...err, sellingPrice: "" })); }} />
-              {errors.sellingPrice && <span style={{ color: "red", fontSize: 12, marginTop: 4 }}>{errors.sellingPrice}</span>}
+              {errors.sellingPrice && <div style={{ color: "#ef4444", fontSize: 12, fontWeight: 500, lineHeight: 1 }}>{errors.sellingPrice}</div>}
             </label>
           </div>
 
           {/* Row 3: Stocks, Media Dropzone (Grid with diverse columns) */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 3fr", gap: 16, marginBottom: 16 }}>
             <label className="field">
-              <span>Stocks Quantity <span style={{ color: "red" }}>*</span></span>
+              <span>Stocks Quantity <span style={{ color: "#ef4444" }}>*</span></span>
               <input type="number" min="0" value={form.availableQuantity} onChange={e => { setForm(f => ({ ...f, availableQuantity: e.target.value })); setErrors(err => ({ ...err, availableQuantity: "" })); }} />
-              {errors.availableQuantity && <span style={{ color: "red", fontSize: 12, marginTop: 4 }}>{errors.availableQuantity}</span>}
+              {errors.availableQuantity && <div style={{ color: "#ef4444", fontSize: 12, fontWeight: 500, lineHeight: 1 }}>{errors.availableQuantity}</div>}
             </label>
 
             <div>
-              <span style={{ color: "var(--muted)", fontSize: 13, fontWeight: 700, display: "block", marginBottom: 6 }}>Images/Videos <span style={{ color: "red" }}>*</span></span>
+              <span style={{ color: "var(--muted)", fontSize: 13, fontWeight: 700, display: "block", marginBottom: 6 }}>Images/Videos <span style={{ color: "#ef4444" }}>*</span></span>
               <div
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -522,7 +553,7 @@ export default function AdminProductsPage() {
                 <span style={{ color: "#475569", fontWeight: 500, fontSize: 14 }}>Drag and drop media, or click to browse</span>
                 <input type="file" accept="image/*,video/*" multiple ref={fileInputRef} onChange={handleFileChange} style={{ display: "none" }} />
               </div>
-              {errors.media && <span style={{ color: "red", fontSize: 12, display: "block", marginTop: 4 }}>{errors.media}</span>}
+              {errors.media && <div style={{ color: "#ef4444", fontSize: 12, fontWeight: 500, lineHeight: 1 }}>{errors.media}</div>}
 
               {mediaItems.length > 0 && (
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
@@ -560,7 +591,7 @@ export default function AdminProductsPage() {
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 15 }}>
               <div>
-                <h3 style={{ margin: 0 }}>Product Variants <span className="meta" style={{ fontWeight: "normal", fontSize: 13 }}>(Optional)</span></h3>
+                <h4 style={{ margin: 0 }}>Product Variants <span className="meta" style={{ fontWeight: "normal", fontSize: 13 }}>(Optional)</span></h4>
                 <p className="meta" style={{ margin: "5px 0 0" }}>Add variants if you have multiple sizes or configurations. This base price/stock will still apply as the default.</p>
               </div>
               <button className="button secondary" type="button" onClick={addVariant} style={{ padding: "4px 10px", fontSize: 13 }}>
@@ -575,7 +606,7 @@ export default function AdminProductsPage() {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
                 {variants.map((v, i) => (
-                  <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-end", background: "#f8fafc", padding: 15, borderRadius: 8, border: "1px solid #e2e8f0", flexWrap: "wrap" }}>
+                  <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#f8fafc", padding: 15, borderRadius: 8, border: "1px solid #e2e8f0", flexWrap: "wrap" }}>
                     <label className="field" style={{ flex: "1 1 120px", margin: 0 }}>
                       <span style={{ fontSize: 12 }}>Value (e.g. 500)</span>
                       <input value={v.unit_value} onChange={e => updateVariant(i, "unit_value", e.target.value)} placeholder="Value" />
@@ -588,21 +619,21 @@ export default function AdminProductsPage() {
                       </select>
                     </label>
                     <label className="field" style={{ flex: "1 1 120px", margin: 0 }}>
-                      <span style={{ fontSize: 12 }}>Actual Price <span style={{ color: "red" }}>*</span></span>
+                      <span style={{ fontSize: 12 }}>Actual Price <span style={{ color: "#ef4444" }}>*</span></span>
                       <input type="number" min="0" step="0.01" value={v.actual_price} onChange={e => { updateVariant(i, "actual_price", e.target.value); setErrors(err => ({ ...err, [`variant_${i}_actualPrice`]: "" })); }} />
-                      {errors[`variant_${i}_actualPrice`] && <span style={{ color: "red", fontSize: 11 }}>{errors[`variant_${i}_actualPrice`]}</span>}
+                      {errors[`variant_${i}_actualPrice`] && <div style={{ color: "#ef4444", fontSize: 12, fontWeight: 500, lineHeight: 1 }}>{errors[`variant_${i}_actualPrice`]}</div>}
                     </label>
                     <label className="field" style={{ flex: "1 1 120px", margin: 0 }}>
-                      <span style={{ fontSize: 12 }}>Selling Price <span style={{ color: "red" }}>*</span></span>
+                      <span style={{ fontSize: 12 }}>Selling Price <span style={{ color: "#ef4444" }}>*</span></span>
                       <input type="number" min="0" step="0.01" value={v.selling_price} onChange={e => { updateVariant(i, "selling_price", e.target.value); setErrors(err => ({ ...err, [`variant_${i}_sellingPrice`]: "" })); }} />
-                      {errors[`variant_${i}_sellingPrice`] && <span style={{ color: "red", fontSize: 11 }}>{errors[`variant_${i}_sellingPrice`]}</span>}
+                      {errors[`variant_${i}_sellingPrice`] && <div style={{ color: "#ef4444", fontSize: 12, fontWeight: 500, lineHeight: 1 }}>{errors[`variant_${i}_sellingPrice`]}</div>}
                     </label>
                     <label className="field" style={{ flex: "1 1 120px", margin: 0 }}>
-                      <span style={{ fontSize: 12 }}>Stock <span style={{ color: "red" }}>*</span></span>
+                      <span style={{ fontSize: 12 }}>Stock <span style={{ color: "#ef4444" }}>*</span></span>
                       <input type="number" min="0" value={v.available_quantity} onChange={e => { updateVariant(i, "available_quantity", e.target.value); setErrors(err => ({ ...err, [`variant_${i}_availableQuantity`]: "" })); }} />
-                      {errors[`variant_${i}_availableQuantity`] && <span style={{ color: "red", fontSize: 11 }}>{errors[`variant_${i}_availableQuantity`]}</span>}
+                      {errors[`variant_${i}_availableQuantity`] && <div style={{ color: "#ef4444", fontSize: 12, fontWeight: 500, lineHeight: 1 }}>{errors[`variant_${i}_availableQuantity`]}</div>}
                     </label>
-                    <button type="button" onClick={() => removeVariant(i)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: "10px 5px" }}>
+                    <button type="button" onClick={() => removeVariant(i)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: "10px 5px", marginTop: 17 }}>
                       <Trash2 size={18} />
                     </button>
                   </div>
@@ -627,7 +658,7 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      <div className="card">
+      <div className="card" style={{ overflow: "visible" }}>
         <div className="table-wrapper">
           <table className="data-table">
             <thead>
@@ -637,7 +668,7 @@ export default function AdminProductsPage() {
                 <th>Category</th>
                 <th>Pricing</th>
                 <th>Stock & Variants</th>
-                <th>Dates</th>
+                <th>Date</th>
                 <th>Status</th>
                 <th style={{ textAlign: "right" }}>Actions</th>
               </tr>
@@ -657,18 +688,16 @@ export default function AdminProductsPage() {
                   </td>
                   <td><span className="meta">{p.category}</span></td>
                   <td>
-                    <div>Selling: ₹{p.selling_price}</div>
-                    <div className="meta" style={{ textDecoration: "line-through" }}>Actual: ₹{p.actual_price}</div>
+                    <div>₹{p.selling_price}</div>
                   </td>
                   <td>
-                    <div>Base Stock: {p.available_quantity}</div>
+                    <div>{p.available_quantity}</div>
                     <div className="meta" style={{ fontSize: 12, marginTop: 4 }}>
                       {p.variants && p.variants.length > 0 ? `${p.variants.length} Variant(s)` : "No variants"}
                     </div>
                   </td>
                   <td>
-                    <div className="meta" style={{ fontSize: 12 }}>Created: {formatDate(p.created_at)}</div>
-                    <div className="meta" style={{ fontSize: 12 }}>Updated: {formatDate(p.updated_at)}</div>
+                    <div className="meta" style={{ fontSize: 13 }}>{formatDate(p.created_at)}</div>
                   </td>
                   <td>
                     <span className={`status-badge ${isActive(p) ? "status-paid" : "status-failed"}`}>
@@ -676,19 +705,20 @@ export default function AdminProductsPage() {
                     </span>
                   </td>
                   <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                    <a href={`/admin/products/view?id=${p.id}`} className="button secondary" style={{ display: "inline-flex", padding: "4px 8px", fontSize: 13, marginRight: 8, borderColor: "#3b82f6", color: "#3b82f6" }}>
-                      <Eye size={14} style={{ marginRight: 4 }} /> View
-                    </a>
-                    <button className="button secondary" type="button" onClick={() => startEdit(p)} disabled={busy} style={{ padding: "4px 8px", fontSize: 13, marginRight: 8 }}>
-                      <Edit2 size={14} /> Edit
-                    </button>
-                    <button className="button secondary" type="button" onClick={() => deleteProduct(p)} disabled={busy} style={{ padding: "4px 8px", fontSize: 13, marginRight: 8, color: "#ef4444" }}>
-                      <Trash2 size={14} /> Delete
-                    </button>
-                    <button className="button secondary" type="button" onClick={() => toggleProduct(p)} disabled={busy} style={{ padding: "4px 8px", fontSize: 13 }}>
-                      {isActive(p) ? <PowerOff size={14} /> : <Power size={14} />}
-                      {isActive(p) ? "Disable" : "Enable"}
-                    </button>
+                    <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
+                      <a href={`/admin/products/view?id=${p.id}`} className="button secondary" title="View" style={{ padding: "6px" }}>
+                        <Eye size={16} color="#3b82f6" />
+                      </a>
+                      <button className="button secondary" type="button" title="Edit" onClick={() => startEdit(p)} disabled={busy} style={{ padding: "6px" }}>
+                        <Edit2 size={16} />
+                      </button>
+                      <button className="button secondary" type="button" title="Delete" onClick={() => deleteProduct(p)} disabled={busy} style={{ padding: "6px" }}>
+                        <Trash2 size={16} color="#ef4444" />
+                      </button>
+                      <button className="button secondary" type="button" title={isActive(p) ? "Disable" : "Enable"} onClick={() => toggleProduct(p)} disabled={busy} style={{ padding: "6px" }}>
+                        {isActive(p) ? <PowerOff size={16} /> : <Power size={16} />}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

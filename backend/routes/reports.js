@@ -36,7 +36,7 @@ async function getReport(req, res, { sendJson }) {
   }
 
   if (report === "stock") {
-    const [rows] = await pool.query("SELECT name, available_quantity FROM products ORDER BY name");
+    const [rows] = await pool.query("SELECT name, available_quantity FROM products WHERE is_deleted = 0 ORDER BY name");
     sendJson(res, 200, rows);
     return;
   }

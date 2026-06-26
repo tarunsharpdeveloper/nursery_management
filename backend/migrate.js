@@ -79,6 +79,7 @@ async function ensureAdminSchema() {
 
   await pool.query("UPDATE orders SET payment_status = 'pending' WHERE payment_status = 'partial'");
   await pool.query("ALTER TABLE orders MODIFY payment_status ENUM('pending', 'paid', 'failed', 'refunded') NOT NULL DEFAULT 'pending'");
+  await addColumn("orders", "is_deleted", "TINYINT(1) NOT NULL DEFAULT 0");
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS product_variants (
@@ -158,6 +159,7 @@ async function ensureAdminSchema() {
 
   await addColumn("bills", "customer_id", "INT NULL");
   await addColumn("bills", "payment_type", "ENUM('cash', 'upi', 'credit') NOT NULL DEFAULT 'cash'");
+  await addColumn("bills", "is_deleted", "TINYINT(1) NOT NULL DEFAULT 0");
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS bill_items (
@@ -169,6 +171,8 @@ async function ensureAdminSchema() {
       line_total DECIMAL(10,2) NOT NULL
     )
   `);
+
+  await addColumn("order_items", "variant_id", "INT NULL");
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS customer_ledger (
@@ -201,6 +205,7 @@ async function ensureAdminSchema() {
   await addColumn("dispatches", "courier_company", "VARCHAR(120)");
   await addColumn("dispatches", "docket_number", "VARCHAR(120)");
   await addColumn("dispatches", "advance_booking_id", "INT NULL");
+  await pool.query("ALTER TABLE dispatches MODIFY order_id INT NULL");
 
   if (await columnExists("attendance", "user_id")) {
     await pool.query("ALTER TABLE attendance MODIFY user_id INT NULL");

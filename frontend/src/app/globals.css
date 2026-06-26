@@ -2610,6 +2610,7 @@ th {
 
 td {
   font-size: 14px;
+  text-transform: capitalize;
 }
 
 tbody tr:hover {
@@ -2625,6 +2626,7 @@ tbody tr:hover {
 .field {
   display: grid;
   gap: 6px;
+  align-content: start;
 }
 
 .field span {
@@ -2643,6 +2645,14 @@ tbody tr:hover {
   min-height: 42px;
   padding: 9px 11px;
   width: 100%;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #9ca3af;
+  opacity: 1;
 }
 
 .field textarea {

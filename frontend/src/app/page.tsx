@@ -74,6 +74,33 @@ export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [videoOpen, setVideoOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 12, hours: 23, minutes: 59, seconds: 59 });
+  const [testiStart, setTestiStart] = useState(0);
+  const [testiPerView, setTestiPerView] = useState(2);
+
+  // Testimonials slider data
+  const testimonials = [
+    { name: "Suresh R. (Farmer)", title: "Excellent Grafted Mango Plants", avatar: "/assets/img/testimonials/testi-1-1.png", text: "I ordered Alphonso Mango grafts for my orchard. They were dispatched quickly. The root health was incredible, and they are adapting very well." },
+    { name: "Preeti S. (Gardener)", title: "High Germination Flower Seeds", avatar: "/assets/img/testimonials/testi-1-2.png", text: "The germination rate of the Marigold and Petunia seeds was close to 90%. My garden is completely transformed. Highly recommended nursery!" },
+    { name: "Rajesh K. (Landscaper)", title: "Smooth Billing & Dispatch Log", avatar: "/assets/img/testimonials/testi-1-3.png", text: "For commercial landscaping projects, we need clear billing logs. Their system generates invoice receipts, orders, and dispatch slips in one place." },
+    { name: "Anita M. (Home Gardener)", title: "Lush & Healthy Indoor Plants", avatar: "/assets/img/testimonials/testi-1-1.png", text: "The indoor plants I received were lush, healthy, and beautifully packaged. The care instructions were spot-on. My living room feels like a green oasis now!" },
+    { name: "Vikram P. (Nursery Owner)", title: "Reliable Wholesale Supply", avatar: "/assets/img/testimonials/testi-1-2.png", text: "As a retail nursery, we need consistent wholesale supply. Their production logs and dispatch tracking make bulk ordering seamless and transparent." }
+  ];
+
+  // Responsive: 1 per view on mobile, 2 on desktop
+  useEffect(() => {
+    const updatePerView = () => {
+      const perView = window.innerWidth < 768 ? 1 : 2;
+      setTestiPerView(perView);
+      setTestiStart(prev => Math.min(prev, Math.max(0, testimonials.length - perView)));
+    };
+    updatePerView();
+    window.addEventListener("resize", updatePerView);
+    return () => window.removeEventListener("resize", updatePerView);
+  }, []);
+
+  const testiMaxStart = Math.max(0, testimonials.length - testiPerView);
+  const testiNext = () => setTestiStart(prev => prev >= testiMaxStart ? 0 : prev + 1);
+  const testiPrev = () => setTestiStart(prev => prev <= 0 ? testiMaxStart : prev - 1);
 
   // Auto-scroll hero slideshow
   useEffect(() => {
@@ -116,7 +143,7 @@ export default function HomePage() {
           price: Number(product.selling_price),
           stock: Number(product.available_quantity),
           sold: 0,
-          image: product.photo_url || "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=900&q=80",
+          image: product.photo_url || "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg",
           active: Boolean(product.is_active)
         }));
 
@@ -156,24 +183,40 @@ export default function HomePage() {
     <>
       {/* ── Hero Slides Area (Awantika Seeds Content) ── */}
       <section className="hero-style1">
-        <div className="hero-bg" style={{ backgroundImage: "url('/assets/img/bg/b-1-1.png')" }}></div>
+        <div className="hero-bg" style={{backgroundImage:'assets\img\bg\b-1-1' }}></div>
         <div className="hero-leaf2 wow fadeInUp" data-wow-delay="1s">
           <img src="/assets/img/hero/h-1-3.png" alt="hero leaf 2" />
         </div>
         <div className="hero-leaf3 wow fadeInUp" data-wow-delay="1.2s">
           <img src="/assets/img/hero/h-1-4.png" alt="hero leaf 3" />
         </div>
-        <div className="container">
-          {/* Slide 0 */}
-          {activeSlide === 0 && (
-            <div className="row gy-4 justify-content-between align-items-center animate-fade">
+        <div className="container" style={{ position: "relative" }}>
+          {[
+            { title: "High-Quality Plants & Saplings", text: "Premium organic saplings and custom-crafted fruit plants directly from our central nursery fields.", subtitle: "100% Certified Nursery Stock & Seeds.", img: "assets\\img\\hero\\h-1-1.png", imgAlt: "saplings" },
+            { title: "Pure & Certified Seeds Selection", text: "High-yield hybrid vegetable and flower seeds optimized for regional Indian soil conditions.", subtitle: "Tested for High Germination Rates.", img: "assets\\img\\hero\\h-1-22.png", imgAlt: "seeds display" },
+            { title: "Premium Nursery & Farm Supplies", text: "A complete range of organic garden soils, compost mixes, nutrients and planting assistance.", subtitle: "Direct Dispatch & Billing Ledger Support.", img: "assets\\img\\hero\\h-1-23.png", imgAlt: "nursery showcase" }
+          ].map((slide, idx) => (
+            <div
+              key={idx}
+              className="row gy-4 justify-content-between align-items-center"
+              style={{
+                opacity: activeSlide === idx ? 1 : 0,
+                visibility: activeSlide === idx ? "visible" : "hidden",
+                transition: "opacity 0.6s ease, visibility 0.6s ease",
+                position: activeSlide === idx ? "relative" : "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                pointerEvents: activeSlide === idx ? "auto" : "none"
+              }}
+            >
               <div className="col-xxl-6 col-xl-6 col-lg-8 mx-auto">
                 <div className="hero-content">
-                  <h1 className="hero-title">High-Quality Plants &amp; Saplings</h1>
-                  <p className="hero-text">Premium organic saplings and custom-crafted fruit plants directly from our central nursery fields.</p>
+                  <h1 className="hero-title">{slide.title}</h1>
+                  <p className="hero-text">{slide.text}</p>
                   <span className="hero-subtitle">
                     <img src="/assets/img/icons/i-1-1.png" alt="icon" />
-                    100% Certified Nursery Stock &amp; Seeds.
+                    {slide.subtitle}
                   </span>
                   <div className="d-flex">
                     <Link href="/products" className="vs-btn style1">Start Shopping<i className="fas fa-long-arrow-right"></i></Link>
@@ -182,80 +225,12 @@ export default function HomePage() {
               </div>
               <div className="col-xxl-auto col-xl-6 col-lg-8 mx-auto">
                 <div className="hero-img">
-                  <img src="/assets/img/hero/h-1-1.png" alt="saplings" />
+                  <img src={slide.img} alt={slide.imgAlt} />
                   <span className="circle"></span>
-                  <div className="hero-certificate">
-                    <img src="/assets/img/logos/l-1-1.png" alt="logo" />
-                  </div>
-                  <div className="hero-leaf">
-                    <img src="/assets/img/hero/h-1-2.png" alt="leaf decoration" />
-                  </div>
                 </div>
               </div>
             </div>
-          )}
-
-          {/* Slide 1 */}
-          {activeSlide === 1 && (
-            <div className="row gy-4 justify-content-between align-items-center animate-fade">
-              <div className="col-xxl-6 col-xl-6 col-lg-8 mx-auto">
-                <div className="hero-content">
-                  <h1 className="hero-title">Pure &amp; Certified Seeds Selection</h1>
-                  <p className="hero-text">High-yield hybrid vegetable and flower seeds optimized for regional Indian soil conditions.</p>
-                  <span className="hero-subtitle">
-                    <img src="/assets/img/icons/i-1-1.png" alt="icon" />
-                    Tested for High Germination Rates.
-                  </span>
-                  <div className="d-flex">
-                    <Link href="/products" className="vs-btn style1">Start Shopping<i className="fas fa-long-arrow-right"></i></Link>
-                  </div>
-                </div>
-              </div>
-              <div className="col-xxl-auto col-xl-6 col-lg-8 mx-auto">
-                <div className="hero-img">
-                  <img src="/assets/img/hero/h-1-1.png" alt="seeds display" />
-                  <span className="circle"></span>
-                  <div className="hero-certificate">
-                    <img src="/assets/img/logos/l-1-1.png" alt="logo" />
-                  </div>
-                  <div className="hero-leaf">
-                    <img src="/assets/img/hero/h-1-2.png" alt="leaf decoration" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Slide 2 */}
-          {activeSlide === 2 && (
-            <div className="row gy-4 justify-content-between align-items-center animate-fade">
-              <div className="col-xxl-6 col-xl-6 col-lg-8 mx-auto">
-                <div className="hero-content">
-                  <h1 className="hero-title">Premium Nursery &amp; Farm Supplies</h1>
-                  <p className="hero-text">A complete range of organic garden soils, compost mixes, nutrients and planting assistance.</p>
-                  <span className="hero-subtitle">
-                    <img src="/assets/img/icons/i-1-1.png" alt="icon" />
-                    Direct Dispatch &amp; Billing Ledger Support.
-                  </span>
-                  <div className="d-flex">
-                    <Link href="/products" className="vs-btn style1">Start Shopping<i className="fas fa-long-arrow-right"></i></Link>
-                  </div>
-                </div>
-              </div>
-              <div className="col-xxl-auto col-xl-6 col-lg-8 mx-auto">
-                <div className="hero-img">
-                  <img src="/assets/img/hero/h-1-1.png" alt="nursery showcase" />
-                  <span className="circle"></span>
-                  <div className="hero-certificate">
-                    <img src="/assets/img/logos/l-1-1.png" alt="logo" />
-                  </div>
-                  <div className="hero-leaf">
-                    <img src="/assets/img/hero/h-1-2.png" alt="leaf decoration" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          ))}
         </div>
 
         {/* Manual Slides Select */}
@@ -316,10 +291,10 @@ export default function HomePage() {
             <div className="col-lg-6 mb-30">
               <div className="img-box1">
                 <div className="img1">
-                  <img className="img" src="/assets/img/about/c-about-1-1.jpg" alt="about 1" />
+                  <img className="img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRj64W6Yhp2BLcBoHVPk2pQeqJx-HbiJXtTpWPoQpkATQ&s=10" alt="about 1" />
                 </div>
                 <div className="video-thumb1">
-                  <img className="img" src="/assets/img/about/about-1-2.jpg" alt="about 2" />
+                  <img className="img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLvX2WV6_Uck7fxt9yiwYPUV43XfKB_o_FGI74BTJAualpPZ-yEvrP7TF9&s=10" alt="about 2" />
                   <button onClick={() => setVideoOpen(true)} className="play-btn style7 popup-video" style={{ background: "transparent", border: "none" }}><i className="fas fa-play"></i></button>
                 </div>
               </div>
@@ -364,7 +339,7 @@ export default function HomePage() {
       )}
 
       {/* ── Trust / Review Area (Nursery Adaptation) ── */}
-      <section className="space-bottom">
+      {/* <section className="space-bottom">
         <div className="container">
           <div className="position-relative">
             <div className="review-wrap">
@@ -391,7 +366,7 @@ export default function HomePage() {
             <img src="/assets/img/shapes/s-1-1.png" alt="shape" className="shape-1" />
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* ── Dynamic Products Display Area (Live Catalog Data) ── */}
       <section className="space-top space-bottom" style={{ backgroundImage: "url('/assets/img/bg/bg-1-1.jpg')", backgroundSize: "cover" }}>
@@ -491,9 +466,9 @@ export default function HomePage() {
               </div>
             </div>
             <div className="col-lg-6 mx-auto">
-              <div className="img-box2">
+              <div className="img-box2" style={{ display: 'block', maxWidth: '100%', overflow: 'hidden' }}>
                 <div className="img-circle" style={{ backgroundImage: "url('/assets/img/features/feature-1-2.png')" }}></div>
-                <img src="/assets/img/features/feature-1-3.png" alt="feature" />
+                <img src="assets\img\features\feature-1-3.png" alt="feature" />
               </div>
             </div>
           </div>
@@ -541,7 +516,7 @@ export default function HomePage() {
       </div>
 
       {/* ── Brands Bar (Nursery Partners & Species) ── */}
-      <div className="brand-layout1" >
+      {/* <div className="brand-layout1" >
         <div className="container">
           <div className="row">
             <div className="col mx-auto text-center">
@@ -560,10 +535,10 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* ── Top Selling Product Area (Featured Alphonso Mango Plant) ── */}
-      <section className="product-layout2 z-index-common" style={{ backgroundImage: "url('/assets/img/bg/b-1-3.jpg')", backgroundSize: "cover" }}>
+      {/* <section className="product-layout2 z-index-common" style={{ backgroundImage: "url('/assets/img/bg/b-1-3.jpg')", backgroundSize: "cover" }}>
         <img className="ele1" src="/assets/img/products/product-leaf-1-1.png" alt="leaf" />
         <img className="ele2" src="/assets/img/products/product-leaf-1-2.png" alt="leaf" />
         <div className="container">
@@ -630,7 +605,7 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* ── Testimonials Area (Farmers & Gardeners Review) ── */}
       <section className="testimonials space-top space-bottom">
@@ -642,36 +617,48 @@ export default function HomePage() {
                 <h2 className="sec-title">What Our Customers Say</h2>
               </div>
             </div>
+            <div className="col-auto">
+              <div className="sec-btns" style={{ marginBottom: 0 }}>
+                <button className="vs-btn style4" onClick={testiPrev} aria-label="Previous testimonials"><i className="far fa-arrow-left"></i></button>
+                <button className="vs-btn style4" onClick={testiNext} aria-label="Next testimonials"><i className="far fa-arrow-right"></i></button>
+              </div>
+            </div>
           </div>
-          <div className="row" style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
-            {[
-              { name: "Suresh R. (Farmer)", title: "Excellent Grafted Mango Plants", avatar: "/assets/img/testimonials/testi-1-1.png", text: "I ordered Alphonso Mango grafts for my orchard. They were dispatched quickly. The root health was incredible, and they are adapting very well." },
-              { name: "Preeti S. (Gardener)", title: "High Germination Flower Seeds", avatar: "/assets/img/testimonials/testi-1-2.png", text: "The germination rate of the Marigold and Petunia seeds was close to 90%. My garden is completely transformed. Highly recommended nursery!" },
-              { name: "Rajesh K. (Landscaper)", title: "Smooth Billing &amp; Dispatch Log", avatar: "/assets/img/testimonials/testi-1-3.png", text: "For commercial landscaping projects, we need clear billing logs. Their system generates invoice receipts, orders, and dispatch slips in one place." }
-            ].map((testi, idx) => (
-              <div className="col" key={idx} style={{ flex: "1 1 440px" }}>
-                <div className="testi-style1">
-                  <div className="star-rating">
-                    <span style={{ width: "100%" }}>Rated 5 out of 5</span>
-                  </div>
-                  <span className="testi-author">By <a href="#">{testi.name}</a></span>
-                  <h3 className="testi-title">{testi.title}</h3>
-                  <div className="testi-content">
-                    <div className="testi-image">
-                      <img className="img1" src={testi.avatar} alt="testimonial avatar" />
-                      <i className="testi-icon"><img src="/assets/img/icons/testimonials-quote-icon-1.png" alt="quote" /></i>
+          <div style={{ overflow: "hidden" }}>
+            <div style={{
+              display: "flex",
+              transition: "transform 0.5s ease",
+              transform: `translateX(-${testiStart * (100 / testiPerView)}%)`
+            }}>
+              {testimonials.map((testi, idx) => (
+                <div key={idx} style={{
+                  flex: `0 0 ${100 / testiPerView}%`,
+                  padding: "0 10px",
+                  boxSizing: "border-box"
+                }}>
+                  <div className="testi-style1">
+                    <div className="star-rating" role="img" aria-label="Rated 5 out of 5">
+                      <span style={{ width: "100%" }}>Rated <strong className="rating">5</strong> out of 5</span>
                     </div>
-                    <p className="testi-text">{testi.text}</p>
+                    <span className="testi-author">By <a href="#">{testi.name}</a></span>
+                    <h3 className="testi-title">{testi.title}</h3>
+                    <div className="testi-content">
+                      <div className="testi-image">
+                        <img className="img1" src={testi.avatar} alt="testimonial avatar" />
+                        <i className="testi-icon"><img src="/assets/img/icons/testimonials-quote-icon-1.png" alt="quote" /></i>
+                      </div>
+                      <p className="testi-text">{testi.text}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── Blog Area (Plant & Farming Advice) ── */}
-      <section className="blog space-bottom">
+      {/* <section className="blog space-bottom">
         <div className="container">
           <div className="row">
             <div className="col-lg-8 mx-auto">
@@ -706,10 +693,10 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* ── Instagram Feed (Nursery Visuals) ── */}
-      <div className="insta-layout1" style={{ paddingBottom: "50px" }}>
+      {/* <div className="insta-layout1" style={{ paddingBottom: "50px" }}>
         <div className="container">
           <h2 className="sec-title2"><i className="fab fa-instagram"></i>Follow <a href="https://www.instagram.com/">@AwantikaSeeds</a></h2>
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
@@ -721,7 +708,7 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </div>
+      </div> */}
     </>
   );
 }

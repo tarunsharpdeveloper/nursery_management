@@ -125,10 +125,11 @@ textarea:focus-visible {
 .brand {
   align-items: center;
   display: flex;
-  gap: 10px;
+  /* gap: 10px; */
   text-decoration: none;
   white-space: nowrap;
   flex-shrink: 0;
+  margin-left: 1.5rem
 }
 
 .brand-logo-img {
@@ -141,7 +142,7 @@ textarea:focus-visible {
 }
 
 .brand-name {
-  font-size: 24px;
+  font-size: 19px;
   font-weight: 800;
   color: var(--text);
   letter-spacing: -0.3px;
@@ -2239,7 +2240,7 @@ p {
 
 .product-image {
   height: 410px;
-  background: var(--surface-muted);
+  /* background: var(--surface-muted); */
   display: block;
   object-fit: cover;
   width: 100%;
@@ -2400,7 +2401,7 @@ p {
   align-items: center;
   display: flex;
   gap: 10px;
-  /* margin-bottom: 14px; */
+  margin-bottom: 9px;
   padding: 4px 6px;
 }
 

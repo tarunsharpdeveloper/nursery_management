@@ -46,7 +46,7 @@ export const products: Product[] = [
     price: 180,
     stock: 95,
     sold: 68,
-    image: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=900&q=80",
+    image: "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg",
     active: true
   }
 ];

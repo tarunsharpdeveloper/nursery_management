@@ -67,7 +67,7 @@ function StarRating({ rating = 5, max = 5 }: { rating?: number; max?: number }) 
 
 // ── Fallback image ─────────────────────────────────────────────────────────
 const DEFAULT_IMG =
-  "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=900&q=80";
+  "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg";
 
 const OFFER_DATE = new Date("2027-12-31T00:00:00");
 

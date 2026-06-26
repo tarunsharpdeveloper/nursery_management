@@ -79,7 +79,7 @@ export default function MyOrdersPage() {
 
   return (
     <main>
-      <section className="z-index-common breadcumb-wrapper my-orders-hero" style={{ backgroundImage: "url('/assets/img/bg/b-1-3.png')" }}>
+      <section className="z-index-common breadcumb-wrapper my-orders-hero" style={{ backgroundImage: "url('https://img.magnific.com/free-photo/monstera-leaves-with-deep-cuts-water-droplets-after-spraying-closeup-dark-background-growing-tropical-plants-home-office_166373-9135.jpg?semt=ais_hybrid&w=740&q=80')", backgroundSize: "cover", backgroundPosition: "center" }}>
         <div className="container">
           <div className="breadcumb-content">
             <h1 className="breadcumb-title">My Orders</h1>

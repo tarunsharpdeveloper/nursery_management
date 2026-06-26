@@ -20,16 +20,16 @@ export default function AboutPage() {
   return (
     <main>
       {/* breadcumb */}
-      <section className="z-index-common breadcumb-wrapper" style={{ backgroundImage: "url('/assets/img/bg/b-1-3.png')" }}>
+      <section className="z-index-common breadcumb-wrapper" style={{ backgroundImage: "url('https://t3.ftcdn.net/jpg/03/61/44/76/360_F_361447601_xgUiLE3tNHW7sdI01beMHPTp2VPzTL8G.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
         <div className="container">
           <div className="row justify-content-between align-items-center">
             <div className="col-auto">
               <div className="breadcumb-content">
-                <h1 className="breadcumb-title">About Us</h1>
+                <h1 className="breadcumb-title">About us</h1>
                 <div className="breadcumb-menu-wrap">
                   <ul className="breadcumb-menu">
                     <li><Link href="/">Home</Link></li>
-                    <li>About Us</li>
+                    <li>About us</li>
                   </ul>
                 </div>
               </div>
@@ -47,10 +47,10 @@ export default function AboutPage() {
             <div className="col-lg-6 mb-30">
               <div className="img-box1">
                 <div className="img1">
-                  <img className="img" src="/assets/img/about/c-about-1-1.jpg" alt="about 1 1" />
+                  <img className="img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRj64W6Yhp2BLcBoHVPk2pQeqJx-HbiJXtTpWPoQpkATQ&s=10" alt="about 1 1" />
                 </div>
                 <div className="video-thumb1">
-                  <img className="img" src="/assets/img/about/about-1-2.jpg" alt="about 2 2" />
+                  <img className="img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLvX2WV6_Uck7fxt9yiwYPUV43XfKB_o_FGI74BTJAualpPZ-yEvrP7TF9&s=10" alt="about 2 2" />
                   <a href="#" className="play-btn style7 popup-video" tabIndex={0}><i className="fas fa-play"></i></a>
                 </div>
               </div>
@@ -108,11 +108,11 @@ export default function AboutPage() {
             </div>
             <div className="col-xl-6 col-lg-auto mb-30">
               <div className="img-box7">
-                <img src="/assets/img/features/feature-3-1.jpg" alt="feature-img" className="img1" />
+                <img src="https://static.vecteezy.com/system/resources/thumbnails/080/863/023/small/vibrant-foliage-of-a-peperomia-plant-also-known-as-a-baby-rubber-plant-or-green-succulent-showing-shiny-textured-surfaces-this-indoor-greenery-thrives-in-bright-light-photo.jpg" alt="feature-img" className="img1" />
                 <a href="#" className="play-btn style5 popup-video"><i className="fas fa-play"></i></a>
-                <img src="/assets/img/leafs/feature-3-2.png" alt="leafs" className="img2" />
+                {/* <img src="/assets/img/leafs/feature-3-2.png" alt="leafs" className="img2" />
                 <img src="/assets/img/leafs/feature-3-3.png" alt="leafs" className="img3" />
-                <img src="/assets/img/leafs/feature-3-4.png" alt="leafs" className="img4" />
+                <img src="/assets/img/leafs/feature-3-4.png" alt="leafs" className="img4" /> */}
               </div>
             </div>
           </div>

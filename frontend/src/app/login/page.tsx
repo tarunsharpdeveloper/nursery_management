@@ -248,6 +248,10 @@ function CustomerLoginContent() {
   }, [isLoaded, user, redirect, router]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.name === "phone") {
+      setFormData((prev) => ({ ...prev, phone: event.target.value.replace(/\D/g, "").slice(0, 10) }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [event.target.name]: event.target.value }));
   };
 
@@ -260,6 +264,9 @@ function CustomerLoginContent() {
       if (isLoginView) {
         await login(formData.email, formData.password);
       } else {
+        if (!/^\d{10}$/.test(formData.phone)) {
+          throw new Error("Phone number must be exactly 10 digits.");
+        }
         await register(formData.name, formData.email, formData.phone, formData.password);
       }
       router.push(redirect);
@@ -312,7 +319,18 @@ function CustomerLoginContent() {
                   <span>Phone Number</span>
                   <div>
                     <Phone size={18} />
-                    <input type="text" name="phone" value={formData.phone} onChange={handleChange} required placeholder="9876543210" />
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
+                      inputMode="numeric"
+                      pattern="[0-9]{10}"
+                      maxLength={10}
+                      title="Phone number must be exactly 10 digits."
+                      placeholder="9876543210"
+                    />
                   </div>
                 </label>
               </>

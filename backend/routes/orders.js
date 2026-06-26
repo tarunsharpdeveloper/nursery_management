@@ -5,7 +5,7 @@ const { hashPassword } = require("../auth");
 const orderSchema = z.object({
   customer: z.object({
     name: z.string().min(2),
-    phone: z.string().min(8),
+    phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
     email: z.string().email(),
     address: z.string().min(5)
   }),
@@ -132,7 +132,7 @@ async function createOrder(req, res, { readJson, sendJson }) {
 
 const trackingSchema = z.object({
   email: z.string().email().optional(),
-  phone: z.string().min(8).optional(),
+  phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits").optional(),
   orderNumber: z.string().min(3).optional()
 }).refine((value) => value.email || value.phone || value.orderNumber, {
   message: "Enter email, phone, or order number"

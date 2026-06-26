@@ -7,6 +7,7 @@ export interface CustomerUser {
   id: number;
   name: string;
   email: string;
+  phone?: string;
   role: string;
 }
 
@@ -20,6 +21,13 @@ interface CustomerAuthContextType {
 }
 
 const CustomerAuthContext = createContext<CustomerAuthContextType | undefined>(undefined);
+
+function getErrorMessage(payload: any, fallback: string) {
+  if (Array.isArray(payload?.error) && payload.error[0]?.message) {
+    return payload.error[0].message;
+  }
+  return payload?.message || fallback;
+}
 
 export function CustomerAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<CustomerUser | null>(null);
@@ -56,7 +64,7 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     });
     
     const payload = await response.json();
-    if (!response.ok) throw new Error(payload.message || "Login failed");
+    if (!response.ok) throw new Error(getErrorMessage(payload, "Login failed"));
     
     if (payload.user.role !== "customer") {
       throw new Error("This account is not a customer account.");
@@ -73,7 +81,7 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     });
     
     const payload = await response.json();
-    if (!response.ok) throw new Error(payload.message || "Registration failed");
+    if (!response.ok) throw new Error(getErrorMessage(payload, "Registration failed"));
 
     storeSession(payload.token, payload.user);
   };

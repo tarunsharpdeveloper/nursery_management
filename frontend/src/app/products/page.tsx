@@ -80,7 +80,7 @@ export default function ProductsPage() {
           price: Number(product.selling_price),
           stock: Number(product.available_quantity),
           sold: 0,
-          image: product.photo_url || "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=900&q=80",
+          image: product.photo_url || "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg",
           active: Boolean(product.is_active)
         }));
 
@@ -144,7 +144,7 @@ export default function ProductsPage() {
   return (
     <main>
       {/* ── Breadcrumb Header ── */}
-      <section className="z-index-common breadcumb-wrapper" style={{ backgroundImage: "url('/assets/img/bg/b-1-3.png')" }}>
+      <section className="z-index-common breadcumb-wrapper" style={{ backgroundImage: "url('https://img.magnific.com/free-photo/pot-with-young-monstera-with-deep-cuts-droplets-water-after-spraying-tropical-liana-dark-background-growing-tropical-plants-home-office_166373-9133.jpg?semt=ais_hybrid&w=740&q=80')", backgroundSize: "cover", backgroundPosition: "center" }}>
         <div className="container">
           <div className="row justify-content-between align-items-center">
             <div className="col-auto">

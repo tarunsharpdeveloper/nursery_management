@@ -35,6 +35,13 @@ export function clearAdminSession() {
   localStorage.removeItem("admin_user");
 }
 
+function getApiErrorMessage(payload: any) {
+  if (Array.isArray(payload?.error) && payload.error[0]?.message) {
+    return payload.error[0].message;
+  }
+  return payload?.message || "API request failed";
+}
+
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getStoredToken();
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -57,7 +64,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   }
 
   if (!response.ok) {
-    throw new Error(payload.message || "API request failed");
+    throw new Error(getApiErrorMessage(payload));
   }
 
   return payload as T;

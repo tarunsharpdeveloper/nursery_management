@@ -109,7 +109,7 @@ function LoginContent() {
                             onChange={handleChange}
                             required
                             style={{ width: "100%", padding: "12px 16px 12px 48px", borderRadius: "12px", border: "1px solid #ddd" }}
-                            placeholder="John Doe"
+                            placeholder="Enter Your Name"
                           />
                         </div>
                       </div>
@@ -125,7 +125,7 @@ function LoginContent() {
                             onChange={handleChange}
                             required
                             style={{ width: "100%", padding: "12px 16px 12px 48px", borderRadius: "12px", border: "1px solid #ddd" }}
-                            placeholder="9876543210"
+                            placeholder="Enter Your Phone Number"
                           />
                         </div>
                       </div>
@@ -311,7 +311,7 @@ function CustomerLoginContent() {
                   <span>Full Name</span>
                   <div>
                     <User size={18} />
-                    <input type="text" name="name" value={formData.name} onChange={handleChange} required placeholder="John Doe" />
+                    <input type="text" name="name" value={formData.name} onChange={handleChange} required placeholder="Enter Your Name" />
                   </div>
                 </label>
 
@@ -329,7 +329,7 @@ function CustomerLoginContent() {
                       pattern="[0-9]{10}"
                       maxLength={10}
                       title="Phone number must be exactly 10 digits."
-                      placeholder="9876543210"
+                      placeholder="Enter Your 10 Digit Phone Number"
                     />
                   </div>
                 </label>
@@ -340,7 +340,7 @@ function CustomerLoginContent() {
               <span>Email Address</span>
               <div>
                 <Mail size={18} />
-                <input type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="you@example.com" />
+                <input type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="Enter your email address" />
               </div>
             </label>
 
@@ -359,6 +359,17 @@ function CustomerLoginContent() {
                 />
               </div>
             </label>
+
+            <div style={{ textAlign: "right", marginBottom: "15px" }}>
+              <Link href="/forgot-password" style={{
+                color: "var(--brand)",
+                fontSize: "14px",
+                textDecoration: "none",
+                fontWeight: 600
+              }}>
+                Forgot Password?
+              </Link>
+            </div>
 
             <button type="submit" disabled={busy} className="button login-button">
               {busy ? "Please wait..." : isLoginView ? "Sign In" : "Create Account"}

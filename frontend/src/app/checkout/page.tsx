@@ -102,7 +102,7 @@ export default function CheckoutPage() {
   if (isSubmitted) {
     return (
       <main>
-        <section className="z-index-common breadcumb-wrapper" style={{ backgroundImage: "url('/assets/img/bg/b-1-3.png')" }}>
+        <section className="z-index-common breadcumb-wrapper" style={{ backgroundImage: "url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuwB_fJjOi4hX4YlC-mm76lRdTPTXJEMgZJM0HdFEaNcfOcC_V1EG6OQk&s=10')", backgroundSize: "cover", backgroundPosition: "center" }}>
           <div className="container">
             <div className="breadcumb-content">
               <h1 className="breadcumb-title">Order Confirmed</h1>
@@ -141,7 +141,7 @@ export default function CheckoutPage() {
   return (
     <main>
       {/* breadcumb */}
-      <section className="z-index-common breadcumb-wrapper" style={{ backgroundImage: "url('/assets/img/bg/b-1-3.png')" }}>
+      <section className="z-index-common breadcumb-wrapper" style={{ backgroundImage: "url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuwB_fJjOi4hX4YlC-mm76lRdTPTXJEMgZJM0HdFEaNcfOcC_V1EG6OQk&s=10')", backgroundSize: "cover", backgroundPosition: "center" }}>
         <div className="container">
           <div className="row justify-content-between align-items-center">
             <div className="col-auto">

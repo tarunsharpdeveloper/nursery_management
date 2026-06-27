@@ -2,6 +2,7 @@ const { loadEnv } = require("./env");
 loadEnv();
 const http = require("http");
 const { readJson, sendJson, sendNoContent, sendError, notFound } = require("./http");
+const { initEmailService } = require("./email");
 const { listProducts, getProduct, createProduct, editProduct, toggleProduct, deleteProduct } = require("./routes/products");
 const { createOrder, listCustomerOrders } = require("./routes/orders");
 const { createProduction } = require("./routes/production");
@@ -14,7 +15,7 @@ const { calculateWages } = require("./routes/wages");
 const { getLedger, getReport } = require("./routes/reports");
 const { ensureAdminSchema } = require("./migrate");
 const { authenticate, hasPermission } = require("./auth");
-const { login, me, registerCustomer, updateProfile, updatePassword } = require("./routes/auth");
+const { login, me, registerCustomer, updateProfile, updatePassword, forgotPassword, resetPassword, verifyResetToken } = require("./routes/auth");
 const {
   getDashboard,
   listCustomers,
@@ -47,12 +48,15 @@ const routes = [
   ["GET", "/api/health", null, (_req, res) => sendJson(res, 200, { status: "ok", service: "nursery-node-backend" })],
   ["POST", "/api/auth/login", null, login],
   ["POST", "/api/auth/register-customer", null, registerCustomer],
+  ["POST", "/api/auth/forgot-password", null, forgotPassword],
+  ["POST", "/api/auth/reset-password", null, resetPassword],
+  ["POST", "/api/auth/verify-reset-token", null, verifyResetToken],
   ["GET", "/api/auth/me", "dashboard:read", me],
   ["PATCH", "/api/auth/profile", "dashboard:read", updateProfile],
   ["PATCH", "/api/auth/password", "dashboard:read", updatePassword],
   ["GET", "/api/dashboard", "dashboard:read", getDashboard],
   ["GET", "/api/customers", "billing:read", listCustomers],
-  ["GET", "/api/categories", "products:read", listCategories],
+  ["GET", "/api/categories", null, listCategories],
   ["POST", "/api/categories", "products:write", createCategory],
   ["PATCH", "/api/categories", "products:write", editCategory],
   ["PATCH", "/api/categories/toggle", "products:write", toggleCategory],
@@ -129,6 +133,9 @@ const server = http.createServer(async (req, res) => {
 });
 
 const port = Number(process.env.BACKEND_PORT || 4000);
+
+// Initialize email service
+initEmailService();
 
 ensureAdminSchema()
   .then(() => {

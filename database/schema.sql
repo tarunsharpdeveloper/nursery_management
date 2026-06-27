@@ -244,3 +244,18 @@ CREATE TABLE wage_calculations (
   UNIQUE KEY unique_employee_month (employee_id, wage_month),
   FOREIGN KEY (employee_id) REFERENCES employees(id)
 );
+
+
+CREATE TABLE password_reset_tokens (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  reset_token VARCHAR(64) NOT NULL UNIQUE,
+  expires_at DATETIME NOT NULL,
+  is_used BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  used_at DATETIME,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_reset_token (reset_token),
+  INDEX idx_user_id (user_id),
+  INDEX idx_expires_at (expires_at)
+);

@@ -16,15 +16,32 @@ export function Footer() {
   return (
     <footer className="footer">
       <div className="footer-brand-col">
-        <div className="brand" style={{ color: "white", marginBottom: 14 }}>
+        <div style={{ 
+          display: "flex",
+          alignItems: "center",
+          gap: "16px",
+          marginBottom: "20px"
+        }}>
           <Image
-            className="brand-logo footer-logo"
             src={logo}
             alt="Awantika Seeds logo"
-            width={180}
-            height={180}
+            width={50}
+            height={50}
+            style={{ 
+              flexShrink: 0,
+              borderRadius: "50%",
+              
+              padding: "2px"
+            }}
           />
-          Awantika Seeds
+          <span style={{ 
+            color: "white",
+            fontSize: "22px", 
+            fontWeight: "700",
+            lineHeight: "1"
+          }}>
+            Awantika Seeds
+          </span>
         </div>
         <p className="meta" style={{ color: "rgba(255, 255, 255, 0.7)", maxWidth: 280 }}>
           Premium nursery plants and high-yield seeds. Cultivating green spaces and providing professional agricultural solutions.
@@ -38,6 +55,16 @@ export function Footer() {
           <li><Link href="/about">About Our Nursery</Link></li>
           <li><Link href="/contact">Get in Touch</Link></li>
           <li><Link href="/my-orders">Track My Orders</Link></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Policies</h3>
+        <ul className="footer-links">
+          <li><Link href="/privacy-policy">Privacy Policy</Link></li>
+          <li><Link href="/terms-of-service">Terms of Service</Link></li>
+          <li><Link href="/refund-policy">Refund Policy</Link></li>
+          <li><Link href="/shipping-policy">Shipping Policy</Link></li>
         </ul>
       </div>
 

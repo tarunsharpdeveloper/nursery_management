@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -73,11 +73,10 @@ const OFFER_DATE = new Date("2027-12-31T00:00:00");
 
 // ── Page component ─────────────────────────────────────────────────────────
 export default function ProductDetailsClient({
-  params,
+  id,
 }: {
-  params: Promise<{ id: string }>;
+  id: string;
 }) {
-  const { id } = use(params);
   const router = useRouter();
   const { addToCart } = useCart();
 

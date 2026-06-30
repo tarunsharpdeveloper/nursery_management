@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { Facebook, Instagram, Leaf, LogIn, LogOut, Search, ShoppingCart, X } from "lucide-react";
+import { Facebook, Instagram, Leaf, LogIn, LogOut, Menu, Search, ShoppingCart, X } from "lucide-react";
 import logo from "@/assets/images/logo.jpeg";
 import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
@@ -16,6 +16,7 @@ export function SiteHeader() {
   const { user, logout } = useCustomerAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Hide the customer header on admin pages, EXCEPT the login page
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
@@ -28,7 +29,7 @@ export function SiteHeader() {
       <div className="promo-bar">
         <div className="promo-content">
           <Leaf size={14} />
-          <span>Fresh plants &amp; seeds delivered to your doorstep — Ujjain, MP</span>
+          <span>Fresh plants &amp; seeds delivered to your doorstep — Ujjain, MP | Call: +91 80852 63020</span>
         </div>
         <div className="social-links">
           <a href="#" aria-label="Facebook"><Facebook size={14} /></a>
@@ -102,8 +103,106 @@ export function SiteHeader() {
             <ShoppingCart size={18} />
             <span className="cart-badge">{cartCount}</span>
           </Link>
+
+          {/* Hamburger Menu Button (Mobile Only) */}
+          <button 
+            className="nav-hamburger" 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
       </nav>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <>
+          {/* Overlay backdrop */}
+          <div 
+            className="mobile-menu-overlay"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          
+          {/* Mobile Menu Panel */}
+          <div className="mobile-menu">
+            <div className="mobile-menu-header">
+              <h3>Menu</h3>
+              <button onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="mobile-menu-content">
+              <Link 
+                href="/" 
+                className="mobile-menu-link"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Home
+              </Link>
+
+              <Link 
+                href="/about" 
+                className="mobile-menu-link"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                About Us
+              </Link>
+
+              <Link 
+                href="/products" 
+                className="mobile-menu-link"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Products
+              </Link>
+
+              <Link 
+                href="/contact" 
+                className="mobile-menu-link"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Contact
+              </Link>
+
+              {user && (
+                <Link 
+                  href="/my-orders" 
+                  className="mobile-menu-link"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  My Orders
+                </Link>
+              )}
+
+              {!user && (
+                <Link 
+                  href="/login" 
+                  className="mobile-menu-link mobile-menu-login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <LogIn size={18} />
+                  Login
+                </Link>
+              )}
+
+              {user && (
+                <button 
+                  onClick={() => {
+                    logout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="mobile-menu-link mobile-menu-logout"
+                >
+                  <LogOut size={18} />
+                  Logout
+                </button>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Search Popup Modal */}
       {isSearchOpen && (

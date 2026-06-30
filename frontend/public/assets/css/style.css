@@ -11693,7 +11693,7 @@ blockquote.vs-quote .quote-author {
 .reviews-form .form-title .rating-select label {
   margin-right: 0;
   text-align: right;
-  margin-bottom: 10px;
+  /* margin-bottom: 10px; */
 }
 
 .reviews-form .form-title .rating-select .stars {
@@ -11701,8 +11701,8 @@ blockquote.vs-quote .quote-author {
 }
 
 .reviews-form .form-title .rating-select .stars a {
-  height: 20px;
-  width: 20px;
+  height: 16px;
+  width: 18px;
 }
 
 .reviews-form .form-title .rating-select .stars a::after {
@@ -12190,7 +12190,7 @@ blockquote.vs-quote .quote-author {
   display: block;
   position: absolute;
   top: 0;
-  left: 0;
+  left: 1px;
   width: 18px;
   height: 14px;
   line-height: 1;
@@ -12256,11 +12256,11 @@ blockquote.vs-quote .quote-author {
 
 .woocommerce-reviews .vs-post-comment .rating-select {
   position: absolute;
-  right: 15px;
-  top: 15px;
+  right: 5px;
+  top: 0px;
   margin-bottom: 0;
   margin-top: 0;
-  padding: 2px 20px;
+  padding: 5px 22px;
   background-color: var(--bg2-color);
   border-radius: 30px;
 }
@@ -13025,12 +13025,15 @@ blockquote.vs-quote .quote-author {
 }
 
 .product-style1 {
-  box-shadow: 0px 4px 5px 0px rgba(0, 0, 0, 0.06);
-  border: 1px solid transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.06);
+  border: 1px solid #979494;
+  transition: all 0.3s ease;
 }
 
 .product-style1:hover {
   border: 1px solid var(--theme-color2);
+  box-shadow: 0 8px 20px rgba(80, 80, 80, 0.12), 0 12px 30px rgba(45, 80, 22, 0.1);
+  transform: translateY(-4px);
 }
 
 .product-style4 {
@@ -15236,3 +15239,42 @@ blockquote.vs-quote .quote-author {
 }
 
 /*# sourceMappingURL=style.css.map */
+
+
+/* ========================================
+   Review Star Rating Fixes
+======================================== */
+.rating-select .stars a {
+  background: transparent !important;
+  color: #ddd;
+  font-size: 24px;
+  text-decoration: none;
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  transition: color 0.2s ease;
+}
+
+.rating-select .stars a:before {
+  content: "★";
+  display: block;
+}
+
+.rating-select .stars a.active,
+.rating-select .stars a:hover {
+  color: #ffc107 !important;
+  background: transparent !important;
+}
+
+.rating-select .stars a:hover ~ a {
+  color: #ddd;
+}
+
+/* Remove green background from star rating links */
+.rating-select .stars span a {
+  background-color: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}

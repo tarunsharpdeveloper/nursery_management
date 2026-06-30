@@ -11693,7 +11693,7 @@ blockquote.vs-quote .quote-author {
 .reviews-form .form-title .rating-select label {
   margin-right: 0;
   text-align: right;
-  margin-bottom: 10px;
+  /* margin-bottom: 10px; */
 }
 
 .reviews-form .form-title .rating-select .stars {
@@ -11701,8 +11701,8 @@ blockquote.vs-quote .quote-author {
 }
 
 .reviews-form .form-title .rating-select .stars a {
-  height: 20px;
-  width: 20px;
+  height: 16px;
+  width: 18px;
 }
 
 .reviews-form .form-title .rating-select .stars a::after {
@@ -12190,7 +12190,7 @@ blockquote.vs-quote .quote-author {
   display: block;
   position: absolute;
   top: 0;
-  left: 0;
+  left: 1;
   width: 18px;
   height: 14px;
   line-height: 1;
@@ -12256,11 +12256,11 @@ blockquote.vs-quote .quote-author {
 
 .woocommerce-reviews .vs-post-comment .rating-select {
   position: absolute;
-  right: 15px;
-  top: 15px;
+  right: 5px;
+  top: 0px;
   margin-bottom: 0;
   margin-top: 0;
-  padding: 2px 20px;
+  padding: 5px 22px;
   background-color: var(--bg2-color);
   border-radius: 30px;
 }
@@ -13025,7 +13025,7 @@ blockquote.vs-quote .quote-author {
 
 .product-style1 {
   box-shadow: 0px 4px 5px 0px rgba(0, 0, 0, 0.06);
-  border: 1px solid transparent;
+  border: 1px solid black;
 }
 
 .product-style1:hover {

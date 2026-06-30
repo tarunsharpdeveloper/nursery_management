@@ -66,7 +66,7 @@ export default function ProductsPage() {
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState("featured");
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
 
   useEffect(() => {
     async function loadProducts() {

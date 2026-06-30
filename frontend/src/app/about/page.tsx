@@ -215,8 +215,20 @@ export default function AboutPage() {
               </div>
             </div>
             <div className="col-xxl-4 col-xl-4 col-lg-auto mx-auto mb-30">
-              <div className="img-box8">
-                <img src="/assets/img/about/about-p-1-1.png" alt="feature-img" className="img1" />
+              <div className="img-box8" style={{ maxWidth: '100%', height: 'auto' }}>
+                <img 
+                  src="/assets/img/about/about-p-1-1.png" 
+                  alt="feature-img" 
+                  className="img1"
+                  style={{
+                    width: '100%',
+                    maxWidth: '500px',
+                    height: 'auto',
+                    objectFit: 'contain',
+                    margin: '0 auto',
+                    display: 'block'
+                  }}
+                />
               </div>
             </div>
             <div className="col-xxl-4 col-xl-4 col-lg-7 mx-auto mb-30">

@@ -20,7 +20,7 @@ export default function CartPage() {
   return (
     <main>
       {/* breadcumb */}
-      <section className="z-index-common breadcumb-wrapper" style={{ backgroundImage: "url('/assets/img/bg/b-1-3.png')" }}>
+      <section className="z-index-common breadcumb-wrapper" style={{ backgroundImage: "url('https://www.shutterstock.com/image-photo/on-rainy-day-garden-nursery-260nw-2415197075.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
         <div className="container">
           <div className="row justify-content-between align-items-center">
             <div className="col-auto">
@@ -72,86 +72,86 @@ export default function CartPage() {
                       const cartKey = item.cartKey || String(item.id);
 
                       return (
-                      <tr className="cart_item" key={cartKey}>
-                        <td data-title="Name">
-                          <div className="d-flex align-items-center gap-4">
-                            <Link className="cart-productimage" href={`/products/${item.id}`}>
-                              <img
-                                width={91}
-                                height={91}
-                                src={item.photo_url || DEFAULT_IMG}
-                                alt={item.name}
-                                style={{ objectFit: "cover", borderRadius: "10px" }}
-                              />
-                            </Link>
-                            <div className="cart_item__des">
-                              <Link className="cart-productname" href={`/products/${item.id}`}>
-                                {item.name}
+                        <tr className="cart_item" key={cartKey}>
+                          <td data-title="Name">
+                            <div className="d-flex align-items-center gap-4">
+                              <Link className="cart-productimage" href={`/products/${item.id}`}>
+                                <img
+                                  width={91}
+                                  height={91}
+                                  src={item.photo_url || DEFAULT_IMG}
+                                  alt={item.name}
+                                  style={{ objectFit: "cover", borderRadius: "10px" }}
+                                />
                               </Link>
-                              <span>{item.category}</span>
-                            </div>
-                          </div>
-                        </td>
-                        <td data-title="Price">
-                          <span className="amount">
-                            <bdi>
-                              <span>Rs. </span>
-                              {item.selling_price.toFixed(2)}
-                            </bdi>
-                          </span>
-                        </td>
-                        <td data-title="Quantity">
-                          <div className="quantity">
-                            <div className="quantity__field quantity-container">
-                              <input
-                                type="number"
-                                id={`quantity-${cartKey}`}
-                                className="qty-input"
-                                step="1"
-                                min="1"
-                                max={item.available_quantity || 99}
-                                name="quantity"
-                                value={item.quantity}
-                                onChange={(e) => updateQuantity(cartKey, Number(e.target.value))}
-                                title="Qty"
-                              />
-                              <div className="quantity__buttons">
-                                <button
-                                  type="button"
-                                  className="quantity-plus qty-btn"
-                                  onClick={() => updateQuantity(cartKey, item.quantity + 1)}
-                                >
-                                  <i className="fas fa-caret-up"></i>
-                                </button>
-                                <button
-                                  type="button"
-                                  className="quantity-minus qty-btn"
-                                  onClick={() => updateQuantity(cartKey, item.quantity - 1)}
-                                >
-                                  <i className="fas fa-caret-down"></i>
-                                </button>
+                              <div className="cart_item__des">
+                                <Link className="cart-productname" href={`/products/${item.id}`}>
+                                  {item.name}
+                                </Link>
+                                <span>{item.category}</span>
                               </div>
                             </div>
-                          </div>
-                        </td>
-                        <td data-title="Total">
-                          <span className="amount">
-                            <bdi>
-                              <span>Rs. </span>
-                              {(item.selling_price * item.quantity).toFixed(2)}
-                            </bdi>
-                          </span>
-                          <button
-                            className="remove ms-3"
-                            type="button"
-                            onClick={() => removeFromCart(cartKey)}
-                            aria-label={`Remove ${item.name}`}
-                            style={{ border: "none", background: "transparent" }}
-                          >
-                            <i className="fal fa-trash-alt text-danger"></i>
-                          </button>
-                        </td>
-                      </tr>
+                          </td>
+                          <td data-title="Price">
+                            <span className="amount">
+                              <bdi>
+                                <span>Rs. </span>
+                                {item.selling_price.toFixed(2)}
+                              </bdi>
+                            </span>
+                          </td>
+                          <td data-title="Quantity">
+                            <div className="quantity">
+                              <div className="quantity__field quantity-container">
+                                <input
+                                  type="number"
+                                  id={`quantity-${cartKey}`}
+                                  className="qty-input"
+                                  step="1"
+                                  min="1"
+                                  max={item.available_quantity || 99}
+                                  name="quantity"
+                                  value={item.quantity}
+                                  onChange={(e) => updateQuantity(cartKey, Number(e.target.value))}
+                                  title="Qty"
+                                />
+                                <div className="quantity__buttons">
+                                  <button
+                                    type="button"
+                                    className="quantity-plus qty-btn"
+                                    onClick={() => updateQuantity(cartKey, item.quantity + 1)}
+                                  >
+                                    <i className="fas fa-caret-up"></i>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="quantity-minus qty-btn"
+                                    onClick={() => updateQuantity(cartKey, item.quantity - 1)}
+                                  >
+                                    <i className="fas fa-caret-down"></i>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td data-title="Total">
+                            <span className="amount">
+                              <bdi>
+                                <span>Rs. </span>
+                                {(item.selling_price * item.quantity).toFixed(2)}
+                              </bdi>
+                            </span>
+                            <button
+                              className="remove ms-3"
+                              type="button"
+                              onClick={() => removeFromCart(cartKey)}
+                              aria-label={`Remove ${item.name}`}
+                              style={{ border: "none", background: "transparent" }}
+                            >
+                              <i className="fal fa-trash-alt text-danger"></i>
+                            </button>
+                          </td>
+                        </tr>
                       );
                     })}
                   </tbody>

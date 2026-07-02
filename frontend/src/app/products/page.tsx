@@ -14,6 +14,7 @@ interface BackendProduct {
   selling_price: number;
   available_quantity: number;
   photo_url: string;
+  media_urls: string | null;
   is_active: boolean;
   category: string;
 }
@@ -65,24 +66,39 @@ export default function ProductsPage() {
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState("featured");
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
 
   useEffect(() => {
     async function loadProducts() {
       try {
         const data = await apiRequest<BackendProduct[]>("/api/products");
-        const transformedProducts: Product[] = data.map((product) => ({
-          id: product.id,
-          name: product.name,
-          type: product.product_type,
-          category: product.category,
-          description: product.description,
-          price: Number(product.selling_price),
-          stock: Number(product.available_quantity),
-          sold: 0,
-          image: product.photo_url || "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg",
-          active: Boolean(product.is_active)
-        }));
+        const transformedProducts: Product[] = data.map((product) => {
+          // Resolve best image: first from media_urls JSON array, then photo_url, then fallback
+          const FALLBACK_IMG = "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg";
+          let resolvedImage = product.photo_url || FALLBACK_IMG;
+          if (product.media_urls) {
+            try {
+              const parsed = JSON.parse(product.media_urls);
+              if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]) {
+                resolvedImage = parsed[0];
+              }
+            } catch {
+              if (product.media_urls) resolvedImage = product.media_urls;
+            }
+          }
+          return {
+            id: product.id,
+            name: product.name,
+            type: product.product_type,
+            category: product.category,
+            description: product.description,
+            price: Number(product.selling_price),
+            stock: Math.max(0, Number(product.available_quantity)),
+            sold: 0,
+            image: resolvedImage,
+            active: Boolean(product.is_active)
+          };
+        });
 
         if (transformedProducts.length) {
           setProducts(transformedProducts);
@@ -102,16 +118,24 @@ export default function ProductsPage() {
   }, [products]);
 
   useEffect(() => {
-    const categoryParam = new URLSearchParams(window.location.search).get("category");
-    if (!categoryParam) {
+    const searchParams = new URLSearchParams(window.location.search);
+    
+    // Category param
+    const categoryParam = searchParams.get("category");
+    if (categoryParam) {
+      const matchedCategory = categories.find(
+        (category) => category.toLowerCase() === categoryParam.toLowerCase()
+      );
+      setSelectedCategory(matchedCategory || categoryParam);
+    } else {
       setSelectedCategory(null);
-      return;
     }
 
-    const matchedCategory = categories.find(
-      (category) => category.toLowerCase() === categoryParam.toLowerCase()
-    );
-    setSelectedCategory(matchedCategory || categoryParam);
+    // Search param
+    const searchParam = searchParams.get("search");
+    if (searchParam) {
+      setQuery(searchParam);
+    }
   }, [categories]);
 
   const selectCategory = (category: string | null) => {
@@ -301,7 +325,13 @@ export default function ProductsPage() {
                           onClick={() => setViewMode("list")}
                           type="button"
                           aria-label="List View"
-                          style={{ border: "none", background: "transparent" }}
+                          style={{
+                            border: "none",
+                            background: viewMode === "list" ? "#ffc107" : "transparent",
+                            color: viewMode === "list" ? "#000" : "inherit",
+                            padding: "6px 10px",
+                            borderRadius: "50%"
+                          }}
                         >
                           <i className="fad fa-th-list"></i>
                         </button>
@@ -312,7 +342,13 @@ export default function ProductsPage() {
                           onClick={() => setViewMode("grid")}
                           type="button"
                           aria-label="Grid View"
-                          style={{ border: "none", background: "transparent" }}
+                          style={{
+                            border: "none",
+                            background: viewMode === "grid" ? "#ffc107" : "transparent",
+                            color: viewMode === "grid" ? "#000" : "inherit",
+                            padding: "6px 10px",
+                            borderRadius: "50%"
+                          }}
                         >
                           <i className="fad fa-th"></i>
                         </button>
@@ -334,18 +370,25 @@ export default function ProductsPage() {
                   <div className="row">
                     {filteredProducts.map((product) => (
                       <div className="col-12 mb-30" key={product.id}>
-                        <div className="vs-product product-style7">
-                          <div className="product-img" style={{ width: "32%", height: "100%", minHeight: "200px" }}>
-                            <Link href={`/products/${product.id}`} style={{ width: "100%" }}>
+                        <div className="vs-product product-style7" style={{ display: "flex", alignItems: "stretch", minHeight: "200px" }}>
+                          <div className="product-img" style={{ position: "relative", width: "300px", height: "300px", flexShrink: 0 }}>
+                            <Link href={`/products/${product.id}`} style={{ width: "100%", height: "100%", display: "block" }}>
                               <img
                                 src={product.image}
                                 alt={product.name}
                                 className="img"
-                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                style={{ 
+                                  width: "100%", 
+                                  height: "100%", 
+                                  objectFit: "cover",
+                                  borderRadius: "8px"
+                                }}
                               />
                             </Link>
+                            {product.stock <= 0 && <span className="product-tag2" style={{ position: "absolute", top: "15px", left: "15px", fontSize: "12px", fontWeight: 600, padding: "3px 12px", borderRadius: "15px", background: "var(--danger)", color: "#fff", zIndex: 2, border: "1px solid #fff" }}>Out of Stock</span>}
+                            {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ position: "absolute", top: "15px", left: "15px", fontSize: "12px", fontWeight: 600, padding: "3px 12px", borderRadius: "15px", background: "var(--accent)", color: "#fff", zIndex: 2, border: "1px solid #fff", whiteSpace: "nowrap" }}>Limited Stock</span>}
                           </div>
-                          <div className="product-content">
+                          <div className="product-content" style={{ flex: 1, padding: "20px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
                             <div className="star-rating">
                               <span style={{ width: "100%" }}>Rated 5.0 out of 5</span>
                             </div>
@@ -377,76 +420,32 @@ export default function ProductsPage() {
                     ))}
                   </div>
                 ) : (
-                  /* ── Grid View (product-style6) ── */
+                  /* ── Grid View (product-style1 from homepage) ── */
                   <div className="row">
                     {filteredProducts.map((product) => (
                       <div className="col-xl-4 col-md-6 mb-30" key={product.id}>
-                        <div className="vs-product product-style6" style={{ borderRadius: "30px", overflow: "hidden", display: "flex", flexDirection: "column", height: "100%" }}>
-                          <div className="product-img" style={{ position: "relative", borderBottom: "1px solid var(--vs-border-color4)" }}>
-                            <Link href={`/products/${product.id}`} style={{ display: "block" }}>
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                className="img w-100"
-                                style={{ height: "240px", objectFit: "cover", display: "block" }}
-                              />
+                        <div className="vs-product product-style1">
+                          <div className="product-img">
+                            <Link href={`/products/${product.id}`}>
+                              <img src={product.image} alt={product.name} className="img w-100" style={{ height: "230px", objectFit: "cover" }} />
                             </Link>
                             {product.stock <= 0 && <span className="product-tag2" style={{ background: "var(--danger)" }}>Out of Stock</span>}
+                            {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ background: "var(--accent)" }}>Limited Stock</span>}
                           </div>
-                          <div className="product-content" style={{ display: "flex", flexDirection: "column", flex: "1" }}>
+                          <div className="product-content">
                             <div className="star-rating">
                               <span style={{ width: "100%" }}>Rated 5.0 out of 5</span>
                             </div>
-                            <h3 className="product-title" style={{ flex: "1" }}>
+                            <h3 className="product-title">
                               <Link href={`/products/${product.id}`}>{product.name}</Link>
                             </h3>
-                            <span className="product-cate" style={{ display: "block", marginBottom: "8px" }}>{product.category} - {product.type}</span>
-                            <div className="d-flex justify-content-between align-items-center mt-2">
-                              <span className="product-price">Rs. {product.price}</span>
-                              <span style={{ fontSize: "12px", color: "var(--muted)" }}>
-                                {product.stock} in stock
-                              </span>
-                            </div>
-                            <div className="mt-3" style={{ display: "flex", gap: "10px", alignItems: "center", justifyContent: "space-between" }}>
-                              <Link 
-                                href={`/products/${product.id}`} 
-                                className="vs-btn style2" 
-                                style={{ 
-                                  padding: "10px 20px", 
-                                  fontSize: "14px", 
-                                  borderRadius: "30px", 
-                                  flex: "1", 
-                                  textAlign: "center",
-                                  display: "inline-block",
-                                  visibility: "visible",
-                                  opacity: 1,
-                                  transform: "none",
-                                  marginRight: 0
-                                }}
-                              >
-                                Details
-                              </Link>
-                              <button
-                                type="button"
-                                style={{ 
-                                  width: "44px",
-                                  height: "44px",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  backgroundColor: "var(--brand, #8cc63f)",
-                                  color: "#fff",
-                                  borderRadius: "50%",
-                                  fontSize: "16px",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  transition: "background-color 0.3s"
-                                }}
-                                onClick={() => addToCart(product, 1)}
-                                aria-label="Add to cart"
-                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2f6b3f")}
-                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--brand, #8cc63f)")}
-                              >
+                            <span className="product-cate">{product.category}</span>
+                            <span className="product-price">Rs. {product.price}</span>
+                            <div className="product-actions">
+                              <button type="button" className="vs-btn" onClick={() => addToCart(product, 1)}>
+                                Add to Cart
+                              </button>
+                              <button type="button" className="cart-btn" onClick={() => addToCart(product, 1)} aria-label={`Add ${product.name} to cart`}>
                                 <i className="fas fa-shopping-basket"></i>
                               </button>
                             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -29,6 +29,14 @@ interface BackendProduct {
     selling_price: number;
     available_quantity: number;
   }>;
+}
+
+interface Review {
+  id: number;
+  customer_name: string;
+  rating: number;
+  review_text: string;
+  created_at: string;
 }
 
 // ── Countdown timer hook ───────────────────────────────────────────────────
@@ -73,11 +81,10 @@ const OFFER_DATE = new Date("2027-12-31T00:00:00");
 
 // ── Page component ─────────────────────────────────────────────────────────
 export default function ProductDetailsClient({
-  params,
+  id,
 }: {
-  params: Promise<{ id: string }>;
+  id: string;
 }) {
-  const { id } = use(params);
   const router = useRouter();
   const { addToCart } = useCart();
 
@@ -90,6 +97,17 @@ export default function ProductDetailsClient({
   const [activeThumb, setActiveThumb] = useState(0);
   const [reviewRating, setReviewRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  
+  // Review states
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewForm, setReviewForm] = useState({
+    customer_name: '',
+    customer_email: '',
+    review_text: ''
+  });
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewSubmitMessage, setReviewSubmitMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
 
   const countdown = useCountdown(OFFER_DATE);
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -125,6 +143,76 @@ export default function ProductDetailsClient({
     setQuantity(1);
   }, [product?.id]);
 
+  // Fetch reviews for this product
+  useEffect(() => {
+    async function loadReviews() {
+      try {
+        setReviewsLoading(true);
+        const data = await apiRequest<Review[]>(`/api/reviews/${id}`);
+        setReviews(data);
+      } catch (error) {
+        console.error("Failed to load reviews:", error);
+      } finally {
+        setReviewsLoading(false);
+      }
+    }
+    
+    if (id) {
+      loadReviews();
+    }
+  }, [id]);
+
+  // Handle review form submission
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!reviewRating) {
+      setReviewSubmitMessage({ type: 'error', text: 'Please select a rating' });
+      return;
+    }
+    
+    if (!reviewForm.customer_name || !reviewForm.customer_email || !reviewForm.review_text) {
+      setReviewSubmitMessage({ type: 'error', text: 'Please fill in all fields' });
+      return;
+    }
+    
+    try {
+      setSubmittingReview(true);
+      setReviewSubmitMessage(null);
+      
+      await apiRequest('/api/reviews', {
+        method: 'POST',
+        body: JSON.stringify({
+          product_id: Number(id),
+          customer_name: reviewForm.customer_name,
+          customer_email: reviewForm.customer_email,
+          rating: reviewRating,
+          review_text: reviewForm.review_text
+        })
+      });
+      
+      // Success - reset form and reload reviews
+      setReviewForm({ customer_name: '', customer_email: '', review_text: '' });
+      setReviewRating(0);
+      setReviewSubmitMessage({ type: 'success', text: 'Thank you! Your review has been submitted successfully.' });
+      
+      // Reload reviews
+      const updatedReviews = await apiRequest<Review[]>(`/api/reviews/${id}`);
+      setReviews(updatedReviews);
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setReviewSubmitMessage(null), 5000);
+    } catch (error: any) {
+      console.error("Failed to submit review:", error);
+      setReviewSubmitMessage({ 
+        type: 'error', 
+        text: error.message || 'Failed to submit review. Please try again.' 
+      });
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   // ── Related products (exclude current, show up to 4) ──────────────────
   const related = allProducts
     .filter((p) => p.id !== Number(id) && p.is_active)
@@ -136,7 +224,7 @@ export default function ProductDetailsClient({
       <main>
         <section
           className="z-index-common breadcumb-wrapper"
-          style={{ backgroundImage: "url('/assets/img/bg/b-1-3.png')" }}
+          style={{ backgroundImage: "url('https://img.magnific.com/premium-photo/blurred-background-garden-center-interior_841543-65637.jpg?semt=ais_hybrid&w=740&q=80')" }}
         >
           <div className="container">
             <div className="breadcumb-content">
@@ -163,7 +251,7 @@ export default function ProductDetailsClient({
       <main>
         <section
           className="z-index-common breadcumb-wrapper"
-          style={{ backgroundImage: "url('/assets/img/bg/b-1-3.png')" }}
+          style={{ backgroundImage: "url('https://img.magnific.com/premium-photo/blurred-background-garden-center-interior_841543-65637.jpg?semt=ais_hybrid&w=740&q=80')" }}
         >
           <div className="container">
             <div className="breadcumb-content">
@@ -198,23 +286,27 @@ export default function ProductDetailsClient({
   }
 
   // ── Resolve image ──────────────────────────────────────────────────────
-  const mainImage = product.photo_url || DEFAULT_IMG;
-
-  // Parse extra media URLs if available
-  let thumbImages: string[] = [mainImage];
+  // Parse media_urls first — these are the images uploaded via the admin panel
+  let mediaList: string[] = [];
   if (product.media_urls) {
     try {
       const parsed = JSON.parse(product.media_urls);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        thumbImages = [mainImage, ...parsed.filter((u: string) => u !== mainImage)].slice(0, 4);
+        mediaList = parsed.filter(Boolean) as string[];
       }
     } catch {
-      // media_urls might just be a single URL string
-      if (product.media_urls !== mainImage) {
-        thumbImages = [mainImage, product.media_urls];
-      }
+      // media_urls might be a plain URL string
+      if (product.media_urls) mediaList = [product.media_urls];
     }
   }
+
+  // Main image: first uploaded image from media_urls, fallback to photo_url, then default
+  const mainImage = mediaList[0] || product.photo_url || DEFAULT_IMG;
+
+  // Build the full thumbnail strip from media_urls; if none, fall back to photo_url
+  let thumbImages: string[] = mediaList.length > 0
+    ? mediaList.slice(0, 4)
+    : [product.photo_url || DEFAULT_IMG];
 
   const displayImage = thumbImages[activeThumb] || mainImage;
   const variants = product.variants || [];
@@ -233,7 +325,7 @@ export default function ProductDetailsClient({
       {/* ── Breadcrumb ── */}
       <section
         className="z-index-common breadcumb-wrapper"
-        style={{ backgroundImage: "url('/assets/img/bg/b-1-3.png')" }}
+        style={{ backgroundImage: "url('https://img.magnific.com/premium-photo/blurred-background-garden-center-interior_841543-65637.jpg?semt=ais_hybrid&w=740&q=80')", backgroundSize: "cover", backgroundPosition: "center" }}
       >
         <div className="container">
           <div className="row justify-content-between align-items-center">
@@ -267,7 +359,7 @@ export default function ProductDetailsClient({
                     <img
                       src={displayImage}
                       alt={product.name}
-                      style={{ width: "100%", height: "auto", maxHeight: "480px", objectFit: "contain" }}
+                      style={{ width: "100%", height: "480px", objectFit: "cover", borderRadius: "inherit" }}
                     />
                   </div>
                 </div>
@@ -619,105 +711,154 @@ export default function ProductDetailsClient({
 
           {/* Reviews */}
           <div className="woocommerce-reviews space-extra-top mb-50">
-            <h3 className="blog-inner-title">Customer Reviews</h3>
+            <h3 className="blog-inner-title">Reviews</h3>
 
-            <div className="vs-post-comment">
-              <div className="rating-select">
-                <p className="stars">
-                  <span>
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <a key={s} className={`star-${s}`} href="#">{s}</a>
-                    ))}
-                  </span>
-                </p>
+            {reviewsLoading ? (
+              <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                <i className="fas fa-spinner fa-spin" style={{ fontSize: "24px", color: "var(--brand)" }}></i>
+                <p style={{ color: "var(--muted)", marginTop: "10px" }}>Loading reviews...</p>
               </div>
-              <div className="comment-avater">
-                <img
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80"
-                  alt="Reviewer"
-                />
+            ) : reviews.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                <p style={{ color: "var(--muted)" }}>No reviews yet. Be the first to review this product!</p>
               </div>
-              <div className="comment-content">
-                <h4 className="name h4">
-                  Ramesh Patel <span className="commented-on">February 12, 2026</span>
-                </h4>
-                <p className="text">
-                  Excellent quality! Arrived well-packed and in perfect health. Already showing new
-                  growth within two weeks. Highly recommend this nursery for all your gardening needs.
-                </p>
-              </div>
-            </div>
+            ) : (
+              reviews.map((review) => {
+                // Format date
+                const reviewDate = new Date(review.created_at);
+                const formattedDate = reviewDate.toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                });
 
-            <div className="vs-post-comment">
-              <div className="rating-select">
-                <p className="stars">
-                  <span>
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <a key={s} className={`star-${s}`} href="#">{s}</a>
-                    ))}
-                  </span>
-                </p>
-              </div>
-              <div className="comment-avater">
-                <img
-                  src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80"
-                  alt="Reviewer"
-                />
-              </div>
-              <div className="comment-content">
-                <h4 className="name h4">
-                  Priya Sharma <span className="commented-on">April 3, 2026</span>
-                </h4>
-                <p className="text">
-                  Great value for money and the team was very helpful with care instructions.
-                  Will definitely purchase again!
-                </p>
-              </div>
-            </div>
+                return (
+                  <div key={review.id} className="vs-post-comment">
+                    <div className="rating-select">
+                      <p className="stars">
+                        <span>
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <a key={s} className={`star-${s}${s <= review.rating ? ' active' : ''}`} href="#">{s}</a>
+                          ))}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="comment-avater">
+                      <img
+                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80"
+                        alt="Comment Author"
+                      />
+                    </div>
+                    <div className="comment-content">
+                      <h4 className="name h4">
+                        {review.customer_name} <span className="commented-on">{formattedDate}</span>
+                      </h4>
+                      <p className="text">{review.review_text}</p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
 
           {/* Add Review Form */}
           <div className="vs-comment-form reviews-form">
             <div id="respond">
-              <div className="form-title">
-                <div className="form-left">
-                  <h3 className="blog-inner-title">Add a Review</h3>
-                  <p className="mb-0">Your email address will not be published.</p>
+              <form onSubmit={handleReviewSubmit}>
+                <div className="form-title">
+                  <div className="form-left">
+                    <h3 className="blog-inner-title">Add Reviews</h3>
+                    <p className="mb-0">Your email address will not be published. Required fields are marked *</p>
+                  </div>
+                  <div className="rating-select">
+                    <label>Select Rating:</label>
+                    <p className="stars" style={{marginBottom:'0.9rem'}}>
+                      <span>
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <a
+                            key={s}
+                            href="#"
+                            className={`star-${s}${reviewRating >= s || hoverRating >= s ? " active" : ""}`}
+                            onClick={(e) => { e.preventDefault(); setReviewRating(s); }}
+                            onMouseEnter={() => setHoverRating(s)}
+                            onMouseLeave={() => setHoverRating(0)}
+                          >
+                            {s}
+                          </a>
+                        ))}
+                      </span>
+                    </p>
+                  </div>
                 </div>
-                <div className="rating-select">
-                  <label>Select Rating:</label>
-                  <p className="stars">
-                    <span>
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <a
-                          key={s}
-                          href="#"
-                          className={`star-${s}${reviewRating >= s || hoverRating >= s ? " active" : ""}`}
-                          onClick={(e) => { e.preventDefault(); setReviewRating(s); }}
-                          onMouseEnter={() => setHoverRating(s)}
-                          onMouseLeave={() => setHoverRating(0)}
-                        >
-                          {s}
-                        </a>
-                      ))}
-                    </span>
-                  </p>
+
+                {/* Success/Error message */}
+                {reviewSubmitMessage && (
+                  <div 
+                    style={{
+                      padding: "15px 20px",
+                      marginBottom: "20px",
+                      borderRadius: "8px",
+                      backgroundColor: reviewSubmitMessage.type === 'success' ? '#d4edda' : '#f8d7da',
+                      color: reviewSubmitMessage.type === 'success' ? '#155724' : '#721c24',
+                      border: `1px solid ${reviewSubmitMessage.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`
+                    }}
+                  >
+                    {reviewSubmitMessage.text}
+                  </div>
+                )}
+
+                <div className="row gx-20">
+                  <div className="col-md-6 form-group">
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      placeholder="Full Name *" 
+                      value={reviewForm.customer_name}
+                      onChange={(e) => setReviewForm({ ...reviewForm, customer_name: e.target.value })}
+                      required
+                      disabled={submittingReview}
+                    />
+                  </div>
+                  <div className="col-md-6 form-group">
+                    <input 
+                      type="email" 
+                      className="form-control" 
+                      placeholder="Email Address *" 
+                      value={reviewForm.customer_email}
+                      onChange={(e) => setReviewForm({ ...reviewForm, customer_email: e.target.value })}
+                      required
+                      disabled={submittingReview}
+                    />
+                  </div>
+                  <div className="col-12 form-group">
+                    <textarea 
+                      className="form-control" 
+                      placeholder="Your Review *"
+                      value={reviewForm.review_text}
+                      onChange={(e) => setReviewForm({ ...reviewForm, review_text: e.target.value })}
+                      required
+                      disabled={submittingReview}
+                      rows={5}
+                    ></textarea>
+                  </div>
+                  <div className="col-12 form-group mb-0">
+                    <button 
+                      type="submit" 
+                      className="vs-btn style2"
+                      disabled={submittingReview}
+                    >
+                      {submittingReview ? (
+                        <>
+                          <i className="fas fa-spinner fa-spin" style={{ marginRight: "8px" }}></i>
+                          Submitting...
+                        </>
+                      ) : (
+                        'Post Review'
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="row gx-20">
-                <div className="col-md-6 form-group">
-                  <input type="text" className="form-control" placeholder="Full Name" />
-                </div>
-                <div className="col-md-6 form-group">
-                  <input type="email" className="form-control" placeholder="Email Address" />
-                </div>
-                <div className="col-12 form-group">
-                  <textarea className="form-control" placeholder="Your Review"></textarea>
-                </div>
-                <div className="col-12 form-group mb-0">
-                  <button type="button" className="vs-btn style2">Post Review</button>
-                </div>
-              </div>
+              </form>
             </div>
           </div>
         </div>
@@ -729,62 +870,85 @@ export default function ProductDetailsClient({
           <div className="container">
             <h3 className="blog-inner-title">Related Products</h3>
             <div className="row">
-              {related.map((rp) => (
-                <div key={rp.id} className="col-xl-3 col-lg-4 col-md-6 mb-30">
-                  <div className="vs-product product-style6">
-                    <div className="product-img">
-                      <Link href={`/products/${rp.id}`}>
-                        <img
-                          src={rp.photo_url || DEFAULT_IMG}
-                          alt={rp.name}
-                          className="img w-100"
-                          style={{ objectFit: "cover", height: "220px", width: "100%", display: "block" }}
-                        />
-                      </Link>
-                      {rp.available_quantity <= 0 && (
-                        <Link href={`/products/${rp.id}`} className="product-tag2">
-                          Out of Stock
+              {related.map((rp) => {
+                // Resolve best image for each related product
+                let relatedImage = DEFAULT_IMG;
+                
+                // First try to get from media_urls
+                if (rp.media_urls) {
+                  try {
+                    const parsed = JSON.parse(rp.media_urls);
+                    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]) {
+                      relatedImage = parsed[0];
+                    }
+                  } catch {
+                    // media_urls might be a plain string
+                    if (rp.media_urls) relatedImage = rp.media_urls;
+                  }
+                }
+                
+                // Fallback to photo_url if no media_urls
+                if (relatedImage === DEFAULT_IMG && rp.photo_url) {
+                  relatedImage = rp.photo_url;
+                }
+
+                return (
+                  <div key={rp.id} className="col-xl-3 col-lg-4 col-md-6 mb-30">
+                    <div className="vs-product product-style6">
+                      <div className="product-img">
+                        <Link href={`/products/${rp.id}`}>
+                          <img
+                            src={relatedImage}
+                            alt={rp.name}
+                            className="img w-100"
+                            style={{ objectFit: "cover", height: "220px", width: "100%", display: "block" }}
+                          />
                         </Link>
-                      )}
-                    </div>
-                    <div className="product-content">
-                      <StarRating rating={5} />
-                      <h3 className="product-title">
-                        <Link href={`/products/${rp.id}`}>{rp.name}</Link>
-                      </h3>
-                      <span className="product-cate">{rp.category}</span>
-                      <span className="product-price">
-                        Rs.&nbsp;{Number(rp.selling_price).toFixed(2)}
-                      </span>
-                      <div className="product-actions">
-                        <button
-                          type="button"
-                          className="vs-btn"
-                          disabled={rp.available_quantity <= 0}
-                          onClick={() => {
-                            addToCart(rp, 1);
-                            router.push("/cart");
-                          }}
-                        >
-                          Add to Cart
-                        </button>
-                        <button
-                          type="button"
-                          className="cart-btn"
-                          aria-label="Cart"
-                          disabled={rp.available_quantity <= 0}
-                          onClick={() => {
-                            addToCart(rp, 1);
-                            router.push("/cart");
-                          }}
-                        >
-                          <i className="fas fa-shopping-basket"></i>
-                        </button>
+                        {rp.available_quantity <= 0 && (
+                          <Link href={`/products/${rp.id}`} className="product-tag2">
+                            Out of Stock
+                          </Link>
+                        )}
+                      </div>
+                      <div className="product-content">
+                        <StarRating rating={5} />
+                        <h3 className="product-title">
+                          <Link href={`/products/${rp.id}`}>{rp.name}</Link>
+                        </h3>
+                        <span className="product-cate">{rp.category}</span>
+                        <span className="product-price">
+                          Rs.&nbsp;{Number(rp.selling_price).toFixed(2)}
+                        </span>
+                        <div className="product-actions">
+                          <button
+                            type="button"
+                            className="vs-btn"
+                            disabled={rp.available_quantity <= 0}
+                            onClick={() => {
+                              addToCart(rp, 1);
+                              router.push("/cart");
+                            }}
+                          >
+                            Add to Cart
+                          </button>
+                          <button
+                            type="button"
+                            className="cart-btn"
+                            aria-label="Cart"
+                            disabled={rp.available_quantity <= 0}
+                            onClick={() => {
+                              addToCart(rp, 1);
+                              router.push("/cart");
+                            }}
+                          >
+                            <i className="fas fa-shopping-basket"></i>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>

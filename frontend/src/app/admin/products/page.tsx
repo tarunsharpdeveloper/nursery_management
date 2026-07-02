@@ -664,6 +664,7 @@ export default function AdminProductsPage() {
             <thead>
               <tr>
                 <th style={{ width: 60 }}>S.No.</th>
+                <th style={{ width: 80 }}>Media</th>
                 <th>Product</th>
                 <th>Category</th>
                 <th>Pricing</th>
@@ -682,6 +683,50 @@ export default function AdminProductsPage() {
               {products.map((p, index) => (
                 <tr key={p.id}>
                   <td>{index + 1}</td>
+                  <td>
+                    {(() => {
+                      let imgSrc: string | null = null;
+                      if (p.media_urls) {
+                        try {
+                          const parsed = JSON.parse(p.media_urls);
+                          if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]) {
+                            imgSrc = parsed[0];
+                          }
+                        } catch {
+                          imgSrc = p.media_urls;
+                        }
+                      }
+                      return imgSrc ? (
+                        <img
+                          src={imgSrc}
+                          alt={p.name}
+                          style={{
+                            width: 52,
+                            height: 52,
+                            objectFit: "cover",
+                            borderRadius: 8,
+                            border: "1px solid #e2e8f0",
+                            display: "block"
+                          }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: 52,
+                          height: 52,
+                          borderRadius: 8,
+                          border: "1px dashed #cbd5e1",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "#f8fafc",
+                          color: "#94a3b8",
+                          fontSize: 10
+                        }}>
+                          No img
+                        </div>
+                      );
+                    })()}
+                  </td>
                   <td>
                     <strong>{p.name}</strong>
                     {p.unit ? <span className="meta" style={{ marginLeft: 6 }}>({p.unit})</span> : null}

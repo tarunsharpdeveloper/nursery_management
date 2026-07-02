@@ -15,6 +15,7 @@ interface BackendProduct {
   selling_price: number;
   available_quantity: number;
   photo_url: string;
+  media_urls: string | null;
   is_active: boolean;
   category: string;
 }
@@ -76,6 +77,7 @@ export default function HomePage() {
   const [timeLeft, setTimeLeft] = useState({ days: 12, hours: 23, minutes: 59, seconds: 59 });
   const [testiStart, setTestiStart] = useState(0);
   const [testiPerView, setTestiPerView] = useState(2);
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
 
   // Testimonials slider data
   const testimonials = [
@@ -134,18 +136,34 @@ export default function HomePage() {
     async function loadProducts() {
       try {
         const data = await apiRequest<BackendProduct[]>("/api/products");
-        const transformedProducts: Product[] = data.map((product) => ({
-          id: product.id,
-          name: product.name,
-          type: product.product_type,
-          category: product.category,
-          description: product.description,
-          price: Number(product.selling_price),
-          stock: Number(product.available_quantity),
-          sold: 0,
-          image: product.photo_url || "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg",
-          active: Boolean(product.is_active)
-        }));
+        const transformedProducts: Product[] = data.map((product) => {
+          // Resolve best image: first from media_urls JSON array, then photo_url, then fallback
+          const FALLBACK_IMG = "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg";
+          let resolvedImage = product.photo_url || FALLBACK_IMG;
+          if (product.media_urls) {
+            try {
+              const parsed = JSON.parse(product.media_urls);
+              if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]) {
+                resolvedImage = parsed[0];
+              }
+            } catch {
+              // media_urls is a plain string URL
+              if (product.media_urls) resolvedImage = product.media_urls;
+            }
+          }
+          return {
+            id: product.id,
+            name: product.name,
+            type: product.product_type,
+            category: product.category,
+            description: product.description,
+            price: Number(product.selling_price),
+            stock: Math.max(0, Number(product.available_quantity)),
+            sold: 0,
+            image: resolvedImage,
+            active: Boolean(product.is_active)
+          };
+        });
 
         if (transformedProducts.length) {
           setProducts(transformedProducts);
@@ -159,6 +177,34 @@ export default function HomePage() {
 
     loadProducts();
   }, []);
+
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const data = await apiRequest<any[]>("/api/categories");
+        if (Array.isArray(data)) {
+          setDbCategories(data);
+        }
+      } catch (error) {
+        console.error("Failed to load categories:", error);
+      }
+    }
+    loadCategories();
+  }, []);
+
+  const getCategoryImageUrl = (categoryName: string) => {
+    const dbCat = dbCategories.find(c => c.name.toLowerCase() === categoryName.toLowerCase());
+    if (dbCat && dbCat.photo_urls) {
+      try {
+        const urls = JSON.parse(dbCat.photo_urls);
+        if (Array.isArray(urls) && urls.length > 0) return urls[0];
+        if (typeof urls === 'string') return urls;
+      } catch {
+        return dbCat.photo_urls;
+      }
+    }
+    return categoryArt[categoryName] || "/assets/img/cate/c-1-1.png";
+  };
 
   const categories = useMemo(() => {
     return [...new Set(products.map((product) => product.category))].sort();
@@ -257,26 +303,158 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          <div className="row" style={{ display: "flex", gap: "20px", flexWrap: "wrap", justifyContent: "center" }}>
+          <div className="row g-4 justify-content-center" style={{ marginTop: "30px" }}>
             {categories.map((category, idx) => (
-              <div className="col-auto" key={category} style={{ flex: "1 1 200px", maxWidth: "240px" }}>
-                <div className="cate-style">
-                  <div className="cate-figure">
-                    <img src={categoryArt[category] || "/assets/img/cate/c-1-1.png"} alt={category} className="cate-img" />
-                  </div>
-                  <div className="cate-content">
-                    <h3 className="cate-title">
-                      <Link href={`/products?category=${encodeURIComponent(category)}`} className="cate-title__link">
+              <div className="col-lg-3 col-md-4 col-sm-6" key={category}>
+                <Link 
+                  href={`/products?category=${encodeURIComponent(category)}`}
+                  style={{ textDecoration: "none" }}
+                >
+                  <div 
+                    className="category-card"
+                    style={{
+                      position: "relative",
+                      borderRadius: "20px",
+                      overflow: "hidden",
+                      backgroundColor: "#fff",
+                      boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
+                      transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                      cursor: "pointer",
+                      height: "100%",
+                      border: "2px solid transparent"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-12px) scale(1.02)";
+                      e.currentTarget.style.boxShadow = "0 20px 50px rgba(45, 80, 22, 0.2)";
+                      e.currentTarget.style.borderColor = "var(--brand)";
+                      const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
+                      if (img) img.style.transform = "scale(1.15) rotate(2deg)";
+                      const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
+                      if (overlay) overlay.style.opacity = "1";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0) scale(1)";
+                      e.currentTarget.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.08)";
+                      e.currentTarget.style.borderColor = "transparent";
+                      const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
+                      if (img) img.style.transform = "scale(1) rotate(0deg)";
+                      const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
+                      if (overlay) overlay.style.opacity = "0";
+                    }}
+                  >
+                    {/* Image Container */}
+                    <div style={{
+                      position: "relative",
+                      width: "100%",
+                      height: "240px",
+                      overflow: "hidden",
+                      borderRadius: "20px 20px 0 0"
+                    }}>
+                      <img 
+                        src={getCategoryImageUrl(category)} 
+                        alt={category}
+                        className="category-img"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)"
+                        }}
+                      />
+                      
+                      {/* Gradient Overlay */}
+                      <div 
+                        className="category-overlay"
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          background: "linear-gradient(180deg, rgba(45, 80, 22, 0) 0%, rgba(45, 80, 22, 0.6) 100%)",
+                          opacity: 0,
+                          transition: "opacity 0.5s ease",
+                          zIndex: 1
+                        }}
+                      />
+
+                      {/* Product Count Badge */}
+                      <div style={{
+                        position: "absolute",
+                        top: "16px",
+                        right: "16px",
+                        background: "linear-gradient(135deg, var(--brand) 0%, #4a7c2e 100%)",
+                        color: "#fff",
+                        padding: "8px 16px",
+                        borderRadius: "25px",
+                        fontSize: "12px",
+                        fontWeight: "700",
+                        boxShadow: "0 4px 12px rgba(45, 80, 22, 0.4)",
+                        zIndex: 2
+                      }}>
+                        {products.filter((product) => product.category === category).length} Items
+                      </div>
+                    </div>
+
+                    {/* Content Section */}
+                    <div style={{
+                      padding: "24px 20px",
+                      background: "linear-gradient(180deg, #ffffff 0%, #fafbfa 100%)"
+                    }}>
+                      <h3 style={{
+                        fontSize: "20px",
+                        fontWeight: "800",
+                        color: "#2d5016",
+                        marginBottom: "8px",
+                        textAlign: "center",
+                        lineHeight: "1.3",
+                        letterSpacing: "-0.5px"
+                      }}>
                         {category}
-                      </Link>
-                    </h3>
-                    <span className="cate-num">
-                      <Link href={`/products?category=${encodeURIComponent(category)}`} className="cate-num__link">
-                        {products.filter((product) => product.category === category).length} Products
-                      </Link>
-                    </span>
+                      </h3>
+                      
+                      <div style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "8px",
+                        marginTop: "12px"
+                      }}>
+                        <div style={{
+                          width: "40px",
+                          height: "2px",
+                          background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)"
+                        }}></div>
+                        <span style={{
+                          fontSize: "13px",
+                          color: "#6b8e23",
+                          fontWeight: "600",
+                          textTransform: "uppercase",
+                          letterSpacing: "1px"
+                        }}>
+                          Explore
+                        </span>
+                        <div style={{
+                          width: "40px",
+                          height: "2px",
+                          background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)"
+                        }}></div>
+                      </div>
+                    </div>
+
+                    {/* Decorative Corner Element */}
+                    <div style={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      width: "60px",
+                      height: "60px",
+                      background: "linear-gradient(135deg, var(--brand) 0%, transparent 100%)",
+                      opacity: 0.05,
+                      borderRadius: "0 60px 0 0"
+                    }}></div>
                   </div>
-                </div>
+                </Link>
               </div>
             ))}
           </div>

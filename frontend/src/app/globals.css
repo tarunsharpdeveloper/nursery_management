@@ -110,7 +110,7 @@ textarea:focus-visible {
 .nav {
   align-items: center;
   background: #ffffff;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+  /* box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07); */
   display: flex;
   gap: 32px;
   justify-content: space-between;
@@ -4585,7 +4585,7 @@ tbody tr:hover {
 .vs-post-comment .comment-content .name { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .vs-post-comment .comment-content .commented-on { font-size: 13px; color: #888; font-weight: 400; margin-left: 10px; }
 .vs-post-comment .comment-content .text { color: #555; line-height: 1.7; margin-bottom: 0; }
-.vs-post-comment .rating-select { width: 100%; }
+.vs-post-comment .rating-select { width:16%; }
 
 /* Rating stars */
 .rating-select { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -5068,3 +5068,261 @@ font-size: 1.4rem;}
 }
 
 
+
+
+/* ============================================ */
+/* Mobile Menu Styles */
+/* ============================================ */
+
+/* Hamburger button - hidden on desktop, visible on mobile */
+.nav-hamburger {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.nav-hamburger:hover {
+  background: var(--surface-muted);
+}
+
+/* Mobile menu overlay (backdrop) */
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 998;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Mobile menu panel (slides in from right) */
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 85%;
+  max-width: 400px;
+  background: var(--surface);
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.3s ease;
+  overflow-y: auto;
+}
+
+/* Mobile menu header */
+.mobile-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--line);
+  background: var(--brand);
+  color: white;
+}
+
+.mobile-menu-header h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+}
+
+.mobile-menu-header button {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.mobile-menu-header button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile menu content */
+.mobile-menu-content {
+  flex: 1;
+  padding: 16px 0;
+}
+
+/* Mobile menu links */
+.mobile-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s;
+  cursor: pointer;
+  border-left: 4px solid transparent;
+}
+
+.mobile-menu-link:hover {
+  background: var(--surface-muted);
+  border-left-color: var(--brand);
+  padding-left: 28px;
+}
+
+.mobile-menu-link:active {
+  background: var(--surface-strong);
+}
+
+/* Special styling for login/logout */
+.mobile-menu-login,
+.mobile-menu-logout {
+  margin-top: 12px;
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.mobile-menu-logout {
+  color: var(--danger);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Responsive breakpoints */
+@media (max-width: 991px) {
+  /* Show hamburger on mobile/tablet */
+  .nav-hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Hide desktop menu on mobile */
+  .nav-menu {
+    display: none !important;
+  }
+
+  /* Hide login/logout buttons on mobile header */
+  .nav-login-btn,
+  .nav-icon-btn[title="Logout"] {
+    display: none !important;
+  }
+
+  /* Adjust nav actions spacing on mobile */
+  .nav-actions {
+    gap: 8px;
+  }
+
+  /* Hide search text on very small screens */
+  .nav-search-btn span {
+    display: none;
+  }
+
+  /* Make logo text smaller on mobile */
+  .brand-name {
+    font-size: 14px !important;
+  }
+
+  /* Adjust promo bar for mobile */
+  .promo-bar {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+
+  .promo-bar .social-links {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 576px) {
+  /* Even smaller adjustments for tiny screens */
+  .brand-logo-img {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .brand-name {
+    font-size: 12px !important;
+  }
+
+  .mobile-menu {
+    width: 90%;
+  }
+
+  .promo-content span {
+    display: none;
+  }
+
+  .promo-content {
+    justify-content: center;
+  }
+}
+
+/* Prevent body scroll when mobile menu is open */
+body.mobile-menu-open {
+  overflow: hidden;
+}
+
+
+/* Fix for review star rating selector and display */
+.rating-select .stars a {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 5px !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+/* Tighter spacing for stars in displayed reviews */
+.vs-post-comment .rating-select .stars a {
+  margin: 0 1px !important;
+}
+
+/* Non-active stars - gray/empty */
+.rating-select .stars a:not(.active)::before {
+  color: #ddd !important;
+}
+
+/* Active stars - yellow/filled */
+.rating-select .stars a.active::before {
+  color: #ffc107 !important;
+}
+
+.rating-select .stars {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0;
+}

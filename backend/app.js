@@ -2,6 +2,7 @@ const { loadEnv } = require("./env");
 loadEnv();
 const http = require("http");
 const { readJson, sendJson, sendNoContent, sendError, notFound } = require("./http");
+const { initEmailService } = require("./email");
 const { listProducts, getProduct, createProduct, editProduct, toggleProduct, deleteProduct } = require("./routes/products");
 const { createOrder, listCustomerOrders } = require("./routes/orders");
 const { createProduction } = require("./routes/production");
@@ -12,9 +13,10 @@ const { initiatePayment, paymentWebhook } = require("./routes/payments");
 const { createEmployee, saveAttendance, saveBulkAttendance, editEmployee, toggleEmployee, deleteEmployee } = require("./routes/attendance");
 const { calculateWages } = require("./routes/wages");
 const { getLedger, getReport } = require("./routes/reports");
+const { getReviews, submitReview, getReviewStats } = require("./routes/reviews");
 const { ensureAdminSchema } = require("./migrate");
 const { authenticate, hasPermission } = require("./auth");
-const { login, me, registerCustomer, updateProfile, updatePassword } = require("./routes/auth");
+const { login, me, registerCustomer, updateProfile, updatePassword, forgotPassword, resetPassword, verifyResetToken } = require("./routes/auth");
 const {
   getDashboard,
   listCustomers,
@@ -52,6 +54,9 @@ const routes = [
   ["GET", "/api/health", null, (_req, res) => sendJson(res, 200, { status: "ok", service: "nursery-node-backend" })],
   ["POST", "/api/auth/login", null, login],
   ["POST", "/api/auth/register-customer", null, registerCustomer],
+  ["POST", "/api/auth/forgot-password", null, forgotPassword],
+  ["POST", "/api/auth/reset-password", null, resetPassword],
+  ["POST", "/api/auth/verify-reset-token", null, verifyResetToken],
   ["GET", "/api/auth/me", "dashboard:read", me],
   ["PATCH", "/api/auth/profile", "dashboard:read", updateProfile],
   ["PATCH", "/api/auth/password", "dashboard:read", updatePassword],
@@ -66,7 +71,7 @@ const routes = [
   ["PATCH", "/api/roles", "roles:write", editRole],
   ["POST", "/api/roles/delete", "roles:write", deleteRole],
   ["GET", "/api/customers", "billing:read", listCustomers],
-  ["GET", "/api/categories", "products:read", listCategories],
+  ["GET", "/api/categories", null, listCategories],
   ["POST", "/api/categories", "products:write", createCategory],
   ["PATCH", "/api/categories", "products:write", editCategory],
   ["PATCH", "/api/categories/toggle", "products:write", toggleCategory],
@@ -111,8 +116,37 @@ const routes = [
   ["GET", "/api/wages/summary", "wages:read", listWageSummary],
   ["POST", "/api/wages/calculate", "wages:read", calculateWages],
   ["GET", "/api/customer-ledger", "ledger:read", getLedger],
-  ["GET", "/api/reports", "reports:read", getReport]
+  ["GET", "/api/reports", "reports:read", getReport],
+  ["GET", "/api/reviews/:productId", null, getReviews],
+  ["POST", "/api/reviews", null, submitReview],
+  ["GET", "/api/reviews/stats/:productId", null, getReviewStats]
 ];
+
+// Route matcher that handles path parameters
+function matchRoute(method, pathname, routeMethod, routePath) {
+  if (method !== routeMethod) return false;
+  
+  // Exact match
+  if (pathname === routePath) return true;
+  
+  // Check for path parameters
+  const routeParts = routePath.split('/');
+  const pathParts = pathname.split('/');
+  
+  if (routeParts.length !== pathParts.length) return false;
+  
+  for (let i = 0; i < routeParts.length; i++) {
+    if (routeParts[i].startsWith(':')) {
+      // This is a parameter, skip comparison
+      continue;
+    }
+    if (routeParts[i] !== pathParts[i]) {
+      return false;
+    }
+  }
+  
+  return true;
+}
 
 const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") {
@@ -121,7 +155,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   const url = new URL(req.url, `http://${req.headers.host}`);
-  const match = routes.find(([method, path]) => method === req.method && path === url.pathname);
+  const match = routes.find(([method, path]) => matchRoute(req.method, url.pathname, method, path));
 
   if (!match) {
     notFound(res);
@@ -149,6 +183,9 @@ const server = http.createServer(async (req, res) => {
 });
 
 const port = Number(process.env.BACKEND_PORT || 4000);
+
+// Initialize email service
+initEmailService();
 
 ensureAdminSchema()
   .then(() => {

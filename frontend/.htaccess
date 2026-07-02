@@ -1,0 +1,9 @@
+# Minimal .htaccess - Let cPanel Node.js App handle routing
+
+# If you get 403 or 500 errors, this file is NOT the solution
+# You MUST use cPanel's "Setup Node.js App" to run the server
+
+# Optional: Force HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

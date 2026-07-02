@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AdminShell } from "@/components/admin-shell";
 import { ArrowLeft } from "lucide-react";
@@ -33,7 +33,7 @@ type OrderDetail = {
   items: OrderItem[];
 };
 
-export default function ViewOrderPage() {
+function ViewOrderContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("id");
   const [order, setOrder] = useState<OrderDetail | null>(null);
@@ -226,5 +226,23 @@ export default function ViewOrderPage() {
         </div>
       </div>
     </AdminShell>
+  );
+}
+
+export default function ViewOrderPage() {
+  return (
+    <Suspense fallback={
+      <AdminShell>
+        <div className="section-header">
+          <div>
+            <p className="eyebrow">Online Order Management</p>
+            <h1>View Order</h1>
+            <p className="meta">Loading...</p>
+          </div>
+        </div>
+      </AdminShell>
+    }>
+      <ViewOrderContent />
+    </Suspense>
   );
 }

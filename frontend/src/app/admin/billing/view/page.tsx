@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AdminShell } from "@/components/admin-shell";
 import { ArrowLeft } from "lucide-react";
@@ -32,7 +32,7 @@ type BillDetail = {
   items: BillItem[];
 };
 
-export default function ViewBillPage() {
+function ViewBillContent() {
   const searchParams = useSearchParams();
   const billId = searchParams.get("id");
   const [bill, setBill] = useState<BillDetail | null>(null);
@@ -199,5 +199,23 @@ export default function ViewBillPage() {
         </div>
       </div>
     </AdminShell>
+  );
+}
+
+export default function ViewBillPage() {
+  return (
+    <Suspense fallback={
+      <AdminShell>
+        <div className="section-header">
+          <div>
+            <p className="eyebrow">Offline Billing</p>
+            <h1>View Bill</h1>
+            <p className="meta">Loading...</p>
+          </div>
+        </div>
+      </AdminShell>
+    }>
+      <ViewBillContent />
+    </Suspense>
   );
 }

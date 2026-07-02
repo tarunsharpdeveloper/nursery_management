@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NDPS Payment Test</title>
+</head>
+<body>
+    <h2>NDPS Payment Gateway Test</h2>
+    <p>Testing connection to: <strong>https://paynetzuat.atomtech.in/ots/aipay/auth</strong></p>
+    <p>Merchant ID: <strong>317159</strong></p>
+    <p>Product: <strong>NSE</strong></p>
+    
+    <form id="paymentForm" method="POST" action="https://paynetzuat.atomtech.in/ots/aipay/auth">
+        <input type="hidden" name="encdata" id="encdata" value="">
+        <input type="hidden" name="signature" id="signature" value="">
+        
+        <h3>Test Payment Details:</h3>
+        <p>Amount: ₹100.00</p>
+        <p>Test Order ID: TEST001</p>
+        <p>Email: test@example.com</p>
+        <p>Mobile: 9876543210</p>
+        
+        <button type="button" onclick="initiatePayment()">Test Payment</button>
+    </form>
+
+    <script>
+        async function initiatePayment() {
+            try {
+                const response = await fetch('http://localhost:4000/api/ndps/initiate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        orderId: 1,
+                        amount: 100,
+                        customerEmail: 'test@example.com',
+                        customerMobile: '9876543210'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('encdata').value = data.formData.encdata;
+                    document.getElementById('signature').value = data.formData.signature;
+                    document.getElementById('paymentForm').submit();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Network error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

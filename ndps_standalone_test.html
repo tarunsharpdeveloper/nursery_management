@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NDPS UAT Test - Standalone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .test-data {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 NDPS Payment Gateway - Standalone Test</h1>
+        
+        <div class="info-box">
+            <strong>Test Environment:</strong> UAT<br>
+            <strong>Merchant ID:</strong> 317159<br>
+            <strong>Gateway URL:</strong> https://paynetzuat.atomtech.in/ots/aipay/auth<br>
+            <strong>Product:</strong> NSE
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Current Issue:</strong><br>
+            Submitting this form results in a blank page from NDPS gateway.<br>
+            The form is POST to the correct URL with encrypted data, but no payment page is displayed.
+        </div>
+
+        <h3>Test Transaction Details:</h3>
+        <div class="test-data" id="testData"></div>
+
+        <h3>Encrypted Payload:</h3>
+        <div class="test-data" id="encryptedData">Loading...</div>
+
+        <form id="ndpsForm" method="POST" action="https://paynetzuat.atomtech.in/ots/aipay/auth">
+            <input type="hidden" name="encdata" id="encdataField">
+            <input type="hidden" name="signature" id="signatureField">
+            <button type="submit">Submit to NDPS Gateway</button>
+        </form>
+
+        <div style="margin-top: 30px; padding: 15px; background: #f9f9f9; border-radius: 5px;">
+            <strong>For NDPS Support:</strong><br>
+            Please help us debug why this results in a blank page.<br>
+            Contact: manaspathak2107@gmail.com
+        </div>
+    </div>
+
+    <script>
+        // This would normally come from your backend API
+        // For now, showing what the backend generates
+        
+        const testTransaction = {
+            merchId: 317159,
+            password: "Test@123",
+            merchTxnId: "TEST_" + Date.now(),
+            merchTxnDate: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            amount: "100.00",
+            customerEmail: "test@example.com",
+            customerMobile: "9876543210",
+            product: "NSE"
+        };
+
+        const payloadJSON = {
+            "payInstrument": {
+                "headDetails": {
+                    "version": "OTSv1.1",
+                    "api": "AUTH",
+                    "platform": "FLASH"
+                },
+                "merchDetails": {
+                    "merchId": testTransaction.merchId,
+                    "userId": "",
+                    "password": testTransaction.password,
+                    "merchTxnId": testTransaction.merchTxnId,
+                    "merchTxnDate": testTransaction.merchTxnDate
+                },
+                "payDetails": {
+                    "amount": testTransaction.amount,
+                    "product": testTransaction.product,
+                    "custAccNo": "TEST123",
+                    "txnCurrency": "INR"
+                },
+                "custDetails": {
+                    "custEmail": testTransaction.customerEmail,
+                    "custMobile": testTransaction.customerMobile
+                },
+                "extras": {
+                    "udf1": "test_order",
+                    "udf2": "nursery_test",
+                    "udf3": window.location.href,
+                    "udf4": "",
+                    "udf5": ""
+                }
+            }
+        };
+
+        // Display test data
+        document.getElementById('testData').textContent = JSON.stringify(payloadJSON, null, 2);
+
+        // Note: In production, this would be done on the backend with proper encryption
+        // For testing purposes, we're showing what needs to be sent
+        
+        document.getElementById('encryptedData').innerHTML = 
+            '<strong style="color: red;">⚠️ Encryption must be done server-side</strong><br><br>' +
+            'The JSON above needs to be:<br>' +
+            '1. Converted to string<br>' +
+            '2. Encrypted using AES-128-ECB with Request Key: A4476C2062FFA58980DC8F79EB6A799E<br>' +
+            '3. Converted to uppercase hex string<br>' +
+            '4. Signature generated using SHA-256 with hash key: KEY123657234<br><br>' +
+            '<strong>To test properly:</strong><br>' +
+            '1. Use the backend API: http://localhost:4000/api/ndps/initiate<br>' +
+            '2. Get encrypted data and signature<br>' +
+            '3. Submit to NDPS gateway<br><br>' +
+            '<a href="http://localhost:4000" target="_blank">→ Go to Backend API Test</a>';
+
+        // Prevent form submission for now since we don't have encrypted data
+        document.getElementById('ndpsForm').addEventListener('submit', function(e) {
+            alert('⚠️ This is a template only.\n\nFor actual testing:\n1. Start your backend: node backend/app.js\n2. Use the checkout page\n3. Or call /api/ndps/initiate API directly\n\nThe backend will provide properly encrypted data.');
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>

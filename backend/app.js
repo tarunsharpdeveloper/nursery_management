@@ -14,6 +14,7 @@ const { createEmployee, saveAttendance } = require("./routes/attendance");
 const { calculateWages } = require("./routes/wages");
 const { getLedger, getReport } = require("./routes/reports");
 const { getReviews, submitReview, getReviewStats } = require("./routes/reviews");
+const { initiateNDPSPayment, handleNDPSResponse, checkPaymentStatus, requeryTransactionStatus } = require("./routes/ndps-payments");
 const { ensureAdminSchema } = require("./migrate");
 const { authenticate, hasPermission } = require("./auth");
 const { login, me, registerCustomer, updateProfile, updatePassword, forgotPassword, resetPassword, verifyResetToken } = require("./routes/auth");
@@ -99,7 +100,11 @@ const routes = [
   ["GET", "/api/reports", "reports:read", getReport],
   ["GET", "/api/reviews/:productId", null, getReviews],
   ["POST", "/api/reviews", null, submitReview],
-  ["GET", "/api/reviews/stats/:productId", null, getReviewStats]
+  ["GET", "/api/reviews/stats/:productId", null, getReviewStats],
+  ["POST", "/api/ndps/initiate", null, initiateNDPSPayment],
+  ["POST", "/api/ndps/response", null, handleNDPSResponse],
+  ["GET", "/api/ndps/status/:paymentId", null, checkPaymentStatus],
+  ["POST", "/api/ndps/requery", null, requeryTransactionStatus],
 ];
 
 // Route matcher that handles path parameters

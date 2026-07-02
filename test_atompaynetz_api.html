@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AtomPaynetz API Test</title>
+</head>
+<body>
+    <h2>AtomPaynetz API Analysis</h2>
+    
+    <button onclick="testDirectPayment()">Test Direct Payment</button>
+    <button onclick="testTokenPayment()">Test Token Payment</button>
+    <button onclick="inspectAtomPaynetz()">Inspect AtomPaynetz</button>
+    
+    <div id="output" style="margin-top: 20px; padding: 10px; background: #f0f0f0; font-family: monospace; white-space: pre-wrap;"></div>
+
+    <script src="https://pgtest.atomtech.in/staticdata/ots/js/atomcheckout.js"></script>
+    
+    <script>
+        function log(message) {
+            document.getElementById('output').textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+        }
+
+        function inspectAtomPaynetz() {
+            log('=== AtomPaynetz Inspection ===');
+            
+            if (typeof window.AtomPaynetz === 'undefined') {
+                log('❌ AtomPaynetz not loaded');
+                return;
+            }
+
+            log('✅ AtomPaynetz loaded');
+            log('Type: ' + typeof window.AtomPaynetz);
+            
+            try {
+                // Try to get the constructor signature
+                const funcStr = window.AtomPaynetz.toString();
+                log('Constructor signature:');
+                log(funcStr.substring(0, 500));
+                
+                // Check for any static methods or properties
+                log('\nStatic properties:');
+                for (let prop in window.AtomPaynetz) {
+                    log(prop + ': ' + typeof window.AtomPaynetz[prop]);
+                }
+                
+            } catch (e) {
+                log('❌ Error inspecting: ' + e.message);
+            }
+        }
+
+        function testDirectPayment() {
+            log('=== Testing Direct Payment ===');
+            
+            if (typeof window.AtomPaynetz === 'undefined') {
+                log('❌ AtomPaynetz not loaded');
+                return;
+            }
+
+            const config = {
+                merchId: "446442",
+                password: "Test@123",
+                product: "NSE", 
+                amount: "100.00",
+                custEmail: "test@example.com",
+                custMobile: "9876543210",
+                custAccNo: "TEST123",
+                txnCurrency: "INR",
+                merchTxnId: "DIRECT_" + Date.now(),
+                returnUrl: "http://localhost:3000/payment/return"
+            };
+
+            try {
+                log('Config: ' + JSON.stringify(config, null, 2));
+                const atom = new window.AtomPaynetz(config, 'uat');
+                log('✅ Direct payment initialized successfully');
+            } catch (error) {
+                log('❌ Direct payment failed: ' + error.message);
+                log('Error stack: ' + error.stack);
+            }
+        }
+
+        function testTokenPayment() {
+            log('=== Testing Token Payment ===');
+            
+            if (typeof window.AtomPaynetz === 'undefined') {
+                log('❌ AtomPaynetz not loaded');
+                return;
+            }
+
+            const tokenConfig = {
+                atomTokenId: "dummy_token_123",
+                merchId: "446442",
+                custEmail: "test@example.com",
+                custMobile: "9876543210",
+                returnUrl: "http://localhost:3000/payment/return"
+            };
+
+            try {
+                log('Token Config: ' + JSON.stringify(tokenConfig, null, 2));
+                const atom = new window.AtomPaynetz(tokenConfig, 'uat');
+                log('✅ Token payment initialized successfully');
+            } catch (error) {
+                log('❌ Token payment failed: ' + error.message);
+                log('Error stack: ' + error.stack);
+            }
+        }
+
+        // Auto-inspect when loaded
+        window.addEventListener('load', function() {
+            setTimeout(inspectAtomPaynetz, 1000); // Wait a bit for script to load
+        });
+    </script>
+</body>
+</html>

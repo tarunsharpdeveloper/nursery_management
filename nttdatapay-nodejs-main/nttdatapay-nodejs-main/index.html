@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ATOM PAYMENT GATEWAY IN NODEJS</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script>
+        var cdnScript = document.createElement('script');
+        cdnScript.setAttribute('src', 'https://pgtest.atomtech.in/staticdata/ots/js/atomcheckout.js?v=' + Date.now());
+        document.head.appendChild(cdnScript);
+    </script>
+</head>
+
+<body>
+    <div class="container my-5">
+        <h3 class="">Merchant Shop</h3>
+        <p>Transaction Id: <%= txnId %></p>
+        <p>Atom Token Id: <%= token %></p>
+        <p>Pay Rs. 100</p>
+        <a class="btn btn-primary" href="javascript:openPay()" role="button">Pay Now</a>
+    </div>
+
+    <script>
+        function openPay() {
+            const options = {
+                "atomTokenId": "<%= token %>",
+                "merchId": "<%= merchId %>",
+                "custEmail": "test.user@gmail.com",
+                "custMobile": "8888888888",
+                "returnUrl": "http://localhost:3000/Response"  // replace with your return URL
+            }
+            let atom = new AtomPaynetz(options, 'uat');
+        }
+    </script>
+</body>
+
+</html>

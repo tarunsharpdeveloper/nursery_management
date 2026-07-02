@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test AtomPaynetz Direct Integration</title>
+</head>
+<body>
+    <h2>Test AtomPaynetz Direct Integration</h2>
+    <button id="payButton">Pay ₹100.00</button>
+
+    <div id="log" style="margin-top: 20px; padding: 10px; background: #f5f5f5; font-family: monospace;">
+        <h3>Debug Log:</h3>
+        <div id="logContent"></div>
+    </div>
+
+    <!-- Load AtomPaynetz Script -->
+    <script src="https://pgtest.atomtech.in/staticdata/ots/js/atomcheckout.js"></script>
+
+    <script>
+        function log(message) {
+            const logContent = document.getElementById('logContent');
+            logContent.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
+        }
+
+        document.getElementById('payButton').addEventListener('click', function() {
+            log('Testing AtomPaynetz direct integration...');
+
+            // Check if AtomPaynetz is loaded
+            if (typeof window.AtomPaynetz === 'undefined') {
+                log('❌ AtomPaynetz library not loaded');
+                return;
+            }
+
+            log('✅ AtomPaynetz library loaded');
+
+            try {
+                // Test 1: Direct merchant integration (without token)
+                log('🔄 Testing direct merchant integration...');
+                
+                const config = {
+                    // Direct merchant details
+                    merchId: "446442",
+                    password: "Test@123",
+                    product: "NSE",
+                    amount: "100.00",
+                    custEmail: "test@example.com",
+                    custMobile: "9876543210",
+                    custAccNo: "TEST123",
+                    txnCurrency: "INR",
+                    merchTxnId: "DIRECT_" + Date.now(),
+                    returnUrl: "http://localhost:3000/payment/return"
+                };
+
+                log('Config: ' + JSON.stringify(config, null, 2));
+
+                // Try to create AtomPaynetz instance directly
+                const atom = new window.AtomPaynetz(config, 'uat');
+                log('✅ AtomPaynetz instance created successfully');
+
+            } catch (error) {
+                log('❌ Direct integration failed: ' + error.message);
+                
+                // Test 2: Check what AtomPaynetz expects
+                log('🔄 Checking AtomPaynetz constructor requirements...');
+                try {
+                    log('AtomPaynetz type: ' + typeof window.AtomPaynetz);
+                    log('AtomPaynetz constructor: ' + window.AtomPaynetz.toString().substring(0, 200) + '...');
+                } catch (e) {
+                    log('Could not inspect AtomPaynetz: ' + e.message);
+                }
+            }
+        });
+
+        // Check when script loads
+        window.addEventListener('load', function() {
+            log('Page loaded');
+            if (typeof window.AtomPaynetz !== 'undefined') {
+                log('✅ AtomPaynetz available globally');
+            } else {
+                log('❌ AtomPaynetz not available');
+            }
+        });
+    </script>
+</body>
+</html>

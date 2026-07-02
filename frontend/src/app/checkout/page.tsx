@@ -6,16 +6,20 @@ import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { apiRequest } from "@/lib/api";
+import NDPSPayment from "@/components/NDPSPayment";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, subtotal, shipping, total, clearCart } = useCart();
   const { user, isLoaded, login } = useCustomerAuth();
 
-  const [paymentMethod, setPaymentMethod] = useState("bacs");
+  const [paymentMethod, setPaymentMethod] = useState("cod"); // Default to COD for testing
   const [sameAddress, setSameAddress] = useState(true);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
   const [orderId, setOrderId] = useState("");
+  const [createdOrder, setCreatedOrder] = useState<any>(null);
+  const [orderTotal, setOrderTotal] = useState(0); // Store order total before cart is cleared
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -87,14 +91,48 @@ export default function CheckoutPage() {
         await login(formData.email, formData.phone).catch(() => undefined);
       }
 
-      setOrderId(response.orderNumber);
-      setIsSubmitted(true);
-      clearCart();
+      // Store order details and show payment options
+      setCreatedOrder({
+        id: response.orderId,
+        number: response.orderNumber,
+        customer: {
+          email: formData.email,
+          phone: formData.phone,
+          name: formData.name
+        }
+      });
+
+      // Save order total BEFORE clearing cart
+      setOrderTotal(total);
+
+      // Handle different payment methods
+      if (paymentMethod === "ndps") {
+        // Show NDPS payment component
+        setShowPayment(true);
+        clearCart(); // Clear cart as order is created
+      } else {
+        // For other payment methods (COD, bank transfer, etc.)
+        setOrderId(response.orderNumber);
+        setIsSubmitted(true);
+        clearCart();
+      }
+
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not place order");
     } finally {
       setBusy(false);
     }
+  };
+
+  const handlePaymentSuccess = (paymentId: number) => {
+    // Payment successful, show success page
+    setOrderId(createdOrder?.number || "");
+    setIsSubmitted(true);
+  };
+
+  const handlePaymentError = (error: string) => {
+    setStatus(`Payment failed: ${error}`);
+    setBusy(false);
   };
 
   if (!isLoaded) return <div style={{ minHeight: "60vh" }}></div>;
@@ -354,7 +392,7 @@ export default function CheckoutPage() {
                             <td data-title="Shipping and Handling">
                               <ul className="woocommerce-shipping-methods list-unstyled">
                                 <li>
-                                  <label htmlFor="free_shipping">{shipping === 0 ? "Free shipping" : `Rs. ${shipping.toFixed(2)}`}</label>
+                                  <label htmlFor="free_shipping">Free Delivery</label>
                                 </li>
                               </ul>
                             </td>
@@ -373,29 +411,29 @@ export default function CheckoutPage() {
                     <div className="woocommerce-checkout-payment">
                       <h2 className="summary-title text-capitalize text-white">Payment Method</h2>
                       <ul className="wc_payment_methods payment_methods methods">
-                        <li className="wc_payment_method payment_method_bacs">
+                        <li className="wc_payment_method payment_method_ndps">
                           <input
-                            id="payment_method_bacs"
+                            id="payment_method_ndps"
                             type="radio"
                             className="input-radio"
                             name="payment_method"
-                            value="bacs"
-                            checked={paymentMethod === "bacs"}
-                            onChange={() => setPaymentMethod("bacs")}
+                            value="ndps"
+                            checked={paymentMethod === "ndps"}
+                            onChange={() => setPaymentMethod("ndps")}
                           />
-                          <label htmlFor="payment_method_bacs">Direct bank transfer</label>
-                        </li>
-                        <li className="wc_payment_method payment_method_cheque">
-                          <input
-                            id="payment_method_cheque"
-                            type="radio"
-                            className="input-radio"
-                            name="payment_method"
-                            value="cheque"
-                            checked={paymentMethod === "cheque"}
-                            onChange={() => setPaymentMethod("cheque")}
-                          />
-                          <label htmlFor="payment_method_cheque">Cheque Payment</label>
+                          <label htmlFor="payment_method_ndps">
+                            💳 Pay Online (Cards, UPI, Net Banking)
+                          </label>
+                          {paymentMethod === "ndps" && (
+                            <div style={{ 
+                              fontSize: '12px', 
+                              color: '#ccc', 
+                              marginTop: '5px',
+                              paddingLeft: '25px'
+                            }}>
+                              Secure payment via NTT DATA Payment Services
+                            </div>
+                          )}
                         </li>
                         <li className="wc_payment_method payment_method_cod">
                           <input
@@ -407,19 +445,39 @@ export default function CheckoutPage() {
                             checked={paymentMethod === "cod"}
                             onChange={() => setPaymentMethod("cod")}
                           />
-                          <label htmlFor="payment_method_cod">Credit Card</label>
+                          <label htmlFor="payment_method_cod">💰 Cash on Delivery</label>
+                          {paymentMethod === "cod" && (
+                            <div style={{ 
+                              fontSize: '12px', 
+                              color: '#ccc', 
+                              marginTop: '5px',
+                              paddingLeft: '25px'
+                            }}>
+                              Pay when you receive your order
+                            </div>
+                          )}
                         </li>
-                        <li className="wc_payment_method payment_method_paypal">
+                        <li className="wc_payment_method payment_method_bacs">
                           <input
-                            id="payment_method_paypal"
+                            id="payment_method_bacs"
                             type="radio"
                             className="input-radio"
                             name="payment_method"
-                            value="paypal"
-                            checked={paymentMethod === "paypal"}
-                            onChange={() => setPaymentMethod("paypal")}
+                            value="bacs"
+                            checked={paymentMethod === "bacs"}
+                            onChange={() => setPaymentMethod("bacs")}
                           />
-                          <label htmlFor="payment_method_paypal">Paypal</label>
+                          <label htmlFor="payment_method_bacs">🏦 Direct Bank Transfer</label>
+                          {paymentMethod === "bacs" && (
+                            <div style={{ 
+                              fontSize: '12px', 
+                              color: '#ccc', 
+                              marginTop: '5px',
+                              paddingLeft: '25px'
+                            }}>
+                              Transfer payment directly to our bank account
+                            </div>
+                          )}
                         </li>
                       </ul>
                       <div className="form-row place-order">
@@ -433,6 +491,52 @@ export default function CheckoutPage() {
                 </div>
               </div>
             </form>
+          )}
+
+          {/* NDPS Payment Component */}
+          {showPayment && createdOrder && (
+            <div className="row justify-content-center" style={{ marginTop: '40px' }}>
+              <div className="col-lg-6">
+                <div style={{ 
+                  backgroundColor: '#fff', 
+                  padding: '40px', 
+                  borderRadius: '10px', 
+                  boxShadow: '0 5px 15px rgba(0,0,0,0.1)',
+                  textAlign: 'center'
+                }}>
+                  <h3 style={{ marginBottom: '20px' }}>Complete Your Payment</h3>
+                  <div style={{ 
+                    backgroundColor: '#f8f9fa', 
+                    padding: '20px', 
+                    borderRadius: '8px', 
+                    marginBottom: '30px' 
+                  }}>
+                    <p><strong>Order:</strong> {createdOrder.number}</p>
+                    <p><strong>Amount:</strong> ₹{orderTotal.toFixed(2)}</p>
+                    <p><strong>Customer:</strong> {createdOrder.customer.name}</p>
+                  </div>
+
+                  <NDPSPayment
+                    orderId={createdOrder.id}
+                    amount={orderTotal}
+                    customerEmail={createdOrder.customer.email}
+                    customerMobile={createdOrder.customer.phone}
+                    onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
+                  />
+
+                  <div style={{ marginTop: '20px' }}>
+                    <button 
+                      onClick={() => setShowPayment(false)}
+                      className="vs-btn style2"
+                      style={{ fontSize: '14px' }}
+                    >
+                      ← Back to Order Details
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>

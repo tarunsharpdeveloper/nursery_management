@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { AdminShell } from "@/components/admin-shell";
 import { AdminModule } from "@/components/admin-module";
-import { Edit2, Power, PowerOff, Trash2, Calendar } from "lucide-react";
+import { Edit2, Power, PowerOff, Trash2, Calendar, MoreVertical } from "lucide-react";
+import { ConfirmModal } from "@/components/confirm-modal";
 import { apiRequest } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
@@ -21,6 +22,22 @@ export default function EmployeesPage() {
   const [values, setValues] = useState<Record<string, string | number>>({});
   const [busy, setBusy] = useState(false);
   const router = useRouter();
+  const [openActionId, setOpenActionId] = useState<number | null>(null);
+  const [dropdownDirection, setDropdownDirection] = useState<"up" | "down">("down");
+  const [confirmState, setConfirmState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    action: () => Promise<void>;
+    isDestructive: boolean;
+    confirmText?: string;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    action: async () => {},
+    isDestructive: false
+  });
 
   const baseFields: Field[] = [
     { name: "name", label: "Employee Name", required: true },
@@ -56,34 +73,53 @@ export default function EmployeesPage() {
   }
 
   async function handleToggle(row: any, reload: () => Promise<void>) {
-    setBusy(true);
-    try {
-      await apiRequest("/api/employees/toggle", {
-        method: "PATCH",
-        body: JSON.stringify({ employeeId: row.id, isActive: !row.is_active })
-      });
-      await reload();
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to toggle status");
-    } finally {
-      setBusy(false);
-    }
+    setConfirmState({
+      isOpen: true,
+      title: `${row.is_active ? "Disable" : "Enable"} Employee`,
+      message: `Are you sure you want to ${row.is_active ? "disable" : "enable"} ${row.name}?`,
+      confirmText: row.is_active ? "Disable" : "Enable",
+      isDestructive: row.is_active,
+      action: async () => {
+        setBusy(true);
+        try {
+          await apiRequest("/api/employees/toggle", {
+            method: "PATCH",
+            body: JSON.stringify({ employeeId: row.id, isActive: !row.is_active })
+          });
+          await reload();
+        } catch (error) {
+          alert(error instanceof Error ? error.message : "Failed to toggle status");
+        } finally {
+          setBusy(false);
+          setConfirmState(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
   }
 
   async function handleDelete(row: any, reload: () => Promise<void>) {
-    if (!confirm(`Are you sure you want to delete ${row.name}?`)) return;
-    setBusy(true);
-    try {
-      await apiRequest("/api/employees/delete", {
-        method: "POST",
-        body: JSON.stringify({ employeeId: row.id })
-      });
-      await reload();
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to delete employee");
-    } finally {
-      setBusy(false);
-    }
+    setConfirmState({
+      isOpen: true,
+      title: "Delete Employee",
+      message: `Are you sure you want to delete ${row.name}?`,
+      confirmText: "Delete",
+      isDestructive: true,
+      action: async () => {
+        setBusy(true);
+        try {
+          await apiRequest("/api/employees/delete", {
+            method: "POST",
+            body: JSON.stringify({ employeeId: row.id })
+          });
+          await reload();
+        } catch (error) {
+          alert(error instanceof Error ? error.message : "Failed to delete employee");
+        } finally {
+          setBusy(false);
+          setConfirmState(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
   }
 
   function handleEdit(row: any) {
@@ -101,11 +137,20 @@ export default function EmployeesPage() {
   }
 
   return (
-    <AdminShell>
+    <>
       <AdminModule
         eyebrow="Employee Master"
         title="Monthly Salary and Daily Wage Employees"
-        listPath="/api/employees"
+        listPath="/api/admin/data-list?model=employees"
+        searchPlaceholder="Search name, mobile..."
+        filterConfig={{
+          key: "employee_type",
+          label: "Employee Type",
+          options: [
+            { value: "monthly_salary", label: "Monthly Salary" },
+            { value: "daily_wage", label: "Daily Wage" }
+          ]
+        }}
         submitPath="/api/employees"
         submitMethod={values.id ? "PATCH" : "POST"}
         submitLabel={values.id ? "Update Employee" : "Save Employee"}
@@ -143,23 +188,86 @@ export default function EmployeesPage() {
           }
           return undefined;
         }}
-        rowActions={(row, reload) => (
-          <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
-            <button className="button secondary" type="button" title="View Attendance" onClick={() => router.push(`/admin/attendance-details?id=${row.id}`)} disabled={busy} style={{ padding: "6px" }}>
-              <Calendar size={16} color="#3b82f6" />
+        rowActions={(row, reload, openModal) => (
+          <div className="actions-cell" style={{ position: "relative" }}>
+            <button 
+              className="button secondary" 
+              type="button" 
+              onClick={(e) => {
+                if (openActionId === row.id) {
+                  setOpenActionId(null);
+                } else {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const spaceBelow = window.innerHeight - rect.bottom;
+                  setDropdownDirection(spaceBelow < 200 ? "up" : "down");
+                  setOpenActionId(row.id);
+                }
+              }}
+              disabled={busy} 
+              style={{ padding: "6px" }}
+            >
+              <MoreVertical size={16} />
             </button>
-            <button className="button secondary" type="button" title="Edit" onClick={() => handleEdit(row)} disabled={busy} style={{ padding: "6px" }}>
-              <Edit2 size={16} />
-            </button>
-            <button className="button secondary" type="button" title="Delete" onClick={() => handleDelete(row, reload)} disabled={busy} style={{ padding: "6px" }}>
-              <Trash2 size={16} color="#ef4444" />
-            </button>
-            <button className="button secondary" type="button" title={row.is_active ? "Disable" : "Enable"} onClick={() => handleToggle(row, reload)} disabled={busy} style={{ padding: "6px" }}>
-              {row.is_active ? <PowerOff size={16} /> : <Power size={16} />}
-            </button>
+            
+            {openActionId === row.id && (
+              <>
+                <div 
+                  className="actions-dropdown-overlay" 
+                  onClick={(e) => { e.stopPropagation(); setOpenActionId(null); }} 
+                />
+                <div className={`actions-dropdown-menu direction-${dropdownDirection}`}>
+                  <button 
+                    className="button secondary actions-dropdown-item" 
+                    type="button" 
+                    onClick={() => { setOpenActionId(null); router.push(`/admin/attendance-details?id=${row.id}`); }} 
+                    disabled={busy}
+                  >
+                    <Calendar size={16} color="#3b82f6" style={{ marginRight: 8 }} />
+                    Attendance
+                  </button>
+                  <button 
+                    className="button secondary actions-dropdown-item" 
+                    type="button" 
+                    onClick={() => { setOpenActionId(null); handleEdit(row); openModal(); }} 
+                    disabled={busy}
+                  >
+                    <Edit2 size={16} style={{ marginRight: 8 }} />
+                    Edit
+                  </button>
+                  <button 
+                    className="button secondary actions-dropdown-item" 
+                    type="button" 
+                    onClick={() => { setOpenActionId(null); handleToggle(row, reload); }} 
+                    disabled={busy}
+                  >
+                    {row.is_active ? <PowerOff size={16} style={{ marginRight: 8 }} /> : <Power size={16} style={{ marginRight: 8 }} />}
+                    {row.is_active ? "Disable" : "Enable"}
+                  </button>
+                  <button 
+                    className="button secondary actions-dropdown-item danger" 
+                    type="button" 
+                    onClick={() => { setOpenActionId(null); handleDelete(row, reload); }} 
+                    disabled={busy}
+                  >
+                    <Trash2 size={16} color="#ef4444" style={{ marginRight: 8 }} />
+                    Delete
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
       />
-    </AdminShell>
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        isDestructive={confirmState.isDestructive}
+        isLoading={busy}
+        onConfirm={confirmState.action}
+        onCancel={() => setConfirmState(prev => ({ ...prev, isOpen: false }))}
+      />
+    </>
   );
 }

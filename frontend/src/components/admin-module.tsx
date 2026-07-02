@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Select from "react-select";
-import { RefreshCw, Save } from "lucide-react";
+import { Plus, Search, MoreVertical, X, Save, Eye, Trash2, RefreshCw } from "lucide-react";
+import { FormModal } from "@/components/form-modal";
 import { apiRequest } from "@/lib/api";
 
 type Field = {
@@ -20,6 +21,13 @@ type AdminModuleProps = {
   eyebrow: string;
   title: string;
   listPath: string;
+  searchPlaceholder?: string;
+  filterConfig?: {
+    key: string;
+    label: string;
+    icon?: React.ReactNode;
+    options: { value: string; label: string }[];
+  };
   submitPath?: string;
   submitMethod?: "POST" | "PATCH";
   submitLabel?: string;
@@ -33,7 +41,7 @@ type AdminModuleProps = {
   onSuccess?: () => void;
   onCancel?: () => void;
   headerActions?: React.ReactNode;
-  rowActions?: (row: any, reload: () => Promise<void>) => React.ReactNode;
+  rowActions?: (row: any, reload: () => Promise<void>, openModal: () => void) => React.ReactNode;
   filterContent?: React.ReactNode;
   filterRows?: (rows: any[]) => any[];
   renderCell?: (row: any, column: { key: string; label: string }, reload: () => Promise<void>) => React.ReactNode;
@@ -50,6 +58,8 @@ export function AdminModule({
   eyebrow,
   title,
   listPath,
+  searchPlaceholder,
+  filterConfig,
   submitPath,
   submitMethod = "POST",
   submitLabel = "Save",
@@ -73,6 +83,25 @@ export function AdminModule({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState("Loading...");
   const [busy, setBusy] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [filterValue, setFilterValue] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterValue]);
 
   const values = externalValues !== undefined ? externalValues : internalValues;
   const displayedRows = filterRows ? filterRows(rows) : rows;
@@ -102,9 +131,27 @@ export function AdminModule({
   async function loadRows() {
     setBusy(true);
     try {
-      const data = await apiRequest<Record<string, unknown>[]>(listPath);
-      setRows(Array.isArray(data) ? data : []);
-      setStatus(`Loaded ${Array.isArray(data) ? data.length : 0} records`);
+      const url = new URL(listPath, typeof window !== "undefined" ? window.location.origin : "http://localhost");
+      
+      url.searchParams.set("page", String(currentPage));
+      url.searchParams.set("limit", "10");
+      if (debouncedSearch) url.searchParams.set("search", debouncedSearch);
+      if (filterConfig && filterValue) {
+        url.searchParams.set("filterKey", filterConfig.key);
+        url.searchParams.set("filterValue", filterValue);
+      }
+      
+      const data = await apiRequest<any>(url.pathname + url.search);
+      if (data && typeof data === 'object' && !Array.isArray(data) && 'data' in data) {
+        setRows(data.data || []);
+        setTotalPages(data.totalPages || 1);
+        setStatus(`Loaded ${data.data.length} of ${data.totalRecords} records`);
+      } else {
+        const arr = Array.isArray(data) ? data : [];
+        setRows(arr);
+        setTotalPages(1);
+        setStatus(`Loaded ${arr.length} records`);
+      }
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not load records");
       setRows([]);
@@ -133,6 +180,7 @@ export function AdminModule({
         body: JSON.stringify(transformSubmit ? transformSubmit(values) : values)
       });
       setStatus("Saved successfully");
+      setIsModalOpen(false);
       await loadRows();
       if (!externalValues) setInternalValues(initialValues);
       if (onSuccess) onSuccess();
@@ -145,28 +193,48 @@ export function AdminModule({
 
   useEffect(() => {
     loadRows();
-  }, [listPath]);
+  }, [listPath, currentPage, debouncedSearch, filterValue]);
 
   return (
-    <>
+    <React.Fragment>
       <div className="section-header">
         <div>
-          <p className="eyebrow">{eyebrow}</p>
+          {/* <p className="eyebrow">{eyebrow}</p> */}
           <h1>{title}</h1>
           {/* <p className="meta">{status}</p> */}
         </div>
         <div style={{ display: "flex", gap: "10px" }}>
+          {canSubmit && (
+            <button className="button" type="button" onClick={() => setIsModalOpen(true)} disabled={busy}>
+              <Plus size={17} />
+              {submitLabel}
+            </button>
+          )}
           {headerActions}
-          <button className="button secondary" type="button" onClick={loadRows} disabled={busy}>
+          {/* <button className="button secondary" type="button" onClick={loadRows} disabled={busy}>
             <RefreshCw size={17} />
             Refresh
-          </button>
+          </button> */}
         </div>
       </div>
 
-      {canSubmit ? (
-        <form className="card" style={{ marginBottom: 20 }}>
-          <div className="card-body">
+      {canSubmit && (
+        <FormModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title={submitLabel}
+          maxWidth={800}
+          footer={
+            <React.Fragment>
+              <button className="button secondary" type="button" onClick={() => setIsModalOpen(false)}>Cancel</button>
+              <button className="button" type="button" onClick={submitForm} disabled={busy}>
+                <Save size={17} />
+                {submitLabel}
+              </button>
+            </React.Fragment>
+          }
+        >
+          <form className="card-body" style={{ padding: 0 }}>
             <div className="form-grid">
               {normalizedFields.map((field) => (
                 <label className="field" key={field.name} style={{ display: 'flex', flexDirection: 'column' }}>
@@ -264,21 +332,10 @@ export function AdminModule({
                   )}
                 </label>
               ))}
-            </div>
-            <div style={{ display: "flex", gap: "10px", marginTop: 16 }}>
-              <button className="button" type="button" onClick={submitForm} disabled={busy}>
-                <Save size={17} />
-                {submitLabel}
-              </button>
-              {onCancel && (
-                <button className="button secondary" type="button" onClick={onCancel} disabled={busy}>
-                  Cancel
-                </button>
-              )}
-            </div>
-          </div>
-        </form>
-      ) : null}
+              </div>
+          </form>
+        </FormModal>
+      )}
 
       {filterContent && (
         <div style={{ marginBottom: '20px' }}>
@@ -286,7 +343,54 @@ export function AdminModule({
         </div>
       )}
 
-      <div className="table-wrap">
+      {(searchPlaceholder || filterConfig) && (
+        <div className="filter-bar-container">
+          <div className="filter-bar-wrapper">
+            {searchPlaceholder && (
+              <div className="filter-group">
+                <label className="filter-label">Search</label>
+                <div className="filter-input-wrapper">
+                  <div className="filter-input-icon">
+                    <Search size={16} />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder={searchPlaceholder}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="filter-input"
+                  />
+                </div>
+              </div>
+            )}
+            
+            {filterConfig && (
+              <div className="filter-group-fixed">
+                <label className="filter-label">
+                  {filterConfig.icon || null} {filterConfig.label}
+                </label>
+                <select
+                  value={filterValue}
+                  onChange={(e) => setFilterValue(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="">All</option>
+                  {filterConfig.options.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="table-wrap" style={{ position: "relative" }}>
+        {busy && (
+          <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.6)", zIndex: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <RefreshCw size={24} className="spin" color="#3b82f6" />
+          </div>
+        )}
         <table>
           <thead>
             <tr>
@@ -302,16 +406,24 @@ export function AdminModule({
                     {renderCell ? (renderCell(row, column, loadRows) ?? formatCell(row[column.key])) : formatCell(row[column.key])}
                   </td>
                 ))}
-                {rowActions && <td>{rowActions(row, loadRows)}</td>}
+                {rowActions && <td>{rowActions(row, loadRows, () => setIsModalOpen(true))}</td>}
               </tr>
             )) : (
               <tr>
-                <td colSpan={columns.length}>No records found</td>
+                <td colSpan={columns.length + (rowActions ? 1 : 0)} style={{ textAlign: "center", padding: "32px 16px", color: "var(--muted)" }}>No records found</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
-    </>
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", background: "white", borderTop: "1px solid #e2e8f0", borderBottomLeftRadius: 8, borderBottomRightRadius: 8, marginTop: -1 }}>
+        <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500 }}>Page {currentPage} of {totalPages}</span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="button secondary" style={{ padding: "6px 12px", height: "auto" }} disabled={currentPage <= 1 || busy} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>Previous</button>
+          <button className="button secondary" style={{ padding: "6px 12px", height: "auto" }} disabled={currentPage >= totalPages || busy} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}>Next</button>
+        </div>
+      </div>
+    </React.Fragment>
   );
 }

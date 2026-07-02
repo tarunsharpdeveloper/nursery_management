@@ -40,9 +40,10 @@ const {
   updateDispatchStatus,
   listEmployees,
   listAttendance,
+  listWageSummary,
+  getUnifiedList,
   listMonthlyAttendance,
-  getEmployeeAttendance,
-  listWageSummary
+  getEmployeeAttendance
 } = require("./routes/admin-data");
 
 const { listUsers, createUser, editUser, toggleUser, deleteUser } = require("./routes/users");
@@ -119,7 +120,8 @@ const routes = [
   ["GET", "/api/reports", "reports:read", getReport],
   ["GET", "/api/reviews/:productId", null, getReviews],
   ["POST", "/api/reviews", null, submitReview],
-  ["GET", "/api/reviews/stats/:productId", null, getReviewStats]
+  ["GET", "/api/reviews/stats/:productId", null, getReviewStats],
+  ["GET", "/api/admin/data-list", null, getUnifiedList]
 ];
 
 // Route matcher that handles path parameters

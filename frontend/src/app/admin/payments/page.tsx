@@ -1,13 +1,23 @@
-import { AdminShell } from "@/components/admin-shell";
 import { AdminModule } from "@/components/admin-module";
 
 export default function PaymentsPage() {
   return (
-    <AdminShell>
+    <>
       <AdminModule
-        eyebrow="Payment Gateway Integration"
+        eyebrow=""
         title="Online Payment Methods and Status"
-        listPath="/api/payments"
+        listPath="/api/admin/data-list?model=payments"
+        searchPlaceholder="Search order number, gateway..."
+        filterConfig={{
+          key: "payment_status",
+          label: "Payment Status",
+          options: [
+            { value: "pending", label: "Pending" },
+            { value: "paid", label: "Paid" },
+            { value: "failed", label: "Failed" },
+            { value: "refunded", label: "Refunded" }
+          ]
+        }}
         submitPath="/api/payments/initiate"
         submitLabel="Initiate Payment"
         fields={[
@@ -29,6 +39,6 @@ export default function PaymentsPage() {
           { key: "amount", label: "Amount" }
         ]}
       />
-    </AdminShell>
+    </>
   );
 }

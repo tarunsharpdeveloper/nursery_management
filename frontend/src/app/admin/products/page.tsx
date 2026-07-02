@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState, useRef, useMemo, DragEvent } from "react";
-import { AdminShell } from "@/components/admin-shell";
 import { apiRequest } from "@/lib/api";
-import { Edit2, Plus, Power, PowerOff, RefreshCw, Box, Trash2, Eye, X, UploadCloud, MoreVertical, ChevronDown } from "lucide-react";
+import { Edit2, Plus, Power, PowerOff, RefreshCw, Box, Trash2, Eye, X, UploadCloud, MoreVertical, ChevronDown, Search } from "lucide-react";
+import { FormModal } from "@/components/form-modal";
+import { ConfirmModal } from "@/components/confirm-modal";
 
 type Category = {
   id: number;
@@ -93,6 +94,41 @@ export default function AdminProductsPage() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [openActionId, setOpenActionId] = useState<number | null>(null);
+  const [dropdownDirection, setDropdownDirection] = useState<"up" | "down">("down");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [confirmState, setConfirmState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    action: () => Promise<void>;
+    isDestructive: boolean;
+    confirmText?: string;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    action: async () => {},
+    isDestructive: false
+  });
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [stockFilter, setStockFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [stockFilter, statusFilter]);
 
   async function loadData() {
     setBusy(true);
@@ -100,8 +136,19 @@ export default function AdminProductsPage() {
       const cats = await apiRequest<Category[]>("/api/categories");
       setCategories(Array.isArray(cats) ? cats : []);
 
-      const prods = await apiRequest<Product[]>("/api/products");
-      setProducts(Array.isArray(prods) ? prods : []);
+      const searchParams = new URLSearchParams({ page: String(currentPage), limit: "10" });
+      if (debouncedSearch) searchParams.set("search", debouncedSearch);
+      if (stockFilter) {
+        searchParams.set("filterKey", "stock_status");
+        searchParams.set("filterValue", stockFilter);
+      } else if (statusFilter) {
+        searchParams.set("filterKey", "status");
+        searchParams.set("filterValue", statusFilter);
+      }
+
+      const prods = await apiRequest<any>(`/api/products?${searchParams.toString()}`);
+      setProducts(prods && prods.data && Array.isArray(prods.data) ? prods.data : (Array.isArray(prods) ? prods : []));
+      setTotalPages(prods?.totalPages || 1);
 
       setStatus("");
     } catch (error) {
@@ -113,7 +160,7 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [currentPage, debouncedSearch, stockFilter, statusFilter]);
 
   const activeCategories = useMemo(() => categories.filter(c => c.is_active !== 0 && c.is_active !== false), [categories]);
   const dropdowns = useMemo(() => {
@@ -276,6 +323,7 @@ export default function AdminProductsPage() {
   }
 
   function startEdit(p: Product) {
+    setIsModalOpen(true);
     setEditing(p);
 
     let path = [];
@@ -394,6 +442,7 @@ export default function AdminProductsPage() {
   }
 
   function resetForm() {
+    setIsModalOpen(false);
     setEditing(null);
     setForm({ name: "", description: "", sellingPrice: "", actualPrice: "", availableQuantity: "", unit: "" });
     setVariants([]);
@@ -402,68 +451,102 @@ export default function AdminProductsPage() {
     setErrors({});
   }
 
-  async function deleteProduct(p: Product) {
-    if (!confirm(`Are you sure you want to delete "${p.name}"?`)) return;
-    setBusy(true);
-    try {
-      await apiRequest("/api/products/delete", {
-        method: "POST",
-        body: JSON.stringify({ productId: p.id })
-      });
-      setStatus(`${p.name} deleted`);
-      await loadData();
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : "Failed to delete";
-      if (msg.includes("foreign key constraint fails") || msg.includes("Cannot delete or update a parent row")) {
-        alert("Do not delete this product; it is added in an order item or is currently in use.");
+  function requestDelete(p: Product) {
+    setConfirmState({
+      isOpen: true,
+      title: "Delete Product",
+      message: `Are you sure you want to delete "${p.name}"?`,
+      confirmText: "Delete",
+      isDestructive: true,
+      action: async () => {
+        setBusy(true);
+        try {
+          await apiRequest("/api/products/delete", {
+            method: "POST",
+            body: JSON.stringify({ productId: p.id })
+          });
+          setStatus(`${p.name} deleted`);
+          await loadData();
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : "Failed to delete";
+          if (msg.includes("foreign key constraint fails") || msg.includes("Cannot delete or update a parent row")) {
+            setStatus("Error: Do not delete this product; it is added in an order item or is currently in use.");
+          } else {
+            setStatus(msg);
+          }
+        } finally {
+          setBusy(false);
+          setConfirmState(prev => ({ ...prev, isOpen: false }));
+        }
       }
-      setStatus(msg);
-    } finally {
-      setBusy(false);
-    }
+    });
   }
 
-  async function toggleProduct(p: Product) {
-    setBusy(true);
-    try {
-      await apiRequest("/api/products/toggle", {
-        method: "PATCH",
-        body: JSON.stringify({ productId: p.id, isActive: !isActive(p) })
-      });
-      setStatus(`${p.name} ${isActive(p) ? "deactivated" : "activated"}`);
-      await loadData();
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Failed to toggle");
-    } finally {
-      setBusy(false);
-    }
+  function requestToggle(p: Product) {
+    const active = isActive(p);
+    setConfirmState({
+      isOpen: true,
+      title: active ? "Disable Product" : "Enable Product",
+      message: `Are you sure you want to ${active ? "disable" : "enable"} "${p.name}"?`,
+      confirmText: active ? "Disable" : "Enable",
+      isDestructive: active,
+      action: async () => {
+        setBusy(true);
+        try {
+          await apiRequest("/api/products/toggle", {
+            method: "PATCH",
+            body: JSON.stringify({ productId: p.id, isActive: !active })
+          });
+          setStatus(`${p.name} ${active ? "deactivated" : "activated"}`);
+          await loadData();
+        } catch (error) {
+          setStatus(error instanceof Error ? error.message : "Failed to toggle");
+        } finally {
+          setBusy(false);
+          setConfirmState(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
   }
+
+  const filteredProducts = products;
 
   return (
-    <AdminShell>
+    <>
       <div className="section-header">
         <div>
-          <p className="eyebrow">Product Management</p>
           <h1>Products</h1>
-
         </div>
-        {/* <button className="button secondary" type="button" onClick={loadData} disabled={busy}>
-          <RefreshCw size={17} />
-          Refresh
-        </button> */}
+        <button className="button" type="button" onClick={() => { resetForm(); setIsModalOpen(true); }} disabled={busy}>
+          <Plus size={17} />
+          Add Product
+        </button>
       </div>
 
-      <div className="card" style={{ marginBottom: 30, border: editing ? "2px solid #3b82f6" : undefined }}>
-        {editing && (
-          <div className="card-header" style={{ padding: 10, background: "rgba(59, 130, 246, 0.1)" }}>
-            <strong>Editing: {editing.name}</strong>
-          </div>
-        )}
-        <div className="card-body">
+      <FormModal
+        isOpen={isModalOpen}
+        onClose={resetForm}
+        title={editing ? `Editing: ${editing.name}` : "Add Product"}
+        maxWidth={1000}
+        footer={
+          editing ? (
+            <>
+              <button className="button secondary" type="button" onClick={resetForm}>Cancel</button>
+              <button className="button" type="button" onClick={handleSaveEdit} disabled={busy}>Save Changes</button>
+            </>
+          ) : (
+            <button className="button" type="button" onClick={handleCreate} disabled={busy}>
+              <Plus size={17} style={{ marginRight: 4 }} />
+              Add Product
+            </button>
+          )
+        }
+      >
+        <div className="card-body" style={{ padding: 0 }}>
           {/* Row 1: Categories (Dynamic) */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(250px, 1fr))", gap: 16, marginBottom: 16 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 16 }}>
             {dropdowns.map((options, idx) => (
-              <label key={idx} className="field">
+              <label key={idx} className="field" style={{ width: 230 }}>
                 <span>
                   {idx === 0 ? "Category" : idx === 1 ? "Subcategory" : `Level ${idx + 1} Subcategory`}
                   {idx === 0 ? <span style={{ color: "#ef4444" }}> *</span> : null}
@@ -491,7 +574,7 @@ export default function AdminProductsPage() {
           </div>
 
           {/* Row 2: Product Name, Unit, Prices (4 columns) */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginBottom: 16 }}>
             <label className="field">
               <span>Product Name <span style={{ color: "#ef4444" }}>*</span></span>
               <input value={form.name} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setErrors(err => ({ ...err, name: "" })); }} placeholder="E.g. Rose Plant" />
@@ -641,19 +724,55 @@ export default function AdminProductsPage() {
               </div>
             )}
           </div>
+        </div>
+      </FormModal>
 
-          <div style={{ display: "flex", gap: 10, marginTop: 30 }}>
-            {editing ? (
-              <>
-                <button className="button" type="button" onClick={handleSaveEdit} disabled={busy}>Save Changes</button>
-                <button className="button secondary" type="button" onClick={resetForm}>Cancel</button>
-              </>
-            ) : (
-              <button className="button" type="button" onClick={handleCreate} disabled={busy}>
-                <Plus size={17} />
-                Add Product
-              </button>
-            )}
+      <div className="filter-bar-container">
+        <div className="filter-bar-wrapper">
+          <div className="filter-group">
+            <label className="filter-label">Search</label>
+            <div className="filter-input-wrapper">
+              <div className="filter-input-icon">
+                <Search size={16} />
+              </div>
+              <input
+                type="text"
+                placeholder="Name, product code..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="filter-input"
+              />
+            </div>
+          </div>
+
+          <div className="filter-group-fixed">
+            <label className="filter-label">
+              <Box size={14} /> Stock Status
+            </label>
+            <select
+              value={stockFilter}
+              onChange={(e) => setStockFilter(e.target.value)}
+              className="filter-select"
+            >
+              <option value="">Any stock level</option>
+              <option value="in_stock">In Stock</option>
+              <option value="out_of_stock">Out of Stock</option>
+            </select>
+          </div>
+
+          <div className="filter-group-fixed">
+            <label className="filter-label">
+              <Power size={14} /> Product Status
+            </label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="filter-select"
+            >
+              <option value="">Any status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
           </div>
         </div>
       </div>
@@ -675,12 +794,12 @@ export default function AdminProductsPage() {
               </tr>
             </thead>
             <tbody>
-              {products.length === 0 ? (
+              {filteredProducts.length === 0 ? (
                 <tr>
                   <td colSpan={8} style={{ textAlign: "center", padding: 20 }} className="meta">No products found</td>
                 </tr>
               ) : null}
-              {products.map((p, index) => (
+              {filteredProducts.map((p, index) => (
                 <tr key={p.id}>
                   <td>{index + 1}</td>
                   <td>
@@ -750,19 +869,72 @@ export default function AdminProductsPage() {
                     </span>
                   </td>
                   <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                    <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
-                      <a href={`/admin/products/view?id=${p.id}`} className="button secondary" title="View" style={{ padding: "6px" }}>
-                        <Eye size={16} color="#3b82f6" />
-                      </a>
-                      <button className="button secondary" type="button" title="Edit" onClick={() => startEdit(p)} disabled={busy} style={{ padding: "6px" }}>
-                        <Edit2 size={16} />
+                    <div className="actions-dropdown-wrapper">
+                      <button 
+                        className="button secondary" 
+                        type="button" 
+                        title="Actions"
+                        onClick={(e) => {
+                          if (openActionId === p.id) {
+                            setOpenActionId(null);
+                          } else {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const spaceBelow = window.innerHeight - rect.bottom;
+                            setDropdownDirection(spaceBelow < 200 ? "up" : "down");
+                            setOpenActionId(p.id);
+                          }
+                        }}
+                        disabled={busy} 
+                        style={{ padding: "6px" }}
+                      >
+                        <MoreVertical size={16} />
                       </button>
-                      <button className="button secondary" type="button" title="Delete" onClick={() => deleteProduct(p)} disabled={busy} style={{ padding: "6px" }}>
-                        <Trash2 size={16} color="#ef4444" />
-                      </button>
-                      <button className="button secondary" type="button" title={isActive(p) ? "Disable" : "Enable"} onClick={() => toggleProduct(p)} disabled={busy} style={{ padding: "6px" }}>
-                        {isActive(p) ? <PowerOff size={16} /> : <Power size={16} />}
-                      </button>
+                      
+                      {openActionId === p.id && (
+                        <>
+                          <div 
+                            className="actions-dropdown-overlay" 
+                            onClick={(e) => { e.stopPropagation(); setOpenActionId(null); }} 
+                          />
+                          <div className={`actions-dropdown-menu direction-${dropdownDirection}`}>
+                            <a 
+                              href={`/admin/products/view?id=${p.id}`}
+                              className="button secondary actions-dropdown-item" 
+                              title="View" 
+                            >
+                              <Eye size={16} color="#3b82f6" style={{ marginRight: 8 }} />
+                              View
+                            </a>
+                            <button 
+                              className="button secondary actions-dropdown-item" 
+                              type="button" 
+                              onClick={() => { setOpenActionId(null); startEdit(p); }} 
+                              disabled={busy}
+                            >
+                              <Edit2 size={16} style={{ marginRight: 8 }} />
+                              Edit
+                            </button>
+                            <button 
+                              className="button secondary actions-dropdown-item" 
+                              type="button" 
+                              onClick={() => { setOpenActionId(null); requestToggle(p); }} 
+                              disabled={busy}
+                            >
+                              {isActive(p) ? <PowerOff size={16} style={{ marginRight: 8 }} /> : <Power size={16} style={{ marginRight: 8 }} />}
+                              {isActive(p) ? "Disable" : "Enable"}
+                            </button>
+                            <button 
+                              className="button secondary actions-dropdown-item danger" 
+                              type="button" 
+                              onClick={() => { setOpenActionId(null); requestDelete(p); }} 
+                              disabled={busy}
+                            >
+                              <Trash2 size={16} color="#ef4444" style={{ marginRight: 8 }} />
+                              Delete
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -771,6 +943,25 @@ export default function AdminProductsPage() {
           </table>
         </div>
       </div>
-    </AdminShell>
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", background: "white", borderTop: "1px solid #e2e8f0", borderBottomLeftRadius: 8, borderBottomRightRadius: 8, marginTop: -1, marginBottom: 24 }}>
+        <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500 }}>Page {currentPage} of {totalPages}</span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="button secondary" style={{ padding: "6px 12px", height: "auto" }} disabled={currentPage <= 1 || busy} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>Previous</button>
+          <button className="button secondary" style={{ padding: "6px 12px", height: "auto" }} disabled={currentPage >= totalPages || busy} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}>Next</button>
+        </div>
+      </div>
+
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        isDestructive={confirmState.isDestructive}
+        isLoading={busy}
+        onConfirm={confirmState.action}
+        onCancel={() => setConfirmState(prev => ({ ...prev, isOpen: false }))}
+      />
+    </>
   );
 }

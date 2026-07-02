@@ -1,9 +1,8 @@
-import { AdminShell } from "@/components/admin-shell";
 import { AdminModule } from "@/components/admin-module";
 
 export default function WagesPage() {
   return (
-    <AdminShell>
+    <>
       <AdminModule
         eyebrow="Wage Calculation"
         title="Monthly and Daily Wage Summary"
@@ -16,7 +15,16 @@ export default function WagesPage() {
           { key: "absent_days", label: "Absent" },
           { key: "payable_amount", label: "Payable Amount" }
         ]}
+        searchPlaceholder="Search employees..."
+        filterConfig={{
+          key: "employee_type",
+          label: "Employee Type",
+          options: [
+            { value: "daily_wage", label: "Daily Wage" },
+            { value: "monthly_salary", label: "Monthly Salary" }
+          ]
+        }}
       />
-    </AdminShell>
+    </>
   );
 }

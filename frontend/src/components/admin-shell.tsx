@@ -47,30 +47,16 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (pathname === "/admin/login") return;
+    
     const storedUser = getStoredUser();
     if (!storedUser) {
       router.replace("/admin/login");
       return;
     }
     setUser(storedUser);
-  }, [router]);
+  }, [router, pathname]);
 
-  // While logged in, intercept browser back button to stay inside admin
-  useEffect(() => {
-    if (!user) return;
-
-    function handlePopState() {
-      router.replace("/admin/dashboard");
-    }
-
-    window.addEventListener("popstate", handlePopState);
-    // Push a history entry on each admin page so back is always trapped
-    window.history.pushState({ from: "admin-portal" }, "");
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [user, pathname]);
 
   const visibleLinks = useMemo(() => {
     if (!user) return [];
@@ -104,6 +90,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }, [isMobile]);
 
   const sidebarClassName = sidebarState === "open" ? "sidebar-open" : sidebarState === "collapsed" ? "sidebar-collapsed" : "sidebar-closed";
+
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
 
   if (!user) {
     return <main className="section"><p className="meta">Checking login...</p></main>;

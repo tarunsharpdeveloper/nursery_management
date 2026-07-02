@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { AdminShell } from "@/components/admin-shell";
 import { AdminModule } from "@/components/admin-module";
-import { Edit2, Power, PowerOff, Trash2 } from "lucide-react";
+import { Edit2, Power, PowerOff, Trash2, MoreVertical } from "lucide-react";
+import { ConfirmModal } from "@/components/confirm-modal";
 import { apiRequest } from "@/lib/api";
 
 type Field = {
@@ -20,6 +21,22 @@ export default function UsersPage() {
   const [values, setValues] = useState<Record<string, any>>({});
   const [busy, setBusy] = useState(false);
   const [roles, setRoles] = useState<{ id: number; name: string }[]>([]);
+  const [openActionId, setOpenActionId] = useState<number | null>(null);
+  const [dropdownDirection, setDropdownDirection] = useState<"up" | "down">("down");
+  const [confirmState, setConfirmState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    action: () => Promise<void>;
+    isDestructive: boolean;
+    confirmText?: string;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    action: async () => {},
+    isDestructive: false
+  });
 
   useEffect(() => {
     apiRequest("/api/roles").then((data: any) => setRoles(data || [])).catch(() => {});
@@ -56,34 +73,53 @@ export default function UsersPage() {
   }
 
   async function handleToggle(row: any, reload: () => Promise<void>) {
-    setBusy(true);
-    try {
-      await apiRequest("/api/users/toggle", {
-        method: "PATCH",
-        body: JSON.stringify({ userId: row.id, isActive: !row.is_active })
-      });
-      await reload();
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to toggle status");
-    } finally {
-      setBusy(false);
-    }
+    setConfirmState({
+      isOpen: true,
+      title: `${row.is_active ? "Disable" : "Enable"} User`,
+      message: `Are you sure you want to ${row.is_active ? "disable" : "enable"} ${row.name}?`,
+      confirmText: row.is_active ? "Disable" : "Enable",
+      isDestructive: row.is_active,
+      action: async () => {
+        setBusy(true);
+        try {
+          await apiRequest("/api/users/toggle", {
+            method: "PATCH",
+            body: JSON.stringify({ userId: row.id, isActive: !row.is_active })
+          });
+          await reload();
+        } catch (error) {
+          alert(error instanceof Error ? error.message : "Failed to toggle status");
+        } finally {
+          setBusy(false);
+          setConfirmState(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
   }
 
   async function handleDelete(row: any, reload: () => Promise<void>) {
-    if (!confirm(`Are you sure you want to delete ${row.name}?`)) return;
-    setBusy(true);
-    try {
-      await apiRequest("/api/users/delete", {
-        method: "POST",
-        body: JSON.stringify({ userId: row.id })
-      });
-      await reload();
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to delete user");
-    } finally {
-      setBusy(false);
-    }
+    setConfirmState({
+      isOpen: true,
+      title: "Delete User",
+      message: `Are you sure you want to delete ${row.name}?`,
+      confirmText: "Delete",
+      isDestructive: true,
+      action: async () => {
+        setBusy(true);
+        try {
+          await apiRequest("/api/users/delete", {
+            method: "POST",
+            body: JSON.stringify({ userId: row.id })
+          });
+          await reload();
+        } catch (error) {
+          alert(error instanceof Error ? error.message : "Failed to delete user");
+        } finally {
+          setBusy(false);
+          setConfirmState(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
   }
 
   function handleEdit(row: any) {
@@ -97,7 +133,7 @@ export default function UsersPage() {
   }
 
   return (
-    <AdminShell>
+    <>
       <AdminModule
         eyebrow="User Management"
         title="Users"
@@ -137,20 +173,77 @@ export default function UsersPage() {
           }
           return undefined;
         }}
-        rowActions={(row, reload) => (
-          <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
-            <button className="button secondary" type="button" title="Edit" onClick={() => handleEdit(row)} disabled={busy} style={{ padding: "6px" }}>
-              <Edit2 size={16} />
+        rowActions={(row, reload, openModal) => (
+          <div className="actions-cell" style={{ position: "relative" }}>
+            <button 
+              className="button secondary" 
+              type="button" 
+              onClick={(e) => {
+                if (openActionId === row.id) {
+                  setOpenActionId(null);
+                } else {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const spaceBelow = window.innerHeight - rect.bottom;
+                  setDropdownDirection(spaceBelow < 200 ? "up" : "down");
+                  setOpenActionId(row.id);
+                }
+              }}
+              disabled={busy} 
+              style={{ padding: "6px" }}
+            >
+              <MoreVertical size={16} />
             </button>
-            <button className="button secondary" type="button" title="Delete" onClick={() => handleDelete(row, reload)} disabled={busy} style={{ padding: "6px" }}>
-              <Trash2 size={16} color="#ef4444" />
-            </button>
-            <button className="button secondary" type="button" title={row.is_active ? "Disable" : "Enable"} onClick={() => handleToggle(row, reload)} disabled={busy} style={{ padding: "6px" }}>
-              {row.is_active ? <PowerOff size={16} /> : <Power size={16} />}
-            </button>
+            
+            {openActionId === row.id && (
+              <>
+                <div 
+                  className="actions-dropdown-overlay" 
+                  onClick={(e) => { e.stopPropagation(); setOpenActionId(null); }} 
+                />
+                <div className={`actions-dropdown-menu direction-${dropdownDirection}`}>
+                  <button 
+                    className="button secondary actions-dropdown-item" 
+                    type="button" 
+                    onClick={() => { setOpenActionId(null); handleEdit(row); openModal(); }} 
+                    disabled={busy}
+                  >
+                    <Edit2 size={16} style={{ marginRight: 8 }} />
+                    Edit
+                  </button>
+                  <button 
+                    className="button secondary actions-dropdown-item" 
+                    type="button" 
+                    onClick={() => { setOpenActionId(null); handleToggle(row, reload); }} 
+                    disabled={busy}
+                  >
+                    {row.is_active ? <PowerOff size={16} style={{ marginRight: 8 }} /> : <Power size={16} style={{ marginRight: 8 }} />}
+                    {row.is_active ? "Disable" : "Enable"}
+                  </button>
+                  <button 
+                    className="button secondary actions-dropdown-item danger" 
+                    type="button" 
+                    onClick={() => { setOpenActionId(null); handleDelete(row, reload); }} 
+                    disabled={busy}
+                  >
+                    <Trash2 size={16} color="#ef4444" style={{ marginRight: 8 }} />
+                    Delete
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
       />
-    </AdminShell>
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        isDestructive={confirmState.isDestructive}
+        isLoading={busy}
+        onConfirm={confirmState.action}
+        onCancel={() => setConfirmState(prev => ({ ...prev, isOpen: false }))}
+      />
+    </>
   );
 }

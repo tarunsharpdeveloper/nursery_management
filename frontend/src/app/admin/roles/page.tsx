@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { AdminShell } from "@/components/admin-shell";
 import { AdminModule } from "@/components/admin-module";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2, MoreVertical } from "lucide-react";
+import { ConfirmModal } from "@/components/confirm-modal";
 import { apiRequest } from "@/lib/api";
 
 const ALL_PERMISSIONS = [
@@ -41,6 +42,22 @@ const ALL_PERMISSIONS = [
 export default function RolesPage() {
   const [values, setValues] = useState<Record<string, any>>({});
   const [busy, setBusy] = useState(false);
+  const [openActionId, setOpenActionId] = useState<number | null>(null);
+  const [dropdownDirection, setDropdownDirection] = useState<"up" | "down">("down");
+  const [confirmState, setConfirmState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    action: () => Promise<void>;
+    isDestructive: boolean;
+    confirmText?: string;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    action: async () => {},
+    isDestructive: false
+  });
 
   function validateForm(vals: Record<string, any>) {
     const errors: Record<string, string> = {};
@@ -49,19 +66,28 @@ export default function RolesPage() {
   }
 
   async function handleDelete(row: any, reload: () => Promise<void>) {
-    if (!confirm(`Are you sure you want to delete the role ${row.name}?`)) return;
-    setBusy(true);
-    try {
-      await apiRequest("/api/roles/delete", {
-        method: "POST",
-        body: JSON.stringify({ roleId: row.id })
-      });
-      await reload();
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to delete role");
-    } finally {
-      setBusy(false);
-    }
+    setConfirmState({
+      isOpen: true,
+      title: "Delete Role",
+      message: `Are you sure you want to delete the role ${row.name}?`,
+      confirmText: "Delete",
+      isDestructive: true,
+      action: async () => {
+        setBusy(true);
+        try {
+          await apiRequest("/api/roles/delete", {
+            method: "POST",
+            body: JSON.stringify({ roleId: row.id })
+          });
+          await reload();
+        } catch (error) {
+          alert(error instanceof Error ? error.message : "Failed to delete role");
+        } finally {
+          setBusy(false);
+          setConfirmState(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
   }
 
   function handleEdit(row: any) {
@@ -74,7 +100,7 @@ export default function RolesPage() {
   }
 
   return (
-    <AdminShell>
+    <>
       <AdminModule
         eyebrow="User Management"
         title="Roles"
@@ -158,17 +184,68 @@ export default function RolesPage() {
           }
           return undefined;
         }}
-        rowActions={(row, reload) => (
-          <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
-            <button className="button secondary" type="button" title="Edit" onClick={() => handleEdit(row)} disabled={busy} style={{ padding: "6px" }}>
-              <Edit2 size={16} />
+        rowActions={(row, reload, openModal) => (
+          <div className="actions-cell" style={{ position: "relative" }}>
+            <button 
+              className="button secondary" 
+              type="button" 
+              onClick={(e) => {
+                if (openActionId === row.id) {
+                  setOpenActionId(null);
+                } else {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const spaceBelow = window.innerHeight - rect.bottom;
+                  setDropdownDirection(spaceBelow < 200 ? "up" : "down");
+                  setOpenActionId(row.id);
+                }
+              }}
+              disabled={busy} 
+              style={{ padding: "6px" }}
+            >
+              <MoreVertical size={16} />
             </button>
-            <button className="button secondary" type="button" title="Delete" onClick={() => handleDelete(row, reload)} disabled={busy} style={{ padding: "6px" }}>
-              <Trash2 size={16} color="#ef4444" />
-            </button>
+            
+            {openActionId === row.id && (
+              <>
+                <div 
+                  className="actions-dropdown-overlay" 
+                  onClick={(e) => { e.stopPropagation(); setOpenActionId(null); }} 
+                />
+                <div className={`actions-dropdown-menu direction-${dropdownDirection}`}>
+                  <button 
+                    className="button secondary actions-dropdown-item" 
+                    type="button" 
+                    onClick={() => { setOpenActionId(null); handleEdit(row); openModal(); }} 
+                    disabled={busy}
+                  >
+                    <Edit2 size={16} style={{ marginRight: 8 }} />
+                    Edit
+                  </button>
+                  <button 
+                    className="button secondary actions-dropdown-item danger" 
+                    type="button" 
+                    onClick={() => { setOpenActionId(null); handleDelete(row, reload); }} 
+                    disabled={busy}
+                  >
+                    <Trash2 size={16} color="#ef4444" style={{ marginRight: 8 }} />
+                    Delete
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
       />
-    </AdminShell>
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        isDestructive={confirmState.isDestructive}
+        isLoading={busy}
+        onConfirm={confirmState.action}
+        onCancel={() => setConfirmState(prev => ({ ...prev, isOpen: false }))}
+      />
+    </>
   );
 }

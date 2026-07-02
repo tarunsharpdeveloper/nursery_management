@@ -82,14 +82,14 @@ function EmployeeAttendanceContent() {
 
   if (!employeeId) {
     return (
-      <AdminShell>
+      // <AdminShell>
         <div style={{ padding: "40px", textAlign: "center" }}>Invalid Employee ID</div>
-      </AdminShell>
+      // </AdminShell>
     );
   }
 
   return (
-    <AdminShell>
+    // <AdminShell>
       <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
         
         {/* Header */}
@@ -256,7 +256,7 @@ function EmployeeAttendanceContent() {
         </div>
 
       </div>
-    </AdminShell>
+    // </AdminShell>
   );
 }
 

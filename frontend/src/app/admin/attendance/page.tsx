@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AdminShell } from "@/components/admin-shell";
+// import { AdminShell } from "@/components/admin-shell";
 import { apiRequest } from "@/lib/api";
 import { Save, RefreshCw } from "lucide-react";
 
@@ -159,11 +159,11 @@ export default function AttendancePage() {
   const hasDrafts = Object.keys(drafts).length > 0;
 
   return (
-    <AdminShell>
+    // <AdminShell>
       <div style={{ padding: "20px", maxWidth: "100%", overflowX: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <div>
-            <span style={{ fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "1px", color: "#6b7280", fontWeight: 600 }}>Attendance Management</span>
+            {/* <span style={{ fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "1px", color: "#6b7280", fontWeight: 600 }}>Attendance Management</span> */}
             <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#1f2937", margin: 0 }}>Monthly Grid</h1>
           </div>
           
@@ -180,10 +180,10 @@ export default function AttendancePage() {
                 outline: "none"
               }}
             />
-            <button className="button secondary" onClick={loadData} disabled={busy}>
+            {/* <button className="button secondary" onClick={loadData} disabled={busy}>
               <RefreshCw size={16} /> Refresh
-            </button>
-            <button className="button" onClick={handleSave} disabled={saving || !hasDrafts}>
+            </button> */}
+            <button className="button" style={{ width: "250px" }} onClick={handleSave} disabled={saving || !hasDrafts}>
               <Save size={16} /> Save Changes
             </button>
           </div>
@@ -280,6 +280,6 @@ export default function AttendancePage() {
           <span style={{ display: "flex", alignItems: "center", gap: "4px" }}><div style={{ width: 12, height: 12, borderRadius: 2, background: STATUS_COLORS.sunday_off }}></div> Sunday Off</span>
         </div>
       </div>
-    </AdminShell>
+    // </AdminShell>
   );
 }

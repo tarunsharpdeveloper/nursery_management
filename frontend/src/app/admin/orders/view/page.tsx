@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AdminShell } from "@/components/admin-shell";
 import { ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/api";
 import Link from "next/link";
@@ -60,10 +59,10 @@ function ViewOrderContent() {
 
   if (!order) {
     return (
-      <AdminShell>
+      <>
         <div className="section-header">
           <div>
-            <p className="eyebrow">Online Order Management</p>
+            {/* <p className="eyebrow">Online Order Management</p> */}
             <h1>View Order</h1>
 
           </div>
@@ -72,7 +71,7 @@ function ViewOrderContent() {
             Back to Orders
           </Link>
         </div>
-      </AdminShell>
+      </>
     );
   }
 
@@ -98,10 +97,10 @@ function ViewOrderContent() {
   };
 
   return (
-    <AdminShell>
+    <>
       <div className="section-header">
         <div>
-          <p className="eyebrow">Online Order Management</p>
+          {/* <p className="eyebrow">Online Order Management</p> */}
           <h1>Order {order.order_number}</h1>
           <p className="meta">Placed on {formatDate(order.created_at)}</p>
         </div>
@@ -225,22 +224,22 @@ function ViewOrderContent() {
           </table>
         </div>
       </div>
-    </AdminShell>
+    </>
   );
 }
 
 export default function ViewOrderPage() {
   return (
     <Suspense fallback={
-      <AdminShell>
+      <>
         <div className="section-header">
           <div>
-            <p className="eyebrow">Online Order Management</p>
+            {/* <p className="eyebrow">Online Order Management</p> */}
             <h1>View Order</h1>
             <p className="meta">Loading...</p>
           </div>
         </div>
-      </AdminShell>
+      </>
     }>
       <ViewOrderContent />
     </Suspense>

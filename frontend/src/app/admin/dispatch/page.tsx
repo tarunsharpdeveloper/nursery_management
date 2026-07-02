@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AdminShell } from "@/components/admin-shell";
 import { AdminModule } from "@/components/admin-module";
 import { apiRequest } from "@/lib/api";
 
@@ -49,11 +48,21 @@ export default function DispatchPage() {
   fields.push({ name: "remarks", label: "Remarks", type: "text" });
 
   return (
-    <AdminShell>
+    <>
       <AdminModule
         eyebrow="Dispatch Management"
         title="Bus and Courier Dispatch"
-        listPath="/api/dispatch"
+        listPath="/api/admin/data-list?model=dispatch"
+        searchPlaceholder="Search reference, driver, bus..."
+        filterConfig={{
+          key: "status",
+          label: "Status",
+          options: [
+            { value: "pending", label: "Pending" },
+            { value: "dispatched", label: "Dispatched" },
+            { value: "delivered", label: "Delivered" }
+          ]
+        }}
         submitPath="/api/dispatch"
         submitLabel="Save Dispatch"
         values={values}
@@ -140,6 +149,6 @@ export default function DispatchPage() {
           return undefined;
         }}
       />
-    </AdminShell>
+    </>
   );
 }

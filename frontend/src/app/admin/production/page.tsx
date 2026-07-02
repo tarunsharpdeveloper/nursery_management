@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Select from "react-select";
-import { AdminShell } from "@/components/admin-shell";
-import { RefreshCw, Save } from "lucide-react";
+import { RefreshCw, Save, Plus, X, Search } from "lucide-react";
+import { FormModal } from "@/components/form-modal";
 import { apiRequest } from "@/lib/api";
 
 type Category = {
@@ -72,8 +72,22 @@ export default function ProductionPage() {
   const [inventory, setInventory] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("Loading...");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [categoryPath, setCategoryPath] = useState<number[]>([]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
   const [form, setForm] = useState({
     productId: "",
@@ -86,14 +100,18 @@ export default function ProductionPage() {
   async function loadData() {
     setBusy(true);
     try {
+      const searchParams = new URLSearchParams({ page: String(currentPage), limit: "10" });
+      if (debouncedSearch) searchParams.set("search", debouncedSearch);
+
       const [cats, prods, inv] = await Promise.all([
         apiRequest<Category[]>("/api/categories"),
         apiRequest<Product[]>("/api/products"),
-        apiRequest<any[]>("/api/inventory")
+        apiRequest<any>(`/api/admin/data-list?model=inventory&${searchParams.toString()}`)
       ]);
       setCategories(Array.isArray(cats) ? cats : []);
       setProducts(Array.isArray(prods) ? prods : []);
-      setInventory(Array.isArray(inv) ? inv : []);
+      setInventory(inv && inv.data && Array.isArray(inv.data) ? inv.data : (Array.isArray(inv) ? inv : []));
+      setTotalPages(inv?.totalPages || 1);
       setStatus(`Loaded inventory records`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not load records");
@@ -104,7 +122,7 @@ export default function ProductionPage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [currentPage, debouncedSearch]);
 
   const activeCategories = useMemo(() => categories.filter(c => c.is_active !== 0 && c.is_active !== false), [categories]);
 
@@ -155,6 +173,7 @@ export default function ProductionPage() {
       });
       setStatus("Saved successfully");
       setForm(f => ({ ...f, quantityProduced: "", remarks: "" })); // keep category/product selected for quick entry
+      setIsModalOpen(false);
       await loadData(); // refresh inventory table
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not save");
@@ -164,23 +183,37 @@ export default function ProductionPage() {
   }
 
   return (
-    <AdminShell>
+    <>
       <div className="section-header">
         <div>
-          <p className="eyebrow">Production Management</p>
+          {/* <p className="eyebrow">Production Management</p> */}
           <h1>Plant and Seed Production Entry</h1>
         </div>
-        <button className="button secondary" type="button" onClick={loadData} disabled={busy}>
-          <RefreshCw size={17} />
-          Refresh
+        <button className="button" type="button" onClick={() => setIsModalOpen(true)} disabled={busy}>
+          <Plus size={17} />
+          Add Production
         </button>
       </div>
 
-      <form className="card" style={{ marginBottom: 20 }}>
-        <div className="card-body">
-          <div className="form-grid">
+      <FormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Production Entry"
+        maxWidth={800}
+        footer={
+          <>
+            <button className="button secondary" type="button" onClick={() => setIsModalOpen(false)}>Cancel</button>
+            <button className="button" type="button" onClick={submitForm} disabled={busy || !form.productId || !form.quantityProduced}>
+              <Save size={17} />
+              Save and Increase Stock
+            </button>
+          </>
+        }
+      >
+        <form className="card-body" style={{ padding: 0 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 16 }}>
             {dropdowns.map((options, idx) => (
-              <label key={idx} className="field">
+              <label key={idx} className="field" style={{ width: 230 }}>
                 <span>{idx === 0 ? "Category" : idx === 1 ? "Subcategory" : `Level ${idx + 1} Subcategory`}</span>
                 <select
                   value={categoryPath[idx] || ""}
@@ -201,6 +234,9 @@ export default function ProductionPage() {
                 </select>
               </label>
             ))}
+          </div>
+
+          <div className="form-grid">
 
             <label className="field">
               <span>Product</span>
@@ -246,15 +282,35 @@ export default function ProductionPage() {
               />
             </label>
           </div>
+        </form>
+      </FormModal>
 
-          <button className="button" type="button" onClick={submitForm} disabled={busy || !form.productId || !form.quantityProduced} style={{ marginTop: 16 }}>
-            <Save size={17} />
-            Save and Increase Stock
-          </button>
+      <div className="filter-bar-container">
+        <div className="filter-bar-wrapper">
+          <div className="filter-group">
+            <label className="filter-label">Search Inventory</label>
+            <div className="filter-input-wrapper">
+              <div className="filter-input-icon">
+                <Search size={16} />
+              </div>
+              <input
+                type="text"
+                placeholder="Search product name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="filter-input"
+              />
+            </div>
+          </div>
         </div>
-      </form>
+      </div>
 
-      <div className="table-wrap">
+      <div className="table-wrap" style={{ position: "relative" }}>
+        {busy && (
+          <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.6)", zIndex: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <RefreshCw size={24} className="spin" color="#3b82f6" />
+          </div>
+        )}
         <table>
           <thead>
             <tr>
@@ -272,12 +328,20 @@ export default function ProductionPage() {
               </tr>
             )) : (
               <tr>
-                <td colSpan={3}>No records found</td>
+                <td colSpan={3} style={{ textAlign: "center", padding: "32px 16px", color: "var(--muted)" }}>No records found</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
-    </AdminShell>
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", background: "white", borderTop: "1px solid #e2e8f0", borderBottomLeftRadius: 8, borderBottomRightRadius: 8, marginTop: -1, marginBottom: 24 }}>
+        <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500 }}>Page {currentPage} of {totalPages}</span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="button secondary" style={{ padding: "6px 12px", height: "auto" }} disabled={currentPage <= 1 || busy} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>Previous</button>
+          <button className="button secondary" style={{ padding: "6px 12px", height: "auto" }} disabled={currentPage >= totalPages || busy} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}>Next</button>
+        </div>
+      </div>
+    </>
   );
 }

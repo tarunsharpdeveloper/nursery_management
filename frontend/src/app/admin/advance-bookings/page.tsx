@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { AdminShell } from "@/components/admin-shell";
 import { AdminModule } from "@/components/admin-module";
 import { apiRequest } from "@/lib/api";
 
@@ -19,7 +18,7 @@ export default function AdvanceBookingsPage() {
       .catch(console.error);
   }, []);
 
-  const selectedProduct = products.find(p => p.id === values.productId);
+  const selectedProduct = products?.find(p => p.id === values.productId);
   const variants = selectedProduct?.variants || [];
   const hasVariants = variants.length > 0;
 
@@ -77,11 +76,22 @@ export default function AdvanceBookingsPage() {
   );
 
   return (
-    <AdminShell>
+    <>
       <AdminModule
         eyebrow="Advance Booking Module"
         title="Future Plant Delivery Bookings"
-        listPath="/api/advance-bookings"
+        listPath="/api/admin/data-list?model=advance_bookings"
+        searchPlaceholder="Search booking number, customer..."
+        filterConfig={{
+          key: "status",
+          label: "Booking Status",
+          options: [
+            { value: "booked", label: "Booked" },
+            { value: "ready", label: "Ready" },
+            { value: "delivered", label: "Delivered" },
+            { value: "cancelled", label: "Cancelled" }
+          ]
+        }}
         submitPath="/api/advance-bookings"
         submitLabel="Save Booking"
         values={values}
@@ -110,6 +120,6 @@ export default function AdvanceBookingsPage() {
           { key: "status", label: "Status" }
         ]}
       />
-    </AdminShell>
+    </>
   );
 }

@@ -19,7 +19,35 @@ async function listCustomers(_req, res, { sendJson }) {
   sendJson(res, 200, rows);
 }
 
-async function listCategories(_req, res, { sendJson }) {
+async function listCategories(req, res, { sendJson }) {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const page = parseInt(url.searchParams.get("page") || "1", 10);
+  const limit = parseInt(url.searchParams.get("limit") || "1000", 10);
+  const search = url.searchParams.get("search") || "";
+  const filterValue = url.searchParams.get("filterValue");
+
+  let whereClause = "WHERE 1=1";
+  const params = {};
+
+  if (search) {
+    whereClause += " AND (c.name LIKE :search OR c.description LIKE :search)";
+    params.search = `%${search}%`;
+  }
+
+  if (filterValue) {
+    whereClause += " AND c.category_type = :filterValue";
+    params.filterValue = filterValue;
+  }
+
+  const [[{ total }]] = await pool.query(
+    `SELECT COUNT(*) AS total FROM categories c ${whereClause}`,
+    params
+  );
+
+  const offset = (page - 1) * limit;
+  params.limit = limit;
+  params.offset = offset;
+
   const [rows] = await pool.query(
     `SELECT c.id, c.parent_id, c.category_type, c.name, c.description, c.photo_urls, c.is_active,
             p.name AS parent_name,
@@ -29,10 +57,23 @@ async function listCategories(_req, res, { sendJson }) {
        LEFT JOIN categories p ON p.id = c.parent_id
        LEFT JOIN categories child ON child.parent_id = c.id
        LEFT JOIN products product ON product.category_id = c.id AND product.is_deleted = 0
+       ${whereClause}
        GROUP BY c.id, c.parent_id, c.category_type, c.name, c.description, c.photo_urls, c.is_active, p.name
-       ORDER BY COALESCE(p.name, c.name), c.parent_id IS NOT NULL, c.name`
+       ORDER BY COALESCE(p.name, c.name), c.parent_id IS NOT NULL, c.name
+       LIMIT :limit OFFSET :offset`,
+    params
   );
-  sendJson(res, 200, rows);
+
+  if (url.searchParams.has("page")) {
+    sendJson(res, 200, {
+      data: rows,
+      totalRecords: total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page
+    });
+  } else {
+    sendJson(res, 200, rows);
+  }
 }
 
 const categorySchema = z.object({
@@ -64,7 +105,8 @@ const editCategorySchema = z.object({
   categoryId: z.number().int().positive(),
   name: z.string().min(2),
   description: z.string().optional().nullable(),
-  photoUrls: z.string().optional().nullable()
+  photoUrls: z.string().optional().nullable(),
+  categoryType: z.enum(["plant", "seed"]).optional().nullable()
 });
 
 async function editCategory(req, res, { readJson, sendJson }) {
@@ -73,13 +115,15 @@ async function editCategory(req, res, { readJson, sendJson }) {
     `UPDATE categories 
         SET name = :name, 
             description = :description,
+            category_type = :categoryType,
             photo_urls = CASE WHEN :photoUrls IS NOT NULL THEN :photoUrls ELSE photo_urls END
       WHERE id = :categoryId`,
     {
       categoryId: payload.categoryId,
       name: payload.name,
       description: payload.description || null,
-      photoUrls: payload.photoUrls || null
+      photoUrls: payload.photoUrls || null,
+      categoryType: payload.categoryType || null
     }
   );
   sendJson(res, 200, { updated: true });
@@ -479,6 +523,23 @@ async function getEmployeeAttendance(req, res, { sendJson }) {
 async function listWageSummary(req, res, { sendJson }) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const wageMonth = url.searchParams.get("month") || new Date().toISOString().slice(0, 7);
+  const search = url.searchParams.get("search") || "";
+  const filterKey = url.searchParams.get("filterKey");
+  const filterValue = url.searchParams.get("filterValue");
+
+  let whereClause = "WHERE e.is_active = TRUE";
+  const params = { wageMonth };
+
+  if (search) {
+    whereClause += " AND e.name LIKE :search";
+    params.search = `%${search}%`;
+  }
+  
+  if (filterKey === "employee_type" && filterValue) {
+    whereClause += " AND e.employee_type = :filterValue";
+    params.filterValue = filterValue;
+  }
+
   const [rows] = await pool.query(
     `SELECT e.id, e.name, e.employee_type, e.gender, e.monthly_salary, e.daily_wage,
             SUM(CASE WHEN a.status = 'present' THEN 1 WHEN a.status = 'half_day' THEN 0.5 WHEN a.status = 'sunday_off' AND e.employee_type = 'monthly_salary' THEN 1 ELSE 0 END) AS days_worked,
@@ -486,10 +547,10 @@ async function listWageSummary(req, res, { sendJson }) {
        FROM employees e
        LEFT JOIN attendance a
          ON a.employee_id = e.id AND DATE_FORMAT(a.attendance_date, '%Y-%m') = :wageMonth
-      WHERE e.is_active = TRUE AND e.is_deleted = 0
+      ${whereClause}
       GROUP BY e.id
       ORDER BY e.name`,
-    { wageMonth }
+    params
   );
 
   sendJson(res, 200, rows.map((row) => {
@@ -503,6 +564,139 @@ async function listWageSummary(req, res, { sendJson }) {
 
     return { ...row, days_worked: daysWorked, absent_days: absentDays, payable_amount: payable };
   }));
+}
+
+const modelsConfig = {
+  employees: {
+    baseSelect: "SELECT id, name, mobile, gender, joining_date, employee_type, monthly_salary, daily_wage FROM employees",
+    baseWhere: "WHERE is_active = TRUE",
+    searchFields: ["name", "mobile", "employee_type"],
+    orderBy: "ORDER BY name",
+    allowedFilters: ["employee_type", "gender"]
+  },
+  orders: {
+    baseSelect: "SELECT o.id, o.order_number, c.name AS customer, o.status, o.payment_status, o.total_amount, o.created_at, GROUP_CONCAT(p.name SEPARATOR ', ') AS products FROM orders o JOIN customers c ON c.id = o.customer_id LEFT JOIN order_items oi ON oi.order_id = o.id LEFT JOIN products p ON p.id = oi.product_id",
+    baseWhere: "WHERE o.is_deleted = 0",
+    groupBy: "GROUP BY o.id",
+    searchFields: ["o.order_number", "c.name", "c.phone"],
+    orderBy: "ORDER BY o.created_at DESC",
+    allowedFilters: ["status", "payment_status"]
+  },
+  payments: {
+    baseSelect: "SELECT p.id, o.order_number, p.payment_gateway, p.payment_method, p.payment_status, p.amount, p.paid_at FROM payments p LEFT JOIN orders o ON o.id = p.order_id",
+    baseWhere: "WHERE 1=1",
+    searchFields: ["o.order_number", "p.payment_gateway", "p.payment_method"],
+    orderBy: "ORDER BY p.created_at DESC",
+    allowedFilters: ["payment_status", "payment_method"]
+  },
+  bills: {
+    baseSelect: "SELECT b.id, b.bill_number, c.name AS customer, b.bill_type, b.payment_type, b.total_amount, b.paid_amount, b.balance_amount, b.bill_date, p.gateway_payment_id AS transaction_id FROM bills b LEFT JOIN customers c ON c.id = b.customer_id LEFT JOIN payments p ON p.bill_id = b.id",
+    baseWhere: "WHERE b.is_deleted = 0",
+    searchFields: ["b.bill_number", "c.name", "p.gateway_payment_id"],
+    orderBy: "ORDER BY b.created_at DESC",
+    allowedFilters: ["bill_type", "payment_type"]
+  },
+  advance_bookings: {
+    baseSelect: "SELECT a.id, a.booking_number, c.name AS customer, c.phone, p.name AS product, a.quantity, a.advance_amount, a.total_bill_amount, a.balance_payable, a.delivery_date, a.status FROM advance_bookings a JOIN customers c ON c.id = a.customer_id JOIN products p ON p.id = a.product_id",
+    baseWhere: "WHERE 1=1",
+    searchFields: ["a.booking_number", "c.name", "c.phone", "p.name"],
+    orderBy: "ORDER BY a.delivery_date",
+    allowedFilters: ["status"]
+  },
+  dispatch: {
+    baseSelect: "SELECT d.id, COALESCE(o.order_number, ab.booking_number) AS reference_number, IF(o.id IS NOT NULL, 'Online Order', 'Advance Booking') AS reference_type, d.dispatch_type, d.status, d.dispatch_date, d.bus_number, d.driver_name, d.driver_mobile, d.courier_company, d.docket_number FROM dispatches d LEFT JOIN orders o ON o.id = d.order_id LEFT JOIN advance_bookings ab ON ab.id = d.advance_booking_id",
+    baseWhere: "WHERE 1=1",
+    searchFields: ["o.order_number", "ab.booking_number", "d.bus_number", "d.driver_name", "d.courier_company", "d.docket_number"],
+    orderBy: "ORDER BY d.id DESC",
+    allowedFilters: ["status", "dispatch_type"]
+  },
+  attendance: {
+    baseSelect: "SELECT a.id, e.name AS employee, a.attendance_date, a.status, a.remarks FROM attendance a JOIN employees e ON e.id = a.employee_id",
+    baseWhere: "WHERE a.employee_id IS NOT NULL",
+    searchFields: ["e.name", "a.remarks"],
+    orderBy: "ORDER BY a.attendance_date DESC, e.name",
+    allowedFilters: ["status"]
+  },
+  inventory: {
+    baseSelect: "SELECT p.id, p.name, p.available_quantity, COALESCE(SUM(CASE WHEN s.quantity_change < 0 THEN ABS(s.quantity_change) ELSE 0 END), 0) AS sold_quantity, p.available_quantity AS current_balance FROM products p LEFT JOIN stock_ledger s ON s.product_id = p.id",
+    baseWhere: "WHERE p.is_deleted = 0",
+    groupBy: "GROUP BY p.id, p.name, p.available_quantity",
+    searchFields: ["p.name"],
+    orderBy: "ORDER BY p.name",
+    allowedFilters: [] // Usually stock status, but that needs a HAVING clause or subquery which is complex for this unified setup
+  }
+};
+
+async function getUnifiedList(req, res, { sendJson }) {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const model = url.searchParams.get("model");
+  const page = parseInt(url.searchParams.get("page") || "1", 10);
+  const limit = parseInt(url.searchParams.get("limit") || "10", 10);
+  const search = url.searchParams.get("search") || "";
+  const filterKey = url.searchParams.get("filterKey");
+  const filterValue = url.searchParams.get("filterValue");
+
+  const config = modelsConfig[model];
+  if (!config) {
+    return sendJson(res, 400, { error: `Unknown model: ${model}` });
+  }
+
+  let whereClause = config.baseWhere;
+  const params = {};
+
+  if (search && config.searchFields.length > 0) {
+    const searchConditions = config.searchFields.map(f => `${f} LIKE :search`).join(" OR ");
+    whereClause += ` AND (${searchConditions})`;
+    params.search = `%${search}%`;
+  }
+
+  if (filterKey && filterValue && config.allowedFilters.includes(filterKey)) {
+    // If it's a joined table and filter doesn't have an alias prefix, assume main table alias or generic. 
+    // In our config, status is usually o.status or a.status, so it's safer if frontend passes the correct alias or we just handle it.
+    // For simplicity, we assume filterKey exactly matches a valid column name in the scope.
+    let fKey = filterKey;
+    if (model === 'orders' && filterKey === 'status') fKey = 'o.status';
+    else if (model === 'orders' && filterKey === 'payment_status') fKey = 'o.payment_status';
+    else if (model === 'advance_bookings' && filterKey === 'status') fKey = 'a.status';
+    else if (model === 'dispatch' && filterKey === 'status') fKey = 'd.status';
+    else if (model === 'dispatch' && filterKey === 'dispatch_type') fKey = 'd.dispatch_type';
+    else if (model === 'attendance' && filterKey === 'status') fKey = 'a.status';
+    else if (model === 'payments' && filterKey === 'payment_status') fKey = 'p.payment_status';
+    else if (model === 'payments' && filterKey === 'payment_method') fKey = 'p.payment_method';
+    else if (model === 'bills' && filterKey === 'bill_type') fKey = 'b.bill_type';
+    else if (model === 'bills' && filterKey === 'payment_type') fKey = 'b.payment_type';
+    else if (model === 'employees' && filterKey === 'employee_type') fKey = 'e.employee_type'; // employees table is just employee_type, but let's just use the column name
+
+    whereClause += ` AND ${fKey} = :filterValue`;
+    params.filterValue = filterValue;
+  }
+
+  // Count total records
+  // Count queries with GROUP BY need to be wrapped as a subquery
+  let countSql = `SELECT COUNT(*) AS total FROM (${config.baseSelect} ${whereClause} ${config.groupBy || ""}) AS count_query`;
+  const [[{ total }]] = await pool.query(countSql, params);
+
+  // Fetch paginated data
+  const offset = (page - 1) * limit;
+  const dataSql = `
+    ${config.baseSelect}
+    ${whereClause}
+    ${config.groupBy || ""}
+    ${config.orderBy || ""}
+    LIMIT :limit OFFSET :offset
+  `;
+  
+  params.limit = limit;
+  params.offset = offset;
+
+  const [data] = await pool.query(dataSql, params);
+
+  sendJson(res, 200, {
+    data,
+    totalRecords: total,
+    totalPages: Math.ceil(total / limit),
+    currentPage: page
+  });
 }
 
 module.exports = {
@@ -528,7 +722,8 @@ module.exports = {
   updateDispatchStatus,
   listEmployees,
   listAttendance,
+  listWageSummary,
+  getUnifiedList,
   listMonthlyAttendance,
-  getEmployeeAttendance,
-  listWageSummary
+  getEmployeeAttendance
 };

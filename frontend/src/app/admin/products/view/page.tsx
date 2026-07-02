@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AdminShell } from "@/components/admin-shell";
 import { apiRequest } from "@/lib/api";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -176,10 +175,10 @@ function ProductDetailContent() {
 
 export default function ProductDetailPage() {
   return (
-    <AdminShell>
+    <>
       <Suspense fallback={<p>Loading...</p>}>
         <ProductDetailContent />
       </Suspense>
-    </AdminShell>
+    </>
   );
 }

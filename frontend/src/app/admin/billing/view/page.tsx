@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AdminShell } from "@/components/admin-shell";
 import { ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/api";
 import Link from "next/link";
@@ -59,10 +58,10 @@ function ViewBillContent() {
 
   if (!bill) {
     return (
-      <AdminShell>
+      <>
         <div className="section-header">
           <div>
-            <p className="eyebrow">Offline Billing</p>
+            {/* <p className="eyebrow">Offline Billing</p> */}
             <h1>View Bill</h1>
           </div>
           <Link href="/admin/billing" className="button secondary">
@@ -70,7 +69,7 @@ function ViewBillContent() {
             Back to Billing
           </Link>
         </div>
-      </AdminShell>
+      </>
     );
   }
 
@@ -85,7 +84,7 @@ function ViewBillContent() {
   };
 
   return (
-    <AdminShell>
+    <>
       <div className="section-header">
         <div>
           <p className="eyebrow">Offline Billing</p>
@@ -198,14 +197,14 @@ function ViewBillContent() {
           </table>
         </div>
       </div>
-    </AdminShell>
+    </>
   );
 }
 
 export default function ViewBillPage() {
   return (
     <Suspense fallback={
-      <AdminShell>
+      <>
         <div className="section-header">
           <div>
             <p className="eyebrow">Offline Billing</p>
@@ -213,7 +212,7 @@ export default function ViewBillPage() {
             <p className="meta">Loading...</p>
           </div>
         </div>
-      </AdminShell>
+      </>
     }>
       <ViewBillContent />
     </Suspense>

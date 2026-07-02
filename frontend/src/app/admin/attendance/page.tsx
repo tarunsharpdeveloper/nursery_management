@@ -1,13 +1,22 @@
-import { AdminShell } from "@/components/admin-shell";
 import { AdminModule } from "@/components/admin-module";
 
 export default function AttendancePage() {
   return (
-    <AdminShell>
+    <>
       <AdminModule
         eyebrow="Attendance Management"
         title="Daily Attendance Entry"
-        listPath="/api/attendance"
+        listPath="/api/admin/data-list?model=attendance"
+        searchPlaceholder="Search employee name..."
+        filterConfig={{
+          key: "status",
+          label: "Status",
+          options: [
+            { value: "present", label: "Present" },
+            { value: "absent", label: "Absent" },
+            { value: "half_day", label: "Half Day" }
+          ]
+        }}
         submitPath="/api/attendance"
         submitLabel="Save Attendance"
         fields={[
@@ -28,6 +37,6 @@ export default function AttendancePage() {
           { key: "remarks", label: "Remarks" }
         ]}
       />
-    </AdminShell>
+    </>
   );
 }

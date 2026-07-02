@@ -41,13 +41,27 @@ async function getReport(req, res, { sendJson }) {
     return;
   }
 
+  const search = url.searchParams.get("search") || "";
+  const filterKey = url.searchParams.get("filterKey");
+  const filterValue = url.searchParams.get("filterValue");
+
+  let salesWhere = "WHERE b.bill_date BETWEEN :fromDate AND :toDate";
+  
+  if (search) {
+    salesWhere += " AND (b.bill_number LIKE :search OR c.name LIKE :search)";
+  }
+  
+  if (filterKey === "bill_type" && filterValue) {
+    salesWhere += " AND b.bill_type = :filterValue";
+  }
+
   const [rows] = await pool.query(
-    `SELECT b.bill_date, b.bill_number, c.name AS customer, b.total_amount, b.paid_amount, b.balance_amount
+    `SELECT b.bill_date, b.bill_number, c.name AS customer, b.total_amount, b.paid_amount, b.balance_amount, b.bill_type
        FROM bills b
        LEFT JOIN customers c ON c.id = b.customer_id
-      WHERE b.bill_date BETWEEN :fromDate AND :toDate
+      ${salesWhere}
       ORDER BY b.bill_date DESC`,
-    { fromDate, toDate }
+    { fromDate, toDate, search: `%${search}%`, filterValue }
   );
 
   sendJson(res, 200, rows);

@@ -40,7 +40,8 @@ const {
   updateDispatchStatus,
   listEmployees,
   listAttendance,
-  listWageSummary
+  listWageSummary,
+  getUnifiedList
 } = require("./routes/admin-data");
 
 const helpers = { readJson, sendJson };
@@ -99,7 +100,8 @@ const routes = [
   ["GET", "/api/reports", "reports:read", getReport],
   ["GET", "/api/reviews/:productId", null, getReviews],
   ["POST", "/api/reviews", null, submitReview],
-  ["GET", "/api/reviews/stats/:productId", null, getReviewStats]
+  ["GET", "/api/reviews/stats/:productId", null, getReviewStats],
+  ["GET", "/api/admin/data-list", null, getUnifiedList]
 ];
 
 // Route matcher that handles path parameters

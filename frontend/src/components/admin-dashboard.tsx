@@ -35,9 +35,9 @@ export function AdminDashboard() {
     <>
       <div className="section-header">
         <div>
-          <p className="eyebrow">Super Admin</p>
-          <h1>Nursery Operations Dashboard</h1>
-          <p className="meta">{status}</p>
+          {/* <p className="eyebrow">Super Admin</p> */}
+          <h1>Dashboard</h1>
+          {/* <p className="meta">{status}</p> */}
         </div>
         <button className="button secondary" type="button" onClick={loadStats}>
           <RefreshCw size={17} />

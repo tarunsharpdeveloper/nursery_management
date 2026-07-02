@@ -1,13 +1,21 @@
-import { AdminShell } from "@/components/admin-shell";
 import { AdminModule } from "@/components/admin-module";
 
 export default function EmployeesPage() {
   return (
-    <AdminShell>
+    <>
       <AdminModule
         eyebrow="Employee Master"
         title="Monthly Salary and Daily Wage Employees"
-        listPath="/api/employees"
+        listPath="/api/admin/data-list?model=employees"
+        searchPlaceholder="Search name, mobile..."
+        filterConfig={{
+          key: "employee_type",
+          label: "Employee Type",
+          options: [
+            { value: "monthly_salary", label: "Monthly Salary" },
+            { value: "daily_wage", label: "Daily Wage" }
+          ]
+        }}
         submitPath="/api/employees"
         submitLabel="Save Employee"
         fields={[
@@ -29,6 +37,6 @@ export default function EmployeesPage() {
           { key: "daily_wage", label: "Wage" }
         ]}
       />
-    </AdminShell>
+    </>
   );
 }

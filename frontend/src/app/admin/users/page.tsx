@@ -3,25 +3,24 @@
 import { useState, useEffect } from "react";
 import { AdminShell } from "@/components/admin-shell";
 import { AdminModule } from "@/components/admin-module";
-import { Edit2, Power, PowerOff, Trash2, Calendar, MoreVertical } from "lucide-react";
+import { Edit2, Power, PowerOff, Trash2, MoreVertical } from "lucide-react";
 import { ConfirmModal } from "@/components/confirm-modal";
 import { apiRequest } from "@/lib/api";
-import { useRouter } from "next/navigation";
 
 type Field = {
   name: string;
   label: string;
-  type?: "text" | "number" | "date" | "select" | "searchable-select" | "textarea";
+  type?: "text" | "number" | "date" | "select" | "searchable-select" | "textarea" | "email" | "password";
   options?: { label: string; value: string | number }[];
   valueType?: "string" | "number";
   placeholder?: string;
   required?: boolean;
 };
 
-export default function EmployeesPage() {
-  const [values, setValues] = useState<Record<string, string | number>>({});
+export default function UsersPage() {
+  const [values, setValues] = useState<Record<string, any>>({});
   const [busy, setBusy] = useState(false);
-  const router = useRouter();
+  const [roles, setRoles] = useState<{ id: number; name: string }[]>([]);
   const [openActionId, setOpenActionId] = useState<number | null>(null);
   const [dropdownDirection, setDropdownDirection] = useState<"up" | "down">("down");
   const [confirmState, setConfirmState] = useState<{
@@ -39,52 +38,53 @@ export default function EmployeesPage() {
     isDestructive: false
   });
 
-  const baseFields: Field[] = [
-    { name: "name", label: "Employee Name", required: true },
-    { name: "mobile", label: "Mobile", required: true },
-    { name: "gender", label: "Gender", type: "select", options: [{ label: "Male", value: "male" }, { label: "Female", value: "female" }, { label: "Other", value: "other" }], required: true },
-    { name: "joiningDate", label: "Joining Date", type: "date", required: true },
-    { name: "employeeType", label: "Employee Type", type: "select", options: [{ label: "Monthly Salary", value: "monthly_salary" }, { label: "Daily Wage", value: "daily_wage" }], required: true },
+  useEffect(() => {
+    apiRequest("/api/roles").then((data: any) => setRoles(data || [])).catch(() => {});
+  }, []);
+
+  const fields: Field[] = [
+    { name: "name", label: "Name", required: true },
+    { name: "email", label: "Email", type: "email", required: true },
+    { 
+      name: "role", 
+      label: "Role", 
+      type: "select", 
+      options: roles.map(r => ({ label: r.name, value: r.name })), 
+      required: true 
+    }
   ];
 
-  const fields = [...baseFields];
-  
-  if (values.employeeType === "monthly_salary") {
-    fields.push({ name: "monthlySalary", label: "Monthly Salary", type: "number", valueType: "number", required: true });
-  } else if (values.employeeType === "daily_wage") {
-    fields.push({ name: "dailyWage", label: "Daily Wage", type: "number", valueType: "number", required: true });
+  if (!values.id) {
+    fields.push({
+      name: "password",
+      label: "Password",
+      type: "password", // This uses "text" on actual form but handles password format nicely, if input type isn't password it's okay because AdminModule defaults to text if type is unknown. Wait, AdminModule handles type={field.type || "text"} so type="password" will correctly render an <input type="password" />!
+      required: true
+    });
   }
 
-  function validateForm(vals: Record<string, string | number>) {
+  function validateForm(vals: Record<string, any>) {
     const errors: Record<string, string> = {};
     if (!vals.name) errors.name = "Name is required";
-    if (!vals.mobile) errors.mobile = "Mobile is required";
-    if (!vals.gender) errors.gender = "Gender is required";
-    if (!vals.joiningDate) errors.joiningDate = "Joining Date is required";
-    if (!vals.employeeType) errors.employeeType = "Employee Type is required";
-    
-    if (vals.employeeType === "monthly_salary" && !vals.monthlySalary) {
-      errors.monthlySalary = "Monthly Salary is required";
-    }
-    if (vals.employeeType === "daily_wage" && !vals.dailyWage) {
-      errors.dailyWage = "Daily Wage is required";
-    }
-    return errors;
+    if (!vals.email) errors.email = "Email is required";
+    if (!vals.role) errors.role = "Role is required";
+    if (!vals.id && !vals.password) errors.password = "Password is required for new users";
+    return Object.keys(errors).length ? errors : null;
   }
 
   async function handleToggle(row: any, reload: () => Promise<void>) {
     setConfirmState({
       isOpen: true,
-      title: `${row.is_active ? "Disable" : "Enable"} Employee`,
+      title: `${row.is_active ? "Disable" : "Enable"} User`,
       message: `Are you sure you want to ${row.is_active ? "disable" : "enable"} ${row.name}?`,
       confirmText: row.is_active ? "Disable" : "Enable",
       isDestructive: row.is_active,
       action: async () => {
         setBusy(true);
         try {
-          await apiRequest("/api/employees/toggle", {
+          await apiRequest("/api/users/toggle", {
             method: "PATCH",
-            body: JSON.stringify({ employeeId: row.id, isActive: !row.is_active })
+            body: JSON.stringify({ userId: row.id, isActive: !row.is_active })
           });
           await reload();
         } catch (error) {
@@ -100,20 +100,20 @@ export default function EmployeesPage() {
   async function handleDelete(row: any, reload: () => Promise<void>) {
     setConfirmState({
       isOpen: true,
-      title: "Delete Employee",
+      title: "Delete User",
       message: `Are you sure you want to delete ${row.name}?`,
       confirmText: "Delete",
       isDestructive: true,
       action: async () => {
         setBusy(true);
         try {
-          await apiRequest("/api/employees/delete", {
+          await apiRequest("/api/users/delete", {
             method: "POST",
-            body: JSON.stringify({ employeeId: row.id })
+            body: JSON.stringify({ userId: row.id })
           });
           await reload();
         } catch (error) {
-          alert(error instanceof Error ? error.message : "Failed to delete employee");
+          alert(error instanceof Error ? error.message : "Failed to delete user");
         } finally {
           setBusy(false);
           setConfirmState(prev => ({ ...prev, isOpen: false }));
@@ -126,12 +126,8 @@ export default function EmployeesPage() {
     setValues({
       id: row.id,
       name: row.name,
-      mobile: row.mobile,
-      gender: row.gender,
-      joiningDate: row.joining_date ? new Date(row.joining_date).toISOString().slice(0, 10) : "",
-      employeeType: row.employee_type,
-      monthlySalary: row.monthly_salary || "",
-      dailyWage: row.daily_wage || ""
+      email: row.email,
+      role: row.role
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -139,43 +135,26 @@ export default function EmployeesPage() {
   return (
     <>
       <AdminModule
-        eyebrow="Employee Master"
-        title="Monthly Salary and Daily Wage Employees"
-        listPath="/api/admin/data-list?model=employees"
-        searchPlaceholder="Search name, mobile..."
-        filterConfig={{
-          key: "employee_type",
-          label: "Employee Type",
-          options: [
-            { value: "monthly_salary", label: "Monthly Salary" },
-            { value: "daily_wage", label: "Daily Wage" }
-          ]
-        }}
-        submitPath="/api/employees"
+        eyebrow="User Management"
+        title="Users"
+        listPath="/api/users"
+        submitPath="/api/users"
         submitMethod={values.id ? "PATCH" : "POST"}
-        submitLabel={values.id ? "Update Employee" : "Save Employee"}
+        submitLabel={values.id ? "Update User" : "Save User"}
         values={values}
         onValuesChange={setValues}
         onSuccess={() => setValues({})}
         onCancel={values.id ? () => setValues({}) : undefined}
         validate={validateForm}
-        transformSubmit={(v) => ({
-          ...v,
-          monthlySalary: v.monthlySalary ? Number(v.monthlySalary) : undefined,
-          dailyWage: v.dailyWage ? Number(v.dailyWage) : undefined
-        })}
-        fields={fields}
+        fields={fields as any} // Cast because AdminModule type might not strictly accept "email"|"password"
         columns={[
           { key: "id", label: "ID" },
-          { key: "name", label: "Employee" },
-          { key: "mobile", label: "Mobile" },
-          { key: "gender", label: "Gender" },
-          { key: "employee_type", label: "Type" },
-          { key: "monthly_salary", label: "Salary" },
-          { key: "daily_wage", label: "Wage" },
+          { key: "name", label: "Name" },
+          { key: "email", label: "Email" },
+          { key: "role", label: "Role" },
           { key: "is_active", label: "Status" }
         ]}
-        renderCell={(row, column, reload) => {
+        renderCell={(row, column) => {
           if (column.key === "is_active") {
             return (
               <span className={`status-badge ${row.is_active ? "status-paid" : "status-failed"}`}>
@@ -183,8 +162,14 @@ export default function EmployeesPage() {
               </span>
             );
           }
-          if (column.key === "employee_type") {
-            return row.employee_type === "monthly_salary" ? "Monthly Salary" : (row.employee_type === "daily_wage" ? "Daily Wage" : row.employee_type);
+          if (column.key === "role") {
+            const labelMap: Record<string, string> = {
+              "super_admin": "Super Admin",
+              "staff_user": "Staff User",
+              "billing_user": "Billing User",
+              "customer": "Customer"
+            };
+            return labelMap[row.role] || <span style={{ textTransform: "capitalize" }}>{typeof row.role === 'string' ? row.role.replace(/_/g, ' ') : row.role}</span>;
           }
           return undefined;
         }}
@@ -216,15 +201,6 @@ export default function EmployeesPage() {
                   onClick={(e) => { e.stopPropagation(); setOpenActionId(null); }} 
                 />
                 <div className={`actions-dropdown-menu direction-${dropdownDirection}`}>
-                  <button 
-                    className="button secondary actions-dropdown-item" 
-                    type="button" 
-                    onClick={() => { setOpenActionId(null); router.push(`/admin/attendance-details?id=${row.id}`); }} 
-                    disabled={busy}
-                  >
-                    <Calendar size={16} color="#3b82f6" style={{ marginRight: 8 }} />
-                    Attendance
-                  </button>
                   <button 
                     className="button secondary actions-dropdown-item" 
                     type="button" 

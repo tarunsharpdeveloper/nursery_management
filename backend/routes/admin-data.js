@@ -5,7 +5,7 @@ async function getDashboard(_req, res, { sendJson }) {
   const [[products]] = await pool.query("SELECT COUNT(*) AS total_products, COALESCE(SUM(available_quantity), 0) AS total_stock FROM products WHERE is_deleted = 0");
   const [[orders]] = await pool.query("SELECT COUNT(*) AS total_orders, COALESCE(SUM(total_amount), 0) AS order_value FROM orders");
   const [[bookings]] = await pool.query("SELECT COUNT(*) AS total_bookings FROM advance_bookings");
-  const [[employees]] = await pool.query("SELECT COUNT(*) AS total_employees FROM employees WHERE is_active = TRUE");
+  const [[employees]] = await pool.query("SELECT COUNT(*) AS total_employees FROM employees WHERE is_active = TRUE AND is_deleted = 0");
 
   sendJson(res, 200, { ...products, ...orders, ...bookings, ...employees });
 }
@@ -424,9 +424,9 @@ async function updateDispatchStatus(req, res, { readJson, sendJson }) {
 
 async function listEmployees(_req, res, { sendJson }) {
   const [rows] = await pool.query(
-    `SELECT id, name, mobile, gender, joining_date, employee_type, monthly_salary, daily_wage
+    `SELECT id, name, mobile, gender, joining_date, employee_type, monthly_salary, daily_wage, is_active
        FROM employees
-      WHERE is_active = TRUE
+      WHERE is_deleted = 0
       ORDER BY name`
   );
   sendJson(res, 200, rows);
@@ -437,11 +437,87 @@ async function listAttendance(_req, res, { sendJson }) {
     `SELECT a.id, e.name AS employee, a.attendance_date, a.status, a.remarks
        FROM attendance a
        JOIN employees e ON e.id = a.employee_id
-      WHERE a.employee_id IS NOT NULL
+      WHERE a.employee_id IS NOT NULL AND e.is_deleted = 0
       ORDER BY a.attendance_date DESC, e.name
       LIMIT 100`
   );
   sendJson(res, 200, rows);
+}
+
+async function listMonthlyAttendance(req, res, { sendJson }) {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const month = url.searchParams.get("month") || new Date().toISOString().slice(0, 7);
+  
+  const [employees] = await pool.query(
+    `SELECT id, name, employee_type FROM employees WHERE is_active = TRUE AND is_deleted = 0 ORDER BY name`
+  );
+
+  const [attendance] = await pool.query(
+    `SELECT employee_id, DATE_FORMAT(attendance_date, '%Y-%m-%d') as date, status 
+       FROM attendance 
+      WHERE DATE_FORMAT(attendance_date, '%Y-%m') = :month`,
+    { month }
+  );
+
+  const attendanceMap = {};
+  attendance.forEach(record => {
+    if (!attendanceMap[record.employee_id]) attendanceMap[record.employee_id] = {};
+    attendanceMap[record.employee_id][record.date] = record.status;
+  });
+
+  const result = employees.map(emp => ({
+    id: emp.id,
+    name: emp.name,
+    employee_type: emp.employee_type,
+    attendance: attendanceMap[emp.id] || {}
+  }));
+
+  sendJson(res, 200, result);
+}
+
+async function getEmployeeAttendance(req, res, { sendJson }) {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const employeeId = url.searchParams.get("employeeId");
+  const startDate = url.searchParams.get("startDate");
+  const endDate = url.searchParams.get("endDate");
+
+  if (!employeeId) {
+    throw new Error("employeeId is required");
+  }
+
+  const [employeeRows] = await pool.query(
+    "SELECT id, name, employee_type FROM employees WHERE id = :employeeId",
+    { employeeId }
+  );
+
+  if (employeeRows.length === 0) {
+    throw new Error("Employee not found");
+  }
+
+  let query = `
+    SELECT DATE_FORMAT(attendance_date, '%Y-%m-%d') as date, status, remarks
+      FROM attendance 
+     WHERE employee_id = :employeeId
+  `;
+  const params = { employeeId };
+
+  if (startDate) {
+    query += " AND attendance_date >= :startDate";
+    params.startDate = startDate;
+  }
+  if (endDate) {
+    query += " AND attendance_date <= :endDate";
+    params.endDate = endDate;
+  }
+
+  query += " ORDER BY attendance_date DESC";
+
+  const [attendance] = await pool.query(query, params);
+
+  sendJson(res, 200, {
+    employee: employeeRows[0],
+    attendance
+  });
 }
 
 async function listWageSummary(req, res, { sendJson }) {
@@ -466,7 +542,7 @@ async function listWageSummary(req, res, { sendJson }) {
 
   const [rows] = await pool.query(
     `SELECT e.id, e.name, e.employee_type, e.gender, e.monthly_salary, e.daily_wage,
-            SUM(CASE WHEN a.status = 'present' THEN 1 WHEN a.status = 'half_day' THEN 0.5 ELSE 0 END) AS days_worked,
+            SUM(CASE WHEN a.status = 'present' THEN 1 WHEN a.status = 'half_day' THEN 0.5 WHEN a.status = 'sunday_off' AND e.employee_type = 'monthly_salary' THEN 1 ELSE 0 END) AS days_worked,
             SUM(CASE WHEN a.status = 'absent' THEN 1 ELSE 0 END) AS absent_days
        FROM employees e
        LEFT JOIN attendance a
@@ -647,5 +723,7 @@ module.exports = {
   listEmployees,
   listAttendance,
   listWageSummary,
-  getUnifiedList
+  getUnifiedList,
+  listMonthlyAttendance,
+  getEmployeeAttendance
 };

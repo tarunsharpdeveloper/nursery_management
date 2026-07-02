@@ -1,30 +1,5 @@
 const crypto = require("crypto");
-
-const rolePermissions = {
-  super_admin: ["*"],
-  staff_user: [
-    "dashboard:read",
-    "products:read",
-    "products:write",
-    "inventory:read",
-    "production:write",
-    "orders:read",
-    "orders:write",
-    "attendance:read",
-    "attendance:write",
-    "employees:read"
-  ],
-  billing_user: [
-    "dashboard:read",
-    "orders:read",
-    "payments:read",
-    "payments:write",
-    "billing:read",
-    "billing:write",
-    "ledger:read"
-  ],
-  customer: []
-};
+const { pool } = require("./db");
 
 function secret() {
   return process.env.AUTH_SECRET || "nursery-dev-secret-change-me";
@@ -70,13 +45,18 @@ function verifyToken(token) {
   return payload;
 }
 
-function permissionsForRole(role) {
-  return rolePermissions[role] || [];
+async function permissionsForRole(role) {
+  if (!role) return [];
+  const [rows] = await pool.query("SELECT permissions FROM roles WHERE name = :role LIMIT 1", { role });
+  if (rows.length && rows[0].permissions) {
+    return typeof rows[0].permissions === "string" ? JSON.parse(rows[0].permissions) : rows[0].permissions;
+  }
+  return [];
 }
 
-function hasPermission(user, permission) {
+async function hasPermission(user, permission) {
   if (!permission) return true;
-  const permissions = permissionsForRole(user?.role);
+  const permissions = await permissionsForRole(user?.role);
   return permissions.includes("*") || permissions.includes(permission);
 }
 
@@ -95,6 +75,5 @@ module.exports = {
   signToken,
   authenticate,
   permissionsForRole,
-  hasPermission,
-  rolePermissions
+  hasPermission
 };

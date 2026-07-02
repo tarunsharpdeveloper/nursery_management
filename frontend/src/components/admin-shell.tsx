@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Banknote, BarChart3, Boxes, CalendarCheck, ClipboardList, CreditCard, Factory, Leaf, LogOut, Menu, NotebookTabs, Package, Receipt, Tags, Truck, UserCircle, Users, User } from "lucide-react";
+import { Banknote, BarChart3, Boxes, CalendarCheck, ClipboardList, CreditCard, Factory, Leaf, LogOut, Menu, NotebookTabs, Package, Receipt, Tags, Truck, UserCircle, Users, User, Shield } from "lucide-react";
 import { clearAdminSession, getStoredUser, type AdminUser } from "@/lib/api";
 
 const links = [
@@ -22,7 +22,9 @@ const links = [
   { href: "/admin/employees", label: "Employees", icon: Users, permission: "employees:read" },
   { href: "/admin/attendance", label: "Attendance", icon: CalendarCheck, permission: "attendance:read" },
   { href: "/admin/wages", label: "Wages", icon: Banknote, permission: "wages:read" },
-  { href: "/admin/reports", label: "Reports", icon: BarChart3, permission: "reports:read" }
+  { href: "/admin/reports", label: "Reports", icon: BarChart3, permission: "reports:read" },
+  { href: "/admin/users", label: "Users", icon: UserCircle, permission: "users:read" },
+  { href: "/admin/roles", label: "Roles", icon: Shield, permission: "roles:read" }
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -72,7 +74,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   const visibleLinks = useMemo(() => {
     if (!user) return [];
-    return links.filter((link) => user.permissions.includes("*") || user.permissions.includes(link.permission));
+    return links.filter((link) => {
+      if (user.role === "billing_user" && link.href === "/admin/orders") {
+        return false;
+      }
+      return user.permissions.includes("*") || user.permissions.includes(link.permission);
+    });
   }, [user]);
 
   function logout() {

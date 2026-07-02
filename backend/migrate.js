@@ -31,8 +31,9 @@ async function modifyColumnEnum(tableName, columnName, newDefinition) {
 async function ensureAdminSchema() {
   await modifyColumnEnum("stock_ledger", "movement_type", "ENUM('production', 'sale', 'online_order', 'advance_booking', 'adjustment') NOT NULL");
   await pool.query("INSERT IGNORE INTO roles (name) VALUES ('super_admin'), ('staff_user'), ('billing_user'), ('customer')");
-  await addColumn("users", "role", "ENUM('super_admin', 'staff_user', 'billing_user', 'customer') NULL");
-  await pool.query("ALTER TABLE users MODIFY role ENUM('super_admin', 'staff_user', 'billing_user', 'customer') NULL");
+  await addColumn("roles", "permissions", "JSON NULL");
+  await addColumn("users", "role", "VARCHAR(50) NULL");
+  await pool.query("ALTER TABLE users MODIFY role VARCHAR(50) NULL");
 
   const defaultUsers = [
     { role: "super_admin", name: "Owner Admin", email: "owner@nursery.local", password: "owner123" },
@@ -63,7 +64,31 @@ async function ensureAdminSchema() {
        SET u.role = r.name
      WHERE u.role IS NULL
   `);
-  await pool.query("ALTER TABLE users MODIFY role ENUM('super_admin', 'staff_user', 'billing_user', 'customer') NOT NULL");
+  await pool.query("ALTER TABLE users MODIFY role VARCHAR(50) NOT NULL");
+  
+  const rolePermissions = {
+    super_admin: ["*"],
+    staff_user: [
+      "dashboard:read", "products:read", "products:write", "inventory:read",
+      "production:write", "orders:read", "orders:write", "attendance:read",
+      "attendance:write", "employees:read"
+    ],
+    billing_user: [
+      "dashboard:read", "orders:read", "payments:read", "payments:write",
+      "billing:read", "billing:write", "ledger:read"
+    ],
+    customer: []
+  };
+
+  for (const [roleName, perms] of Object.entries(rolePermissions)) {
+    await pool.query(
+      "UPDATE roles SET permissions = COALESCE(permissions, :perms) WHERE name = :roleName",
+      { perms: JSON.stringify(perms), roleName }
+    );
+  }
+
+  await addColumn("users", "is_deleted", "TINYINT(1) NOT NULL DEFAULT 0");
+  await addColumn("roles", "is_deleted", "TINYINT(1) NOT NULL DEFAULT 0");
 
   await addColumn("customers", "is_credit_customer", "BOOLEAN NOT NULL DEFAULT FALSE");
   await addColumn("customers", "credit_limit", "DECIMAL(10,2) NOT NULL DEFAULT 0");
@@ -211,7 +236,9 @@ async function ensureAdminSchema() {
     await pool.query("ALTER TABLE attendance MODIFY user_id INT NULL");
   }
   await addColumn("attendance", "employee_id", "INT NULL");
-  await pool.query("ALTER TABLE attendance MODIFY status ENUM('present', 'absent', 'half_day', 'leave') NOT NULL");
+  await pool.query("ALTER TABLE attendance MODIFY status ENUM('present', 'absent', 'half_day', 'leave', 'sunday_off') NOT NULL");
+  
+  await addColumn("employees", "is_deleted", "TINYINT(1) NOT NULL DEFAULT 0");
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS wage_calculations (

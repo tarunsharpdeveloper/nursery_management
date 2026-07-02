@@ -13,6 +13,7 @@ type Field = {
   valueType?: "string" | "number";
   placeholder?: string;
   required?: boolean;
+  isMulti?: boolean;
 };
 
 type AdminModuleProps = {
@@ -24,14 +25,15 @@ type AdminModuleProps = {
   submitLabel?: string;
   fields?: Field[];
   columns: { key: string; label: string }[];
-  initialValues?: Record<string, string | number>;
-  values?: Record<string, string | number>;
-  onValuesChange?: (values: Record<string, string | number>) => void;
-  transformSubmit?: (values: Record<string, string | number>) => unknown;
-  validate?: (values: Record<string, string | number>) => Record<string, string> | null;
+  initialValues?: Record<string, any>;
+  values?: Record<string, any>;
+  onValuesChange?: (values: Record<string, any>) => void;
+  transformSubmit?: (values: Record<string, any>) => unknown;
+  validate?: (values: Record<string, any>) => Record<string, string> | null;
   onSuccess?: () => void;
+  onCancel?: () => void;
   headerActions?: React.ReactNode;
-  rowActions?: (row: any) => React.ReactNode;
+  rowActions?: (row: any, reload: () => Promise<void>) => React.ReactNode;
   filterContent?: React.ReactNode;
   filterRows?: (rows: any[]) => any[];
   renderCell?: (row: any, column: { key: string; label: string }, reload: () => Promise<void>) => React.ReactNode;
@@ -59,6 +61,7 @@ export function AdminModule({
   transformSubmit,
   validate,
   onSuccess,
+  onCancel,
   headerActions,
   rowActions,
   filterContent,
@@ -66,7 +69,7 @@ export function AdminModule({
   renderCell
 }: AdminModuleProps) {
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
-  const [internalValues, setInternalValues] = useState<Record<string, string | number>>(initialValues);
+  const [internalValues, setInternalValues] = useState<Record<string, any>>(initialValues);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState("Loading...");
   const [busy, setBusy] = useState(false);
@@ -74,7 +77,7 @@ export function AdminModule({
   const values = externalValues !== undefined ? externalValues : internalValues;
   const displayedRows = filterRows ? filterRows(rows) : rows;
 
-  const updateValues = (nextValues: Record<string, string | number> | ((current: Record<string, string | number>) => Record<string, string | number>)) => {
+  const updateValues = (nextValues: Record<string, any> | ((current: Record<string, any>) => Record<string, any>)) => {
     if (onValuesChange) {
       onValuesChange(typeof nextValues === "function" ? nextValues(values) : nextValues);
     } else {
@@ -82,7 +85,7 @@ export function AdminModule({
     }
   };
 
-  const handleChange = (name: string, value: string | number) => {
+  const handleChange = (name: string, value: any) => {
     updateValues((current) => ({ ...current, [name]: value }));
     if (fieldErrors[name]) {
       setFieldErrors((prev) => {
@@ -184,16 +187,24 @@ export function AdminModule({
                   ) : field.type === "searchable-select" ? (
                     <Select
                       options={field.options}
-                      value={field.options?.find(o => String(o.value) === String(values[field.name])) || null}
-                      onChange={(option: any) => handleChange(field.name, option ? (field.valueType === "number" ? Number(option.value) : option.value) : "")}
+                      isMulti={field.isMulti}
+                      value={field.isMulti ? field.options?.filter(o => Array.isArray(values[field.name]) ? values[field.name].includes(String(o.value)) : false) : (field.options?.find(o => String(o.value) === String(values[field.name])) || null)}
+                      onChange={(option: any) => {
+                        if (field.isMulti) {
+                          handleChange(field.name, option ? option.map((o: any) => o.value) : []);
+                        } else {
+                          handleChange(field.name, option ? (field.valueType === "number" ? Number(option.value) : option.value) : "");
+                        }
+                      }}
                       isClearable
                       placeholder={field.placeholder || "Select"}
+                      menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                      menuPosition="fixed"
                       styles={{
                         container: (base) => ({ ...base, width: '100%' }),
                         control: (base, state) => ({
                           ...base,
                           minHeight: '50px',
-                          height: '50px',
                           borderRadius: '8px',
                           borderColor: fieldErrors[field.name] ? '#ef4444' : (state.isFocused ? 'rgba(47, 107, 63, 0.65)' : 'var(--line)'),
                           boxShadow: state.isFocused ? '0 0 0 1px rgba(47, 107, 63, 0.24)' : 'none',
@@ -203,17 +214,29 @@ export function AdminModule({
                         }),
                         valueContainer: (base) => ({
                           ...base,
-                          height: '48px',
+                          minHeight: '48px',
                           padding: '0 11px'
                         }),
                         indicatorsContainer: (base) => ({
                           ...base,
-                          height: '48px'
+                          minHeight: '48px'
                         }),
                         input: (base) => ({
                           ...base,
                           margin: 0,
                           padding: 0
+                        }),
+                        menuList: (base) => ({
+                          ...base,
+                          maxHeight: '180px'
+                        }),
+                        menu: (base) => ({
+                          ...base,
+                          zIndex: 9999
+                        }),
+                        menuPortal: (base) => ({
+                          ...base,
+                          zIndex: 9999
                         })
                       }}
                     />
@@ -242,10 +265,17 @@ export function AdminModule({
                 </label>
               ))}
             </div>
-            <button className="button" type="button" onClick={submitForm} disabled={busy} style={{ marginTop: 16 }}>
-              <Save size={17} />
-              {submitLabel}
-            </button>
+            <div style={{ display: "flex", gap: "10px", marginTop: 16 }}>
+              <button className="button" type="button" onClick={submitForm} disabled={busy}>
+                <Save size={17} />
+                {submitLabel}
+              </button>
+              {onCancel && (
+                <button className="button secondary" type="button" onClick={onCancel} disabled={busy}>
+                  Cancel
+                </button>
+              )}
+            </div>
           </div>
         </form>
       ) : null}
@@ -272,7 +302,7 @@ export function AdminModule({
                     {renderCell ? (renderCell(row, column, loadRows) ?? formatCell(row[column.key])) : formatCell(row[column.key])}
                   </td>
                 ))}
-                {rowActions && <td>{rowActions(row)}</td>}
+                {rowActions && <td>{rowActions(row, loadRows)}</td>}
               </tr>
             )) : (
               <tr>

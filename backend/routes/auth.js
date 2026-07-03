@@ -16,7 +16,7 @@ async function login(req, res, { readJson, sendJson }) {
        FROM users u
        JOIN roles r ON r.id = u.role_id
        LEFT JOIN customers c ON c.email = u.email
-      WHERE u.email = :email AND u.is_active = TRUE
+      WHERE u.email = :email AND u.is_active = TRUE AND u.is_deleted = 0
       LIMIT 1`,
     { email: payload.email }
   );
@@ -28,7 +28,7 @@ async function login(req, res, { readJson, sendJson }) {
     return;
   }
 
-  const permissions = permissionsForRole(user.role);
+  const permissions = await permissionsForRole(user.role);
   const token = signToken({ id: user.id, name: user.name, email: user.email, role: user.role });
 
   sendJson(res, 200, {
@@ -38,7 +38,7 @@ async function login(req, res, { readJson, sendJson }) {
 }
 
 async function me(req, res, { sendJson }) {
-  sendJson(res, 200, { user: req.user, permissions: permissionsForRole(req.user.role) });
+  sendJson(res, 200, { user: req.user, permissions: await permissionsForRole(req.user.role) });
 }
 
 const registerSchema = z.object({
@@ -104,7 +104,7 @@ async function registerCustomer(req, res, { readJson, sendJson }) {
 
     sendJson(res, 201, {
       token,
-      user: { id: userId, name: payload.name, email: payload.email, phone: payload.phone, role: 'customer', permissions: permissionsForRole('customer') }
+      user: { id: userId, name: payload.name, email: payload.email, phone: payload.phone, role: 'customer', permissions: await permissionsForRole('customer') }
     });
   } catch (error) {
     await connection.rollback();

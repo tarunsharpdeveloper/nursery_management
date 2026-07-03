@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Banknote, BarChart3, Boxes, CalendarCheck, ClipboardList, CreditCard, Factory, Leaf, LogOut, Menu, NotebookTabs, Package, Receipt, Tags, Truck, UserCircle, Users, User } from "lucide-react";
+import { Banknote, BarChart3, Boxes, CalendarCheck, ClipboardList, CreditCard, Factory, Leaf, LogOut, Menu, NotebookTabs, Package, Receipt, Tags, Truck, UserCircle, Users, User, Shield } from "lucide-react";
 import { clearAdminSession, getStoredUser, type AdminUser } from "@/lib/api";
 
 const links = [
@@ -22,7 +22,9 @@ const links = [
   { href: "/admin/employees", label: "Employees", icon: Users, permission: "employees:read" },
   { href: "/admin/attendance", label: "Attendance", icon: CalendarCheck, permission: "attendance:read" },
   { href: "/admin/wages", label: "Wages", icon: Banknote, permission: "wages:read" },
-  { href: "/admin/reports", label: "Reports", icon: BarChart3, permission: "reports:read" }
+  { href: "/admin/reports", label: "Reports", icon: BarChart3, permission: "reports:read" },
+  { href: "/admin/roles", label: "Roles", icon: Shield, permission: "roles:read" },
+  { href: "/admin/users", label: "Users Management", icon: UserCircle, permission: "users:read" }
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -45,34 +47,25 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (pathname === "/admin/login") return;
+    
     const storedUser = getStoredUser();
     if (!storedUser) {
       router.replace("/admin/login");
       return;
     }
     setUser(storedUser);
-  }, [router]);
+  }, [router, pathname]);
 
-  // While logged in, intercept browser back button to stay inside admin
-  useEffect(() => {
-    if (!user) return;
-
-    function handlePopState() {
-      router.replace("/admin/dashboard");
-    }
-
-    window.addEventListener("popstate", handlePopState);
-    // Push a history entry on each admin page so back is always trapped
-    window.history.pushState({ from: "admin-portal" }, "");
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [user, pathname]);
 
   const visibleLinks = useMemo(() => {
     if (!user) return [];
-    return links.filter((link) => user.permissions.includes("*") || user.permissions.includes(link.permission));
+    return links.filter((link) => {
+      if (user.role === "billing_user" && link.href === "/admin/orders") {
+        return false;
+      }
+      return user.permissions.includes("*") || user.permissions.includes(link.permission);
+    });
   }, [user]);
 
   function logout() {
@@ -98,6 +91,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   const sidebarClassName = sidebarState === "open" ? "sidebar-open" : sidebarState === "collapsed" ? "sidebar-collapsed" : "sidebar-closed";
 
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
+
   if (!user) {
     return <main className="section"><p className="meta">Checking login...</p></main>;
   }
@@ -116,7 +113,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="sidebar-label">
             <h3>Admin Portal</h3>
-            <span>Sanviya Hi-Tech Nursery</span>
+            <span>Saniya Hi-Tech Nursery</span>
           </div>
         </div>
 

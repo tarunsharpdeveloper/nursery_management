@@ -10,7 +10,7 @@ const { createBill } = require("./routes/billing");
 const { createAdvanceBooking } = require("./routes/bookings");
 const { createDispatch } = require("./routes/dispatch");
 const { initiatePayment, paymentWebhook } = require("./routes/payments");
-const { createEmployee, saveAttendance } = require("./routes/attendance");
+const { createEmployee, saveAttendance, saveBulkAttendance, editEmployee, toggleEmployee, deleteEmployee } = require("./routes/attendance");
 const { calculateWages } = require("./routes/wages");
 const { getLedger, getReport } = require("./routes/reports");
 const { getReviews, submitReview, getReviewStats } = require("./routes/reviews");
@@ -41,8 +41,14 @@ const {
   updateDispatchStatus,
   listEmployees,
   listAttendance,
-  listWageSummary
+  listWageSummary,
+  getUnifiedList,
+  listMonthlyAttendance,
+  getEmployeeAttendance
 } = require("./routes/admin-data");
+
+const { listUsers, createUser, editUser, toggleUser, deleteUser } = require("./routes/users");
+const { listRoles, createRole, editRole, deleteRole } = require("./routes/roles");
 
 const helpers = { readJson, readFormData, sendJson };
 
@@ -57,6 +63,15 @@ const routes = [
   ["PATCH", "/api/auth/profile", "dashboard:read", updateProfile],
   ["PATCH", "/api/auth/password", "dashboard:read", updatePassword],
   ["GET", "/api/dashboard", "dashboard:read", getDashboard],
+  ["GET", "/api/users", "users:read", listUsers],
+  ["POST", "/api/users", "users:write", createUser],
+  ["PATCH", "/api/users", "users:write", editUser],
+  ["PATCH", "/api/users/toggle", "users:write", toggleUser],
+  ["POST", "/api/users/delete", "users:write", deleteUser],
+  ["GET", "/api/roles", "roles:read", listRoles],
+  ["POST", "/api/roles", "roles:write", createRole],
+  ["PATCH", "/api/roles", "roles:write", editRole],
+  ["POST", "/api/roles/delete", "roles:write", deleteRole],
   ["GET", "/api/customers", "billing:read", listCustomers],
   ["GET", "/api/categories", null, listCategories],
   ["POST", "/api/categories", "products:write", createCategory],
@@ -92,8 +107,14 @@ const routes = [
   ["POST", "/api/payments/webhook", null, paymentWebhook],
   ["GET", "/api/employees", "employees:read", listEmployees],
   ["POST", "/api/employees", "employees:write", createEmployee],
+  ["PATCH", "/api/employees", "employees:write", editEmployee],
+  ["PATCH", "/api/employees/toggle", "employees:write", toggleEmployee],
+  ["POST", "/api/employees/delete", "employees:write", deleteEmployee],
   ["GET", "/api/attendance", "attendance:read", listAttendance],
+  ["GET", "/api/attendance/monthly", "attendance:read", listMonthlyAttendance],
+  ["GET", "/api/attendance/employee", "attendance:read", getEmployeeAttendance],
   ["POST", "/api/attendance", "attendance:write", saveAttendance],
+  ["POST", "/api/attendance/bulk", "attendance:write", saveBulkAttendance],
   ["GET", "/api/wages/summary", "wages:read", listWageSummary],
   ["POST", "/api/wages/calculate", "wages:read", calculateWages],
   ["GET", "/api/customer-ledger", "ledger:read", getLedger],
@@ -106,6 +127,7 @@ const routes = [
   ["POST", "/Response", null, handleNDPSPopupResponse],
   ["GET", "/api/ndps/status/:paymentId", null, checkPaymentStatus],
   ["POST", "/api/ndps/requery", null, requeryTransactionStatus],
+  ["GET", "/api/admin/data-list", null, getUnifiedList]
 ];
 
 // Route matcher that handles path parameters
@@ -156,7 +178,7 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, 401, { message: "Login required" });
         return;
       }
-      if (!hasPermission(user, permission)) {
+      if (!(await hasPermission(user, permission))) {
         sendJson(res, 403, { message: "Permission denied" });
         return;
       }

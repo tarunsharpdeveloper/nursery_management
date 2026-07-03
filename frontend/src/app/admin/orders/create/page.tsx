@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
-import { AdminShell } from "@/components/admin-shell";
 import { Save, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/api";
 import Link from "next/link";
@@ -202,10 +201,10 @@ export default function CreateOrderPage() {
   );
 
   return (
-    <AdminShell>
+    <>
       <div className="section-header">
         <div>
-          <p className="eyebrow">Online Order Management</p>
+          {/* <p className="eyebrow">Online Order Management</p> */}
           <h1>Create Order</h1>
           <p className="meta" style={{ color: status.includes("Error") || status.includes("error") ? "#d32f2f" : undefined }}>{status}</p>
         </div>
@@ -409,6 +408,6 @@ export default function CreateOrderPage() {
           </div>
         </div>
       </form>
-    </AdminShell>
+    </>
   );
 }

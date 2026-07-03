@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AdminShell } from "@/components/admin-shell";
 import { apiRequest, getStoredUser, setStoredUser, type AdminUser } from "@/lib/api";
 
 export default function ProfilePage() {
@@ -84,10 +83,10 @@ export default function ProfilePage() {
     }
   }
 
-  if (!user) return <AdminShell><div className="section"><p>Loading...</p></div></AdminShell>;
+  if (!user) return <><div className="section"><p>Loading...</p></div></>;
 
   return (
-    <AdminShell>
+    <>
       <div className="section" style={{ padding: '32px' }}>
         <h1 className="brand-name" style={{ fontSize: '24px', marginBottom: '24px' }}>My Profile</h1>
         
@@ -203,6 +202,6 @@ export default function ProfilePage() {
 
         </div>
       </div>
-    </AdminShell>
+    </>
   );
 }

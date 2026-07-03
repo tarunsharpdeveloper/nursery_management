@@ -1,7 +1,42 @@
 const { z } = require("zod");
 const { pool } = require("../db");
 
-async function listProducts(_req, res, { sendJson }) {
+async function listProducts(req, res, { sendJson }) {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const page = parseInt(url.searchParams.get("page") || "1", 10);
+  const limit = parseInt(url.searchParams.get("limit") || "1000", 10);
+  const search = url.searchParams.get("search") || "";
+  const filterKey = url.searchParams.get("filterKey");
+  const filterValue = url.searchParams.get("filterValue");
+
+  let whereClause = "WHERE p.is_deleted = 0";
+  const params = {};
+
+  if (search) {
+    whereClause += " AND (p.name LIKE :search OR p.description LIKE :search)";
+    params.search = `%${search}%`;
+  }
+
+  if (filterKey === "stock_status" && filterValue) {
+    if (filterValue === "in_stock") {
+      whereClause += " AND p.available_quantity > 0";
+    } else if (filterValue === "out_of_stock") {
+      whereClause += " AND p.available_quantity <= 0";
+    }
+  } else if (filterKey === "status" && filterValue) {
+    whereClause += " AND p.is_active = :isActive";
+    params.isActive = filterValue === "active" ? 1 : 0;
+  }
+
+  const [[{ total }]] = await pool.query(
+    `SELECT COUNT(*) AS total FROM products p ${whereClause}`,
+    params
+  );
+
+  const offset = (page - 1) * limit;
+  params.limit = limit;
+  params.offset = offset;
+
   const [products] = await pool.query(
     `SELECT p.id, p.category_id, p.product_type, p.name, p.description, 
             p.selling_price, p.actual_price, p.available_quantity,
@@ -10,24 +45,42 @@ async function listProducts(_req, res, { sendJson }) {
             c.name AS category
        FROM products p
        JOIN categories c ON c.id = p.category_id
-       WHERE p.is_deleted = 0
-       ORDER BY p.created_at DESC`
+       ${whereClause}
+       ORDER BY p.created_at DESC
+       LIMIT :limit OFFSET :offset`,
+    params
   );
 
-  const [variants] = await pool.query(
-    `SELECT id, product_id, unit, unit_value, actual_price, selling_price, available_quantity 
-     FROM product_variants`
-  );
+  let formattedRows = products;
 
-  const formattedRows = products.map(p => {
-    const pVariants = variants.filter(v => v.product_id === p.id);
-    return {
-      ...p,
-      variants: pVariants
-    };
-  });
+  if (products.length > 0) {
+    const productIds = products.map(p => p.id);
+    const [variants] = await pool.query(
+      `SELECT id, product_id, unit, unit_value, actual_price, selling_price, available_quantity 
+       FROM product_variants
+       WHERE product_id IN (?)`,
+      [productIds]
+    );
 
-  sendJson(res, 200, formattedRows);
+    formattedRows = products.map(p => {
+      const pVariants = variants.filter(v => v.product_id === p.id);
+      return {
+        ...p,
+        variants: pVariants
+      };
+    });
+  }
+
+  if (url.searchParams.has("page")) {
+    sendJson(res, 200, {
+      data: formattedRows,
+      totalRecords: total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page
+    });
+  } else {
+    sendJson(res, 200, formattedRows);
+  }
 }
 
 const getProductSchema = z.object({

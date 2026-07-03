@@ -93,7 +93,7 @@ export default function AdvanceBookingsPage() {
           ]
         }}
         submitPath="/api/advance-bookings"
-        submitLabel="Save Booking"
+        submitLabel="Add Booking"
         values={values}
         onValuesChange={setValues}
         onSuccess={() => setValues({})}

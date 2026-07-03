@@ -568,11 +568,11 @@ async function listWageSummary(req, res, { sendJson }) {
 
 const modelsConfig = {
   employees: {
-    baseSelect: "SELECT id, name, mobile, gender, joining_date, employee_type, monthly_salary, daily_wage FROM employees",
-    baseWhere: "WHERE is_active = TRUE",
+    baseSelect: "SELECT id, name, mobile, gender, joining_date, employee_type, monthly_salary, daily_wage, is_active FROM employees",
+    baseWhere: "WHERE is_deleted = 0",
     searchFields: ["name", "mobile", "employee_type"],
     orderBy: "ORDER BY name",
-    allowedFilters: ["employee_type", "gender"]
+    allowedFilters: ["employee_type", "gender", "is_active"]
   },
   orders: {
     baseSelect: "SELECT o.id, o.order_number, c.name AS customer, o.status, o.payment_status, o.total_amount, o.created_at, GROUP_CONCAT(p.name SEPARATOR ', ') AS products FROM orders o JOIN customers c ON c.id = o.customer_id LEFT JOIN order_items oi ON oi.order_id = o.id LEFT JOIN products p ON p.id = oi.product_id",

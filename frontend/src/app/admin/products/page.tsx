@@ -5,6 +5,7 @@ import { apiRequest } from "@/lib/api";
 import { Edit2, Plus, Power, PowerOff, RefreshCw, Box, Trash2, Eye, X, UploadCloud, MoreVertical, ChevronDown, Search } from "lucide-react";
 import { FormModal } from "@/components/form-modal";
 import { ConfirmModal } from "@/components/confirm-modal";
+import Link from "next/link";
 
 type Category = {
   id: number;
@@ -254,7 +255,15 @@ export default function AdminProductsPage() {
 
   async function handleCreate() {
     const newErrors: Record<string, string> = {};
-    if (!targetCategoryId) newErrors.category = "Category is required";
+    if (!targetCategoryId) {
+      newErrors.category = "Category is required";
+    } else {
+      const targetHasChildren = activeCategories.some(c => c.parent_id === targetCategoryId);
+      if (targetHasChildren) {
+        newErrors.category = "You must select a final subcategory to add products.";
+      }
+    }
+    
     if (!form.name.trim()) newErrors.name = "Product name is required";
     if (!form.actualPrice) newErrors.actualPrice = "Actual price is required";
     if (!form.sellingPrice) newErrors.sellingPrice = "Selling price is required";
@@ -374,7 +383,15 @@ export default function AdminProductsPage() {
     if (!editing) return;
 
     const newErrors: Record<string, string> = {};
-    if (!targetCategoryId) newErrors.category = "Category is required";
+    if (!targetCategoryId) {
+      newErrors.category = "Category is required";
+    } else {
+      const targetHasChildren = activeCategories.some(c => c.parent_id === targetCategoryId);
+      if (targetHasChildren) {
+        newErrors.category = "You must select a final subcategory to add products.";
+      }
+    }
+    
     if (!form.name.trim()) newErrors.name = "Product name is required";
     if (!form.actualPrice) newErrors.actualPrice = "Actual price is required";
     if (!form.sellingPrice) newErrors.sellingPrice = "Selling price is required";
@@ -788,7 +805,6 @@ export default function AdminProductsPage() {
                 <th>Category</th>
                 <th>Pricing</th>
                 <th>Stock & Variants</th>
-                <th>Date</th>
                 <th>Status</th>
                 <th style={{ textAlign: "right" }}>Actions</th>
               </tr>
@@ -855,13 +871,7 @@ export default function AdminProductsPage() {
                     <div>₹{p.selling_price}</div>
                   </td>
                   <td>
-                    <div>{p.available_quantity}</div>
-                    <div className="meta" style={{ fontSize: 12, marginTop: 4 }}>
-                      {p.variants && p.variants.length > 0 ? `${p.variants.length} Variant(s)` : "No variants"}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="meta" style={{ fontSize: 13 }}>{formatDate(p.created_at)}</div>
+                    {p.available_quantity} / {p.variants && p.variants.length > 0 ? <span className="meta" style={{ fontSize: 13 }}>{p.variants.length} Variant(s)</span> : <span className="meta" style={{ fontSize: 13 }}>No variants</span>}
                   </td>
                   <td>
                     <span className={`status-badge ${isActive(p) ? "status-paid" : "status-failed"}`}>
@@ -897,14 +907,14 @@ export default function AdminProductsPage() {
                             onClick={(e) => { e.stopPropagation(); setOpenActionId(null); }} 
                           />
                           <div className={`actions-dropdown-menu direction-${dropdownDirection}`}>
-                            <a 
+                            <Link 
                               href={`/admin/products/view?id=${p.id}`}
                               className="button secondary actions-dropdown-item" 
                               title="View" 
                             >
                               <Eye size={16} color="#3b82f6" style={{ marginRight: 8 }} />
                               View
-                            </a>
+                            </Link>
                             <button 
                               className="button secondary actions-dropdown-item" 
                               type="button" 

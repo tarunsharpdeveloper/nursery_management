@@ -23,8 +23,8 @@ const links = [
   { href: "/admin/attendance", label: "Attendance", icon: CalendarCheck, permission: "attendance:read" },
   { href: "/admin/wages", label: "Wages", icon: Banknote, permission: "wages:read" },
   { href: "/admin/reports", label: "Reports", icon: BarChart3, permission: "reports:read" },
-  { href: "/admin/users", label: "Users", icon: UserCircle, permission: "users:read" },
-  { href: "/admin/roles", label: "Roles", icon: Shield, permission: "roles:read" }
+  { href: "/admin/roles", label: "Roles", icon: Shield, permission: "roles:read" },
+  { href: "/admin/users", label: "Users Management", icon: UserCircle, permission: "users:read" }
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

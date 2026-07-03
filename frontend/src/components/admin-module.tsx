@@ -9,12 +9,14 @@ import { apiRequest } from "@/lib/api";
 type Field = {
   name: string;
   label: string;
-  type?: "text" | "number" | "date" | "select" | "searchable-select" | "textarea";
+  type?: "text" | "number" | "date" | "select" | "searchable-select" | "textarea" | "checkbox-group";
   options?: { label: string; value: string | number }[];
   valueType?: "string" | "number";
   placeholder?: string;
   required?: boolean;
   isMulti?: boolean;
+  fullWidth?: boolean;
+  renderChipsBelow?: boolean;
 };
 
 type AdminModuleProps = {
@@ -31,6 +33,7 @@ type AdminModuleProps = {
   submitPath?: string;
   submitMethod?: "POST" | "PATCH";
   submitLabel?: string;
+  addLabel?: string;
   fields?: Field[];
   columns: { key: string; label: string }[];
   initialValues?: Record<string, any>;
@@ -63,6 +66,7 @@ export function AdminModule({
   submitPath,
   submitMethod = "POST",
   submitLabel = "Save",
+  addLabel,
   fields = [],
   columns,
   initialValues = {},
@@ -205,9 +209,12 @@ export function AdminModule({
         </div>
         <div style={{ display: "flex", gap: "10px" }}>
           {canSubmit && (
-            <button className="button" type="button" onClick={() => setIsModalOpen(true)} disabled={busy}>
+            <button className="button" type="button" onClick={() => {
+              if (onCancel) onCancel();
+              setIsModalOpen(true);
+            }} disabled={busy}>
               <Plus size={17} />
-              {submitLabel}
+              {addLabel || submitLabel}
             </button>
           )}
           {headerActions}
@@ -235,9 +242,9 @@ export function AdminModule({
           }
         >
           <form className="card-body" style={{ padding: 0 }}>
-            <div className="form-grid">
+            <div className="form-grid" style={{ gridTemplateColumns: normalizedFields.length === 2 && !normalizedFields.some(f => f.fullWidth) ? '1fr 1fr' : undefined }}>
               {normalizedFields.map((field) => (
-                <label className="field" key={field.name} style={{ display: 'flex', flexDirection: 'column' }}>
+                <label className="field" key={field.name} style={{ display: 'flex', flexDirection: 'column', gridColumn: field.fullWidth ? '1 / -1' : undefined }}>
                   <span>
                     {field.label}
                     {field.required && <span style={{ color: '#ef4444', marginLeft: '4px' }}>*</span>}
@@ -256,6 +263,7 @@ export function AdminModule({
                     <Select
                       options={field.options}
                       isMulti={field.isMulti}
+                      controlShouldRenderValue={!field.renderChipsBelow}
                       value={field.isMulti ? field.options?.filter(o => Array.isArray(values[field.name]) ? values[field.name].includes(String(o.value)) : false) : (field.options?.find(o => String(o.value) === String(values[field.name])) || null)}
                       onChange={(option: any) => {
                         if (field.isMulti) {
@@ -308,6 +316,27 @@ export function AdminModule({
                         })
                       }}
                     />
+                  ) : field.type === "checkbox-group" ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px', marginTop: '8px', padding: '16px', background: 'var(--surface-muted)', borderRadius: '8px', border: '1px solid var(--line)' }}>
+                      {(field.options || []).map((option) => (
+                        <label key={option.value} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 500, color: 'var(--text)' }}>
+                          <input
+                            type="checkbox"
+                            checked={Array.isArray(values[field.name]) && values[field.name].includes(option.value)}
+                            onChange={(e) => {
+                              const current = Array.isArray(values[field.name]) ? values[field.name] : [];
+                              if (e.target.checked) {
+                                handleChange(field.name, [...current, option.value]);
+                              } else {
+                                handleChange(field.name, current.filter((v: any) => v !== option.value));
+                              }
+                            }}
+                            style={{ width: '16px', height: '16px', accentColor: 'var(--brand)', cursor: 'pointer' }}
+                          />
+                          {option.label}
+                        </label>
+                      ))}
+                    </div>
                   ) : field.type === "textarea" ? (
                     <textarea
                       rows={3}
@@ -333,6 +362,27 @@ export function AdminModule({
                 </label>
               ))}
               </div>
+              
+              {normalizedFields.filter(f => f.renderChipsBelow && Array.isArray(values[f.name]) && values[f.name].length > 0).map(field => (
+                <div key={`${field.name}-chips`} style={{ marginTop: '20px' }}>
+                  <label className="field" style={{ display: 'block', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Selected {field.label}</span>
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '16px', background: 'var(--surface-muted)', borderRadius: '8px', border: '1px solid var(--line)' }}>
+                    {values[field.name].map((val: any) => {
+                      const opt = field.options?.find(o => String(o.value) === String(val));
+                      return (
+                        <div key={val} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'white', padding: '4px 10px', borderRadius: '6px', border: '1px solid var(--line)', fontSize: '14px', fontWeight: 500, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', color: 'var(--text)' }}>
+                          {opt ? opt.label : val}
+                          <button type="button" onClick={() => handleChange(field.name, values[field.name].filter((v: any) => v !== val))} style={{ display: 'inline-flex', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: 0, marginLeft: '4px' }}>
+                            <X size={14} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
           </form>
         </FormModal>
       )}
@@ -403,7 +453,9 @@ export function AdminModule({
               <tr key={String(row.id ?? row.order_number ?? row.booking_number ?? index)}>
                 {columns.map((column) => (
                   <td key={column.key}>
-                    {renderCell ? (renderCell(row, column, loadRows) ?? formatCell(row[column.key])) : formatCell(row[column.key])}
+                    {column.key === "id" 
+                      ? ((currentPage - 1) * 10 + index + 1)
+                      : (renderCell ? (renderCell(row, column, loadRows) ?? formatCell(row[column.key])) : formatCell(row[column.key]))}
                   </td>
                 ))}
                 {rowActions && <td>{rowActions(row, loadRows, () => setIsModalOpen(true))}</td>}

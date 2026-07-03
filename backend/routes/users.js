@@ -3,13 +3,57 @@ const { pool } = require("../db");
 const { hashPassword } = require("../auth");
 
 async function listUsers(req, res, { sendJson }) {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const page = parseInt(url.searchParams.get("page") || "1", 10);
+  const limit = parseInt(url.searchParams.get("limit") || "10", 10);
+  const search = url.searchParams.get("search") || "";
+  const filterKey = url.searchParams.get("filterKey");
+  const filterValue = url.searchParams.get("filterValue");
+
+  let whereClause = "WHERE is_deleted = 0";
+  const params = {};
+
+  if (search) {
+    whereClause += " AND (name LIKE :search OR email LIKE :search)";
+    params.search = `%${search}%`;
+  }
+
+  if (filterKey === "role" && filterValue) {
+    whereClause += " AND role = :role";
+    params.role = filterValue;
+  } else if (filterKey === "status" && filterValue) {
+    whereClause += " AND is_active = :isActive";
+    params.isActive = filterValue === "active" ? 1 : 0;
+  }
+
+  const [[{ total }]] = await pool.query(
+    `SELECT COUNT(*) AS total FROM users ${whereClause}`,
+    params
+  );
+
+  const offset = (page - 1) * limit;
+  params.limit = limit;
+  params.offset = offset;
+
   const [rows] = await pool.query(
     `SELECT id, name, email, role, is_active, created_at
        FROM users
-      WHERE is_deleted = 0
-      ORDER BY id DESC`
+      ${whereClause}
+      ORDER BY id DESC
+      LIMIT :limit OFFSET :offset`,
+    params
   );
-  sendJson(res, 200, rows);
+
+  if (url.searchParams.has("page")) {
+    sendJson(res, 200, {
+      data: rows,
+      totalRecords: total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page
+    });
+  } else {
+    sendJson(res, 200, rows);
+  }
 }
 
 const createUserSchema = z.object({

@@ -17,6 +17,7 @@ type Category = {
   photo_urls: string | null;
   is_active: number | boolean;
   product_count: number;
+  child_count: number;
 };
 
 function isActive(c: Category) {
@@ -418,7 +419,11 @@ function SubCategoriesContent() {
                     {c.description ? <p className="meta" style={{ margin: "4px 0 0" }}>{c.description}</p> : null}
                   </td>
                   <td>
-                    <span className="meta">{c.product_count} products</span>
+                    <span className="meta">
+                      {c.child_count > 0 
+                        ? `${c.child_count} subcategories` 
+                        : `${c.product_count} products`}
+                    </span>
                   </td>
                   <td>
                     <span className={`status-badge ${isActive(c) ? "status-paid" : "status-failed"}`}>

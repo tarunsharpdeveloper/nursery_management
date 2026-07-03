@@ -49,7 +49,7 @@ export default function UsersPage() {
       name: "role", 
       label: "Role", 
       type: "select", 
-      options: roles.map(r => ({ label: r.name, value: r.name })), 
+      options: roles.map(r => ({ label: r.name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: r.name })), 
       required: true 
     }
   ];
@@ -138,9 +138,16 @@ export default function UsersPage() {
         eyebrow="User Management"
         title="Users"
         listPath="/api/users"
+        searchPlaceholder="Search by name or email..."
+        filterConfig={roles.length > 0 ? {
+          key: "role",
+          label: "Role",
+          options: roles.map(r => ({ label: r.name.replace(/_/g, ' '), value: r.name }))
+        } : undefined}
         submitPath="/api/users"
         submitMethod={values.id ? "PATCH" : "POST"}
-        submitLabel={values.id ? "Update User" : "Save User"}
+        submitLabel={values.id ? "Update User" : "Add User"}
+        addLabel="Add User"
         values={values}
         onValuesChange={setValues}
         onSuccess={() => setValues({})}

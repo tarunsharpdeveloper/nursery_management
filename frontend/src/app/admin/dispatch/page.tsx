@@ -64,7 +64,7 @@ export default function DispatchPage() {
           ]
         }}
         submitPath="/api/dispatch"
-        submitLabel="Save Dispatch"
+        submitLabel="Add Dispatch"
         values={values}
         onValuesChange={setValues}
         onSuccess={() => setValues({
@@ -115,6 +115,19 @@ export default function DispatchPage() {
         ]}
         renderCell={(row, column, reload) => {
           if (column.key === "status") {
+            let bgColor = "var(--bg)";
+            let color = "var(--text)";
+            if (row.status === "pending") {
+              bgColor = "#fef3c7";
+              color = "#d97706";
+            } else if (row.status === "dispatched") {
+              bgColor = "#e0f2fe";
+              color = "#0284c7";
+            } else if (row.status === "delivered") {
+              bgColor = "#dcfce7";
+              color = "#16a34a";
+            }
+
             return (
               <select
                 value={row.status}
@@ -130,13 +143,19 @@ export default function DispatchPage() {
                   }
                 }}
                 style={{
-                  padding: "4px 8px",
-                  borderRadius: "6px",
-                  border: "1px solid var(--line)",
-                  background: "var(--bg)",
-                  color: "var(--text)",
+                  padding: "2px 12px 2px 8px", // extra right padding for the native arrow
+                  height: "auto",
+                  minHeight: "24px",
+                  width: "auto",
+                  display: "inline-block",
+                  borderRadius: "4px",
+                  border: `1px solid ${color}40`,
+                  background: bgColor,
+                  color: color,
                   outline: "none",
-                  fontSize: "0.85rem",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
                   cursor: "pointer"
                 }}
               >

@@ -105,9 +105,11 @@ export default function RolesPage() {
         eyebrow="User Management"
         title="Roles"
         listPath="/api/roles"
+        searchPlaceholder="Search roles..."
         submitPath="/api/roles"
         submitMethod={values.id ? "PATCH" : "POST"}
-        submitLabel={values.id ? "Update Role" : "Save Role"}
+        submitLabel={values.id ? "Update Role" : "Add Role"}
+        addLabel="Add Role"
         values={values}
         onValuesChange={setValues}
         onSuccess={() => setValues({})}
@@ -120,6 +122,7 @@ export default function RolesPage() {
             label: "Permissions",
             type: "searchable-select",
             isMulti: true,
+            renderChipsBelow: true,
             options: ALL_PERMISSIONS.map(p => {
               if (p === "*") return { label: "All Permissions (*)", value: p };
               const [mod, act] = p.split(':');

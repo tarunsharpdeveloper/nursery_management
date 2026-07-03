@@ -153,7 +153,8 @@ export default function EmployeesPage() {
         }}
         submitPath="/api/employees"
         submitMethod={values.id ? "PATCH" : "POST"}
-        submitLabel={values.id ? "Update Employee" : "Save Employee"}
+        submitLabel={values.id ? "Update Employee" : "Add Employee"}
+        addLabel="Add Employee"
         values={values}
         onValuesChange={setValues}
         onSuccess={() => setValues({})}

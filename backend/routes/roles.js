@@ -2,11 +2,35 @@ const { z } = require("zod");
 const { pool } = require("../db");
 
 async function listRoles(req, res, { sendJson }) {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const page = parseInt(url.searchParams.get("page") || "1", 10);
+  const limit = parseInt(url.searchParams.get("limit") || "10", 10);
+  const search = url.searchParams.get("search") || "";
+
+  let whereClause = "WHERE is_deleted = 0";
+  const params = {};
+
+  if (search) {
+    whereClause += " AND name LIKE :search";
+    params.search = `%${search}%`;
+  }
+
+  const [[{ total }]] = await pool.query(
+    `SELECT COUNT(*) AS total FROM roles ${whereClause}`,
+    params
+  );
+
+  const offset = (page - 1) * limit;
+  params.limit = limit;
+  params.offset = offset;
+
   const [rows] = await pool.query(
     `SELECT id, name, permissions
        FROM roles
-      WHERE is_deleted = 0
-      ORDER BY id ASC`
+      ${whereClause}
+      ORDER BY id ASC
+      LIMIT :limit OFFSET :offset`,
+    params
   );
   
   const roles = rows.map(r => ({
@@ -14,7 +38,16 @@ async function listRoles(req, res, { sendJson }) {
     permissions: r.permissions ? (typeof r.permissions === "string" ? JSON.parse(r.permissions) : r.permissions) : []
   }));
   
-  sendJson(res, 200, roles);
+  if (url.searchParams.has("page")) {
+    sendJson(res, 200, {
+      data: roles,
+      totalRecords: total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page
+    });
+  } else {
+    sendJson(res, 200, roles);
+  }
 }
 
 const roleSchema = z.object({

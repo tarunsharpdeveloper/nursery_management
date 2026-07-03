@@ -1,7 +1,7 @@
 const { loadEnv } = require("./env");
 loadEnv();
 const http = require("http");
-const { readJson, sendJson, sendNoContent, sendError, notFound } = require("./http");
+const { readJson, readFormData, sendJson, sendNoContent, sendError, notFound } = require("./http");
 const { initEmailService } = require("./email");
 const { listProducts, getProduct, createProduct, editProduct, toggleProduct, deleteProduct } = require("./routes/products");
 const { createOrder, listCustomerOrders } = require("./routes/orders");
@@ -14,6 +14,7 @@ const { createEmployee, saveAttendance, saveBulkAttendance, editEmployee, toggle
 const { calculateWages } = require("./routes/wages");
 const { getLedger, getReport } = require("./routes/reports");
 const { getReviews, submitReview, getReviewStats } = require("./routes/reviews");
+const { initiateNDPSPayment, handleNDPSResponse, checkPaymentStatus, requeryTransactionStatus, handleNDPSPopupResponse } = require("./routes/ndps-payments");
 const { ensureAdminSchema } = require("./migrate");
 const { authenticate, hasPermission } = require("./auth");
 const { login, me, registerCustomer, updateProfile, updatePassword, forgotPassword, resetPassword, verifyResetToken } = require("./routes/auth");
@@ -49,7 +50,7 @@ const {
 const { listUsers, createUser, editUser, toggleUser, deleteUser } = require("./routes/users");
 const { listRoles, createRole, editRole, deleteRole } = require("./routes/roles");
 
-const helpers = { readJson, sendJson };
+const helpers = { readJson, readFormData, sendJson };
 
 const routes = [
   ["GET", "/api/health", null, (_req, res) => sendJson(res, 200, { status: "ok", service: "nursery-node-backend" })],
@@ -121,6 +122,11 @@ const routes = [
   ["GET", "/api/reviews/:productId", null, getReviews],
   ["POST", "/api/reviews", null, submitReview],
   ["GET", "/api/reviews/stats/:productId", null, getReviewStats],
+  ["POST", "/api/ndps/initiate", null, initiateNDPSPayment],
+  ["POST", "/api/ndps/response", null, handleNDPSResponse],
+  ["POST", "/Response", null, handleNDPSPopupResponse],
+  ["GET", "/api/ndps/status/:paymentId", null, checkPaymentStatus],
+  ["POST", "/api/ndps/requery", null, requeryTransactionStatus],
   ["GET", "/api/admin/data-list", null, getUnifiedList]
 ];
 

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test AtomPaynetz with Real Token</title>
+</head>
+<body>
+    <h2>Test AtomPaynetz with Real Token</h2>
+    <p>This test uses the token ID we successfully generated: <strong>15000000953137</strong></p>
+    <button id="payButton">Pay Now</button>
+
+    <div id="log" style="margin-top: 20px; padding: 10px; background: #f5f5f5; font-family: monospace;">
+        <h3>Debug Log:</h3>
+        <div id="logContent"></div>
+    </div>
+
+    <!-- Load AtomPaynetz Script -->
+    <script>
+        var cdnScript = document.createElement('script');
+        cdnScript.setAttribute('src', 'https://pgtest.atomtech.in/staticdata/ots/js/atomcheckout.js?v=' + Date.now());
+        document.head.appendChild(cdnScript);
+    </script>
+
+    <script>
+        function log(message) {
+            const logContent = document.getElementById('logContent');
+            logContent.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
+        }
+
+        // Wait for script to load
+        setTimeout(function() {
+            document.getElementById('payButton').addEventListener('click', function() {
+                log('Testing AtomPaynetz with real token...');
+
+                if (typeof window.AtomPaynetz === 'undefined') {
+                    log('❌ AtomPaynetz library not loaded');
+                    return;
+                }
+
+                log('✅ AtomPaynetz library loaded');
+
+                try {
+                    // Use the token we got from debug script
+                    const options = {
+                        atomTokenId: "15000000953137", // The token from our successful test
+                        merchId: "446442",
+                        custEmail: "test@example.com",
+                        custMobile: "9876543210",
+                        returnUrl: "http://localhost:3000/payment/return"
+                    };
+
+                    log('Config: ' + JSON.stringify(options, null, 2));
+                    log('Creating AtomPaynetz instance...');
+
+                    let atom = new window.AtomPaynetz(options, 'uat');
+                    
+                    log('✅ AtomPaynetz popup should open now!');
+                } catch (error) {
+                    log('❌ Error: ' + error.message);
+                    log('Stack: ' + error.stack);
+                }
+            });
+
+            log('Page ready. Click button to test payment.');
+        }, 2000);
+    </script>
+</body>
+</html>

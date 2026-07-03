@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Test AtomPaynetz - Exact Working Format</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script>
+        // Load script EXACTLY like working implementation
+        var cdnScript = document.createElement('script');
+        cdnScript.setAttribute('src', 'https://pgtest.atomtech.in/staticdata/ots/js/atomcheckout.js?v=' + Date.now());
+        document.head.appendChild(cdnScript);
+    </script>
+</head>
+
+<body>
+    <div class="container my-5">
+        <h3>Test Payment - Exact Working Format</h3>
+        <p><strong>This uses the EXACT format from working NTT implementation</strong></p>
+        <hr>
+        
+        <div class="alert alert-info">
+            <strong>Instructions:</strong>
+            <ol>
+                <li>This will use a fresh token - click "Generate New Token" first</li>
+                <li>Then click "Pay Now" to test the payment popup</li>
+            </ol>
+        </div>
+        
+        <button id="generateTokenBtn" class="btn btn-primary">1. Generate New Token</button>
+        <button id="payButton" class="btn btn-success" disabled>2. Pay Now</button>
+        
+        <hr>
+        
+        <div id="tokenInfo" style="background: #f8f9fa; padding: 15px; margin-top: 20px; display: none;">
+            <h5>Token Information:</h5>
+            <p>Token ID: <strong id="displayToken"></strong></p>
+            <p>Merchant ID: <strong>446442</strong></p>
+            <p>Status: <span id="tokenStatus" class="badge badge-success">Ready</span></p>
+        </div>
+        
+        <div id="log" style="margin-top: 20px; padding: 10px; background: #f5f5f5; font-family: monospace; max-height: 400px; overflow-y: auto;">
+            <h5>Debug Log:</h5>
+            <div id="logContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentToken = null;
+        
+        function log(message) {
+            const logContent = document.getElementById('logContent');
+            const time = new Date().toLocaleTimeString();
+            logContent.innerHTML += time + ': ' + message + '<br>';
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+
+        // Generate new token from backend
+        document.getElementById('generateTokenBtn').addEventListener('click', async function() {
+            log('🔄 Generating new token from backend...');
+            this.disabled = true;
+            
+            try {
+                const response = await fetch('http://localhost:4000/api/ndps/initiate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        orderId: 999,
+                        amount: 100,
+                        customerEmail: 'test@example.com',
+                        customerMobile: '9876543210'
+                    })
+                });
+                
+                const data = await response.json();
+                log('✅ Response received');
+                log('Token: ' + data.atomTokenId);
+                log('Type: ' + typeof data.atomTokenId);
+                
+                currentToken = data.atomTokenId.toString(); // Ensure it's a string
+                
+                document.getElementById('displayToken').textContent = currentToken;
+                document.getElementById('tokenInfo').style.display = 'block';
+                document.getElementById('payButton').disabled = false;
+                
+                log('✅ Token ready for payment');
+            } catch (error) {
+                log('❌ Error generating token: ' + error.message);
+                this.disabled = false;
+            }
+        });
+
+        // Pay button - EXACT format from working implementation
+        document.getElementById('payButton').addEventListener('click', function openPay() {
+            log('💳 Opening payment popup...');
+            
+            if (!currentToken) {
+                log('❌ No token available. Generate token first.');
+                return;
+            }
+            
+            if (typeof window.AtomPaynetz === 'undefined') {
+                log('❌ AtomPaynetz library not loaded');
+                return;
+            }
+            
+            log('✅ AtomPaynetz library loaded');
+            
+            try {
+                // EXACT format from working implementation
+                const options = {
+                    "atomTokenId": currentToken, // String token
+                    "merchId": "446442",
+                    "custEmail": "test@example.com",
+                    "custMobile": "9876543210",
+                    "returnUrl": "http://localhost:3000/payment/return"
+                };
+                
+                log('Config: ' + JSON.stringify(options, null, 2));
+                log('Creating AtomPaynetz instance with env: uat');
+                
+                // EXACT call from working implementation
+                let atom = new AtomPaynetz(options, 'uat');
+                
+                log('✅ AtomPaynetz instance created successfully');
+                log('Popup should open now!');
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+                log('Stack: ' + error.stack);
+            }
+        });
+
+        // Check when script loads
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                if (typeof window.AtomPaynetz !== 'undefined') {
+                    log('✅ Page loaded - AtomPaynetz available');
+                } else {
+                    log('⚠️ Page loaded - AtomPaynetz NOT available yet');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

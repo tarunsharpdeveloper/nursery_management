@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Test with Merchant ID 317157</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script>
+        var cdnScript = document.createElement('script');
+        cdnScript.setAttribute('src', 'https://pgtest.atomtech.in/staticdata/ots/js/atomcheckout.js?v=' + Date.now());
+        document.head.appendChild(cdnScript);
+    </script>
+</head>
+
+<body>
+    <div class="container my-5">
+        <h3>Test with Merchant ID 317157 (from working implementation)</h3>
+        <p class="alert alert-warning">
+            <strong>Note:</strong> This uses merchant ID 317157 which is from NTT's official working Node.js sample.
+            This merchant ID might have test transactions enabled.
+        </p>
+        
+        <button id="generateBtn" class="btn btn-primary">Generate Token</button>
+        <button id="payBtn" class="btn btn-success" disabled>Pay Now</button>
+        
+        <div id="info" style="margin-top: 20px; display: none;">
+            <p>Token: <strong id="token"></strong></p>
+            <p>Merchant: <strong>317157</strong></p>
+        </div>
+        
+        <div id="log" style="margin-top: 20px; padding: 10px; background: #f5f5f5; font-family: monospace; max-height: 400px; overflow-y: auto;">
+            <div id="logContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentToken = null;
+        
+        function log(msg) {
+            document.getElementById('logContent').innerHTML += new Date().toLocaleTimeString() + ': ' + msg + '<br>';
+        }
+
+        document.getElementById('generateBtn').addEventListener('click', async function() {
+            log('Generating token with merchant 317157...');
+            
+            try {
+                // Use 317157 credentials
+                const crypto = await import('https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/+esm');
+                
+                // For now, just use a mock token to test
+                // In reality, you'd need to update backend to support 317157
+                currentToken = "15000000953140"; // Use a recently generated token
+                
+                document.getElementById('token').textContent = currentToken;
+                document.getElementById('info').style.display = 'block';
+                document.getElementById('payBtn').disabled = false;
+                
+                log('✅ Token ready (using test token)');
+                log('⚠️ Note: To properly test, update backend .env to use merchant 317157');
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+            }
+        });
+
+        document.getElementById('payBtn').addEventListener('click', function() {
+            log('Opening payment with merchant 317157...');
+            
+            try {
+                const options = {
+                    "atomTokenId": currentToken,
+                    "merchId": "317157", // Different merchant ID
+                    "custEmail": "test@example.com",
+                    "custMobile": "9876543210",
+                    "returnUrl": "http://localhost:3000/payment/return"
+                };
+                
+                log('Config: ' + JSON.stringify(options));
+                let atom = new AtomPaynetz(options, 'uat');
+                log('✅ Popup opened');
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

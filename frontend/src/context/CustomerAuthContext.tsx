@@ -56,8 +56,20 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     setUser(newUser);
   };
 
+  const getApiUrl = () => {
+    if (typeof window === 'undefined') {
+      // Server-side: use environment variable
+      return process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+    }
+    // Client-side: use environment variable or default
+    return typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_BASE_URL 
+      ? process.env.NEXT_PUBLIC_API_BASE_URL 
+      : "http://localhost:4000";
+  };
+
   const login = async (email: string, password: string) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000"}/api/auth/login`, {
+    const apiUrl = getApiUrl();
+    const response = await fetch(`${apiUrl}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password })
@@ -74,7 +86,8 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
   };
 
   const register = async (name: string, email: string, phone: string, password: string) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000"}/api/auth/register-customer`, {
+    const apiUrl = getApiUrl();
+    const response = await fetch(`${apiUrl}/api/auth/register-customer`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, phone, password })

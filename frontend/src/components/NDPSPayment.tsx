@@ -113,10 +113,6 @@ export default function NDPSPayment({
         throw new Error('Invalid response from payment gateway. Please try again or use Cash on Delivery.');
       }
 
-      // Store payment info for later
-      localStorage.setItem('ndps_payment_id', response.paymentId.toString());
-      localStorage.setItem('ndps_merch_txn_id', response.merchTxnId);
-
       // Open AtomPaynetz popup (exact format from working implementation)
       if (!window.AtomPaynetz) {
         throw new Error('AtomPaynetz library not loaded');

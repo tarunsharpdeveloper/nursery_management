@@ -684,9 +684,181 @@ async function requeryTransactionStatus(req, res, helpers) {
   }
 }
 
+/**
+ * Handle NDPS popup response (form POST redirect)
+ * NDPS sends POST to returnUrl with encrypted data
+ * This is different from server-to-server callback
+ */
+async function handleNDPSPopupResponse(req, res, helpers) {
+  try {
+    console.log('=== NDPS Popup Response Handler ===');
+    
+    // NDPS sends form-encoded POST data, not JSON!
+    const body = await helpers.readFormData(req);
+    const encryptedResponse = body.encData;
+
+    console.log('Received form-encoded data, encData length:', encryptedResponse ? encryptedResponse.length : 0);
+
+    if (!encryptedResponse) {
+      console.log('No encrypted data in NDPS popup response');
+      res.writeHead(302, { 'Location': 'http://localhost:3000/checkout?payment=failed' });
+      res.end();
+      return;
+    }
+
+    console.log('Encrypted response received from popup');
+    let responseData;
+    try {
+      const decryptedData = decryptData(encryptedResponse);
+      console.log('=== Decrypted Popup Response ===');
+      console.log(decryptedData);
+      
+      responseData = JSON.parse(decryptedData);
+      console.log('=== Parsed Response Data ===');
+      console.log(JSON.stringify(responseData, null, 2));
+    } catch (decryptError) {
+      console.error('NDPS Response decryption failed:', decryptError);
+      // Redirect to checkout with error
+      return res.writeHead(302, { 'Location': 'http://localhost:3000/checkout?payment=failed' });
+      res.end();
+    }
+
+    // Response format: {"payInstrument": transaction_object}
+    // Note: Popup response sends object directly, not array
+    if (!responseData.payInstrument) {
+      console.error('Invalid response format - expected payInstrument');
+      return res.writeHead(302, { 'Location': 'http://localhost:3000/checkout?payment=failed' });
+      res.end();
+    }
+
+    // Handle both formats: array (server callback) or object (popup response)
+    let transaction;
+    if (Array.isArray(responseData.payInstrument)) {
+      transaction = responseData.payInstrument[0];
+    } else {
+      transaction = responseData.payInstrument;
+    }
+
+    if (!transaction) {
+      console.error('No transaction found in response');
+      return res.writeHead(302, { 'Location': 'http://localhost:3000/checkout?payment=failed' });
+      res.end();
+    }
+
+    console.log('=== Transaction Details ===');
+    console.log(JSON.stringify(transaction, null, 2));
+    
+    // Extract transaction details
+    const merchTxnId = transaction.merchDetails?.merchTxnId;
+    const statusCode = transaction.responseDetails?.statusCode;
+    const statusMessage = transaction.responseDetails?.message;
+    const atomTxnId = transaction.payDetails?.atomTxnId;
+    const totalAmount = transaction.payDetails?.totalAmount;
+    const bankTxnId = transaction.payModeSpecificData?.bankDetails?.bankTxnId;
+
+    console.log('Extracted Details:');
+    console.log('- Merchant Txn ID:', merchTxnId);
+    console.log('- Status Code:', statusCode);
+    console.log('- Status Message:', statusMessage);
+    console.log('- Atom Txn ID:', atomTxnId);
+    console.log('- Total Amount:', totalAmount);
+
+    if (!merchTxnId) {
+      return res.writeHead(302, { 'Location': 'http://localhost:3000/checkout?payment=failed' });
+      res.end();
+    }
+
+    // Verify signature if present
+    if (transaction.payDetails?.signature) {
+      try {
+        const signatureData = [transaction];
+        const calculatedSignature = generateSignature(signatureData);
+        const receivedSignature = transaction.payDetails.signature;
+        
+        if (receivedSignature !== calculatedSignature) {
+          console.error('Signature mismatch!');
+          console.error('Received:', receivedSignature);
+          console.error('Calculated:', calculatedSignature);
+          return res.writeHead(302, { 'Location': 'http://localhost:3000/checkout?payment=failed' });
+          res.end();
+        }
+        console.log('✅ Signature verified successfully');
+      } catch (sigError) {
+        console.error('Signature verification error:', sigError);
+        // Continue anyway - signature might not be present in all responses
+      }
+    }
+
+    // Find the payment record
+    const [paymentRows] = await pool.query(
+      'SELECT * FROM payments WHERE gateway_payment_id = ?',
+      [merchTxnId]
+    );
+
+    if (paymentRows.length === 0) {
+      console.log('Payment record not found for:', merchTxnId);
+      return res.writeHead(302, { 'Location': 'http://localhost:3000/checkout?payment=failed' });
+      res.end();
+    }
+
+    const payment = paymentRows[0];
+    let newStatus = 'pending';
+    let redirectUrl = 'http://localhost:3000/checkout?payment=failed';
+
+    // Map status code to payment status
+    if (statusCode === 'OTS0000') {
+      newStatus = 'paid';
+      redirectUrl = `http://localhost:3000/checkout?orderNumber=${payment.order_id}&success=true`;
+      console.log('✅ Payment successful');
+    } else {
+      newStatus = 'failed';
+      redirectUrl = 'http://localhost:3000/checkout?payment=failed';
+      console.log('❌ Payment failed:', statusMessage);
+    }
+
+    // Update payment record with full details
+    await pool.query(
+      `UPDATE payments 
+       SET payment_status = ?, 
+           paid_at = CASE WHEN ? = 'paid' THEN NOW() ELSE paid_at END,
+           remarks = ?
+       WHERE id = ?`,
+      [
+        newStatus, 
+        newStatus, 
+        `Status: ${statusCode} - ${statusMessage}. Atom Txn: ${atomTxnId || 'N/A'}. Bank Txn: ${bankTxnId || 'N/A'}`,
+        payment.id
+      ]
+    );
+
+    // Update order status
+    await pool.query(
+      'UPDATE orders SET payment_status = ? WHERE id = ?',
+      [newStatus, payment.order_id]
+    );
+
+    console.log('=== Payment Updated ===');
+    console.log('Payment ID:', payment.id);
+    console.log('Order ID:', payment.order_id);
+    console.log('New Status:', newStatus);
+    console.log('Redirecting to:', redirectUrl);
+
+    // Send HTML redirect (like reference implementation)
+    // This is a 302 redirect with Location header
+    res.writeHead(302, { 'Location': redirectUrl });
+    res.end();
+
+  } catch (error) {
+    console.error('NDPS Popup Response handling error:', error);
+    res.writeHead(302, { 'Location': 'http://localhost:3000/checkout?payment=failed' });
+    res.end();
+  }
+}
+
 module.exports = {
   initiateNDPSPayment,
   handleNDPSResponse,
   checkPaymentStatus,
-  requeryTransactionStatus
+  requeryTransactionStatus,
+  handleNDPSPopupResponse
 };

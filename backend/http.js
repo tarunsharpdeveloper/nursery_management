@@ -9,6 +9,28 @@ async function readJson(req) {
   return raw ? JSON.parse(raw) : {};
 }
 
+/**
+ * Read form-encoded data (application/x-www-form-urlencoded)
+ * Used for NDPS popup responses which send form-encoded POST data
+ */
+async function readFormData(req) {
+  const chunks = [];
+
+  for await (const chunk of req) {
+    chunks.push(chunk);
+  }
+
+  const raw = Buffer.concat(chunks).toString("utf8");
+  const params = new URLSearchParams(raw);
+  
+  const result = {};
+  for (const [key, value] of params) {
+    result[key] = value;
+  }
+  
+  return result;
+}
+
 function corsHeaders() {
   return {
     "Content-Type": "application/json",
@@ -44,4 +66,4 @@ function notFound(res) {
   sendJson(res, 404, { message: "Route not found" });
 }
 
-module.exports = { readJson, sendJson, sendNoContent, sendError, notFound };
+module.exports = { readJson, readFormData, sendJson, sendNoContent, sendError, notFound };

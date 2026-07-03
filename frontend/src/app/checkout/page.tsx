@@ -22,6 +22,8 @@ export default function CheckoutPage() {
   const [orderTotal, setOrderTotal] = useState(0); // Store order total before cart is cleared
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -31,6 +33,28 @@ export default function CheckoutPage() {
     zip: "",
     phone: "",
   });
+
+  // Check for payment success/failure in URL
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const orderNumber = searchParams.get('orderNumber');
+      const success = searchParams.get('success');
+      const failed = searchParams.get('payment');
+
+      if (success === 'true' && orderNumber) {
+        setPaymentSuccess(true);
+        setOrderId(orderNumber);
+        setIsSubmitted(true);
+        // Clean URL
+        window.history.replaceState({}, document.title, '/checkout');
+      } else if (failed === 'failed') {
+        setPaymentError('Payment failed. Please try another payment method or try again.');
+        // Clean URL
+        window.history.replaceState({}, document.title, '/checkout');
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -150,6 +174,56 @@ export default function CheckoutPage() {
 
         <section className="space space-extra-bottom">
           <div className="container" style={{ textAlign: "center", padding: "80px 20px" }}>
+            {/* Payment Success Banner */}
+            {paymentSuccess && (
+              <div style={{
+                backgroundColor: '#d4edda',
+                border: '2px solid #28a745',
+                borderRadius: '8px',
+                padding: '20px',
+                marginBottom: '40px',
+                textAlign: 'left'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  <i 
+                    className="fal fa-check-circle" 
+                    style={{ fontSize: '32px', color: '#28a745', flexShrink: 0 }}
+                  ></i>
+                  <div>
+                    <h4 style={{ color: '#155724', margin: '0 0 5px 0' }}>✅ Payment Received Successfully!</h4>
+                    <p style={{ color: '#155724', margin: 0, fontSize: '14px' }}>
+                      Your payment has been processed and your order is confirmed.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Payment Error Banner */}
+            {paymentError && (
+              <div style={{
+                backgroundColor: '#f8d7da',
+                border: '2px solid #f5c6cb',
+                borderRadius: '8px',
+                padding: '20px',
+                marginBottom: '40px',
+                textAlign: 'left'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  <i 
+                    className="fal fa-exclamation-circle" 
+                    style={{ fontSize: '32px', color: '#dc3545', flexShrink: 0 }}
+                  ></i>
+                  <div>
+                    <h4 style={{ color: '#721c24', margin: '0 0 5px 0' }}>❌ Payment Failed</h4>
+                    <p style={{ color: '#721c24', margin: 0, fontSize: '14px' }}>
+                      {paymentError}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <i
               className="fal fa-badge-check"
               style={{ fontSize: "70px", color: "var(--brand)", marginBottom: "25px", display: "block" }}
@@ -201,6 +275,45 @@ export default function CheckoutPage() {
       {/* Checkout Area */}
       <div className="vs-product-wrapper space-top space-extra-bottom">
         <div className="container">
+          {/* Payment Error Banner */}
+          {paymentError && (
+            <div style={{
+              backgroundColor: '#f8d7da',
+              border: '2px solid #dc3545',
+              borderRadius: '8px',
+              padding: '20px',
+              marginBottom: '30px',
+              textAlign: 'left'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1 }}>
+                  <i 
+                    className="fal fa-exclamation-circle" 
+                    style={{ fontSize: '28px', color: '#dc3545', flexShrink: 0 }}
+                  ></i>
+                  <div>
+                    <h4 style={{ color: '#721c24', margin: '0 0 5px 0' }}>❌ Payment Failed</h4>
+                    <p style={{ color: '#721c24', margin: 0, fontSize: '14px' }}>
+                      {paymentError}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setPaymentError("")}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    color: '#721c24'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          )}
+
           {cartItems.length === 0 ? (
             <div style={{ textAlign: "center", padding: "80px 20px" }}>
               <i

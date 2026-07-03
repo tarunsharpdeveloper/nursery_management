@@ -50,7 +50,7 @@ export function SiteHeader() {
             priority
           />
           <div style={{ display: "flex", flexDirection: "column", lineHeight: 1,gap: "7px" }}>
-          <span className="brand-name">Shri Sanviya Hi-Tech Nursery</span>
+          <span className="brand-name">Shri Saniya Hi-Tech Nursery</span>
           <div style={{display:'flex'}}><span className="brand-name">(Awantika Seeds)</span></div>
           </div>
         </Link>

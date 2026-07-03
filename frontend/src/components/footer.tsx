@@ -24,7 +24,7 @@ export function Footer() {
         }}>
           <Image
             src={logo}
-            alt="Shri Sanviya Hi-Tech Nursery logo"
+            alt="Shri Saniya Hi-Tech Nursery logo"
             width={70}
             height={70}
             style={{ 
@@ -36,15 +36,15 @@ export function Footer() {
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
             <span className="brand-name" style={{ 
               color: "white",
-              fontSize: "20px", 
+              fontSize: "16px", 
               fontWeight: "700",
               lineHeight: "1.2"
             }}>
-              Shri Sanviya Hi-Tech Nursery
+              Shri Saniya Hi-Tech Nursery
             </span>
             <span className="brand-name" style={{ 
               color: "rgba(255, 255, 255, 0.85)",
-              fontSize: "16px", 
+              fontSize: "17px", 
               fontWeight: "600",
               lineHeight: "1"
             }}>

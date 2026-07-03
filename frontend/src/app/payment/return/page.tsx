@@ -1,13 +1,9 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
-import { apiRequest } from '@/lib/api';
 
-export default function PaymentReturnPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
+function PaymentReturnContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'failed' | 'pending'>('loading');
   const [paymentDetails, setPaymentDetails] = useState<any>(null);
   const [error, setError] = useState<string>('');
@@ -15,11 +11,18 @@ export default function PaymentReturnPage() {
   useEffect(() => {
     const checkPaymentStatus = async () => {
       try {
-        // Get merchant transaction ID from localStorage or URL params
-        const merchTxnId = localStorage.getItem('ndps_merch_txn_id') || searchParams.get('merchTxnId');
-        const paymentId = localStorage.getItem('ndps_payment_id') || searchParams.get('paymentId');
+        // Extract params from URL directly
+        if (typeof window === 'undefined') return;
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const merchTxnIdFromUrl = urlParams.get('merchTxnId');
+        const paymentIdFromUrl = urlParams.get('paymentId');
 
-        console.log('Checking payment status...');
+        // Get from localStorage if not in URL
+        let merchTxnId = localStorage.getItem('ndps_merch_txn_id') || merchTxnIdFromUrl;
+        let paymentId = localStorage.getItem('ndps_payment_id') || paymentIdFromUrl;
+
+        console.log('Payment Return Page Loaded');
         console.log('Merchant Txn ID:', merchTxnId);
         console.log('Payment ID:', paymentId);
 
@@ -29,61 +32,50 @@ export default function PaymentReturnPage() {
           return;
         }
 
-        // Wait a moment for the callback to be processed
+        // Dynamic import to avoid SSR issues
+        const { apiRequest } = await import('@/lib/api');
+
+        // Wait for callback processing
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-        // First, try to check via our database
+        // Check database first
         if (paymentId) {
           try {
-            const dbStatus = await apiRequest<{
-              paymentId: number;
-              orderId: number;
-              orderNumber: string;
-              status: string;
-              amount: number;
-              paidAt: string | null;
-            }>(`/api/ndps/status/${paymentId}`);
+            const dbStatus = await apiRequest<any>(`/api/ndps/status/${paymentId}`);
 
             console.log('Database status:', dbStatus);
 
-            if (dbStatus.status === 'paid') {
+            if (dbStatus?.status === 'paid') {
               setStatus('success');
               setPaymentDetails(dbStatus);
-              // Clear localStorage
               localStorage.removeItem('ndps_payment_id');
               localStorage.removeItem('ndps_merch_txn_id');
               return;
-            } else if (dbStatus.status === 'failed') {
+            } else if (dbStatus?.status === 'failed') {
               setStatus('failed');
               setPaymentDetails(dbStatus);
               return;
             }
           } catch (dbError) {
-            console.log('Database check failed, trying requery...');
+            console.log('Database check failed, will try requery');
           }
         }
 
-        // If database status is still pending, query NTT API directly
+        // Query requery endpoint if still pending
         if (merchTxnId) {
           try {
-            console.log('Querying NTT API for status...');
-            const gatewayStatus = await apiRequest<{
-              merchTxnId: string;
-              statusCode: string;
-              statusMessage: string;
-              transactionData: any;
-              source: string;
-            }>('/api/ndps/requery', {
+            console.log('Querying payment status...');
+            const gatewayStatus = await apiRequest<any>('/api/ndps/requery', {
               method: 'POST',
               body: JSON.stringify({ merchTxnId })
             });
 
             console.log('Gateway status:', gatewayStatus);
 
-            if (gatewayStatus.statusCode === 'OTS0000') {
+            if (gatewayStatus?.statusCode === 'OTS0000') {
               setStatus('success');
-              setPaymentDetails(gatewayStatus.transactionData);
-            } else if (gatewayStatus.statusCode && gatewayStatus.statusCode !== 'OTS0000') {
+              setPaymentDetails(gatewayStatus.transactionData || gatewayStatus);
+            } else if (gatewayStatus?.statusCode && gatewayStatus.statusCode !== 'OTS0000') {
               setStatus('failed');
               setPaymentDetails(gatewayStatus);
             } else {
@@ -91,7 +83,6 @@ export default function PaymentReturnPage() {
               setPaymentDetails(gatewayStatus);
             }
 
-            // Clear localStorage
             localStorage.removeItem('ndps_payment_id');
             localStorage.removeItem('ndps_merch_txn_id');
           } catch (requeryError: any) {
@@ -100,7 +91,6 @@ export default function PaymentReturnPage() {
             setError('Unable to confirm payment status. Please check your order status or contact support.');
           }
         }
-
       } catch (error: any) {
         console.error('Payment status check error:', error);
         setStatus('failed');
@@ -109,7 +99,7 @@ export default function PaymentReturnPage() {
     };
 
     checkPaymentStatus();
-  }, [searchParams]);
+  }, []);
 
   if (status === 'loading') {
     return (
@@ -251,5 +241,24 @@ export default function PaymentReturnPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function PaymentReturnPage() {
+  return (
+    <Suspense fallback={
+      <main>
+        <section className="space space-extra-bottom">
+          <div className="container" style={{ textAlign: 'center', padding: '100px 20px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '20px' }}>
+              <i className="fas fa-spinner fa-spin" style={{ color: 'var(--brand)' }}></i>
+            </div>
+            <h2>Loading...</h2>
+          </div>
+        </section>
+      </main>
+    }>
+      <PaymentReturnContent />
+    </Suspense>
   );
 }

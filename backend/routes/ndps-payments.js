@@ -389,7 +389,6 @@ async function handleNDPSResponse(req, res, helpers) {
     const atomTxnId = transaction.payDetails?.atomTxnId;
     const totalAmount = transaction.payDetails?.totalAmount;
     const bankTxnId = transaction.payModeSpecificData?.bankDetails?.bankTxnId;
-    const subChannel = transaction.payModeSpecificData?.subChannel;
 
     console.log('Extracted Details:');
     console.log('- Merchant Txn ID:', merchTxnId);
@@ -521,16 +520,10 @@ async function checkPaymentStatus(req, res, helpers) {
   }
 }
 
-module.exports = {
-  initiateNDPSPayment,
-  handleNDPSResponse,
-  checkPaymentStatus,
-  requeryTransactionStatus
-};
-
 /**
  * Requery transaction status from NTT DATA API
- * This calls NTT's status/requery API to get the latest transaction status
+ * This calls NTT's AUTH API with STATUS api type to get the latest transaction status
+ * (NTT uses the same endpoint with different api type in headDetails)
  */
 async function requeryTransactionStatus(req, res, helpers) {
   try {
@@ -546,12 +539,39 @@ async function requeryTransactionStatus(req, res, helpers) {
 
     console.log('Querying status for transaction:', merchTxnId);
 
+    // First, try to get from database (faster, more reliable for UAT)
+    const [paymentRows] = await pool.query(
+      'SELECT * FROM payments WHERE gateway_payment_id = ?',
+      [merchTxnId]
+    );
+
+    if (paymentRows.length > 0) {
+      console.log('Found transaction in database');
+      const payment = paymentRows[0];
+      
+      send(res, 200, {
+        merchTxnId: merchTxnId,
+        statusCode: payment.payment_status === 'paid' ? 'OTS0000' : (payment.payment_status === 'failed' ? 'OTS9999' : 'OTS0001'),
+        statusMessage: payment.payment_status === 'paid' ? 'SUCCESS' : (payment.payment_status === 'failed' ? 'FAILED' : 'PENDING'),
+        amount: payment.amount,
+        status: payment.payment_status,
+        source: 'database',
+        remarks: payment.remarks
+      });
+      return;
+    }
+
+    // If not in database, try to query NTT API
+    // Note: NTT STATUS API may not work in UAT, so we gracefully fall back
+    
+    console.log('Not found in database, attempting NTT STATUS API query...');
+
     // Create requery payload
     const requeryPayload = {
       payInstrument: {
         headDetails: {
           version: config.version,
-          api: "STATUS", // Changed to STATUS for requery
+          api: "STATUS", // Use STATUS api type for status queries
           platform: config.platform
         },
         merchDetails: {
@@ -569,42 +589,31 @@ async function requeryTransactionStatus(req, res, helpers) {
     // Encrypt the payload
     const encryptedData = encryptData(payloadData);
 
-    // Call NTT STATUS API (usually same URL but different API in payload)
-    const statusUrl = config.apiUrl.replace('/auth', '/status'); // or might be same URL
+    // NTT uses the same AUTH endpoint for status queries (with STATUS api type in payload)
     const formBody = `encData=${encryptedData}&merchId=${config.merchId}`;
 
-    console.log('Calling NTT STATUS API:', statusUrl);
+    console.log('Calling NTT API:', config.apiUrl);
 
-    const statusResponse = await fetch(statusUrl, {
+    const statusResponse = await fetch(config.apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Cache-Control': 'no-cache'
       },
-      body: formBody
+      body: formBody,
+      timeout: 10000
     });
 
     const statusResponseText = await statusResponse.text();
     console.log('Status API response:', statusResponseText);
 
-    if (!statusResponse.ok || !statusResponseText || statusResponseText.length === 0) {
-      // If status API doesn't work, return database status
-      console.log('Status API not available, returning database status');
-      
-      const [paymentRows] = await pool.query(
-        'SELECT * FROM payments WHERE gateway_payment_id = ?',
-        [merchTxnId]
-      );
-
-      if (paymentRows.length === 0) {
-        return send(res, 404, { error: 'Transaction not found' });
-      }
-
-      return send(res, 200, {
-        merchTxnId: merchTxnId,
-        status: paymentRows[0].payment_status,
-        amount: paymentRows[0].amount,
-        source: 'database'
+    // If we get the welcome message or empty response, fall back to "not found"
+    if (statusResponseText.includes('Welcome') || !statusResponseText || statusResponseText.length < 50) {
+      console.log('NTT STATUS API not available or returned welcome message');
+      return send(res, 404, { 
+        error: 'Transaction not found in database', 
+        details: 'NTT STATUS API not available in UAT',
+        source: 'gateway_unavailable'
       });
     }
 
@@ -618,9 +627,12 @@ async function requeryTransactionStatus(req, res, helpers) {
           break;
         }
       }
+    } else if (statusResponseText.length > 50 && !statusResponseText.includes('<')) {
+      encryptedResponse = statusResponseText.trim();
     }
 
     if (!encryptedResponse) {
+      console.log('Could not extract encrypted response');
       return send(res, 500, { error: 'Invalid status response from gateway' });
     }
 
@@ -638,7 +650,7 @@ async function requeryTransactionStatus(req, res, helpers) {
     }
 
     const transaction = responseData.payInstrument[0];
-    console.log('Transaction details:', JSON.stringify(transaction, null, 2));
+    console.log('Transaction details from NTT:', JSON.stringify(transaction, null, 2));
 
     // Extract status information
     const statusCode = transaction.responseDetails?.statusCode;
@@ -646,30 +658,12 @@ async function requeryTransactionStatus(req, res, helpers) {
     const atomTxnId = transaction.payDetails?.atomTxnId;
     const totalAmount = transaction.payDetails?.totalAmount;
 
-    // Update database if needed
-    const [paymentRows] = await pool.query(
-      'SELECT * FROM payments WHERE gateway_payment_id = ?',
-      [merchTxnId]
-    );
-
-    if (paymentRows.length > 0) {
-      let newStatus = 'pending';
-      if (statusCode === 'OTS0000') {
-        newStatus = 'paid';
-      } else if (statusCode && statusCode !== 'OTS0000') {
-        newStatus = 'failed';
-      }
-
-      await pool.query(
-        'UPDATE payments SET payment_status = ?, remarks = ? WHERE gateway_payment_id = ?',
-        [newStatus, `Status: ${statusCode} - ${statusMessage}`, merchTxnId]
-      );
-      
-      // Also update order
-      await pool.query(
-        'UPDATE orders SET payment_status = ? WHERE id = ?',
-        [newStatus, paymentRows[0].order_id]
-      );
+    // Determine payment status from NTT status code
+    let paymentStatus = 'pending';
+    if (statusCode === 'OTS0000') {
+      paymentStatus = 'paid';
+    } else if (statusCode && statusCode !== 'OTS0000' && statusCode !== 'OTS0001') {
+      paymentStatus = 'failed';
     }
 
     send(res, 200, {
@@ -678,6 +672,7 @@ async function requeryTransactionStatus(req, res, helpers) {
       statusMessage: statusMessage,
       atomTxnId: atomTxnId,
       totalAmount: totalAmount,
+      status: paymentStatus,
       transactionData: transaction,
       source: 'gateway'
     });
@@ -688,3 +683,10 @@ async function requeryTransactionStatus(req, res, helpers) {
     send(res, 500, { error: 'Failed to query transaction status', details: error.message });
   }
 }
+
+module.exports = {
+  initiateNDPSPayment,
+  handleNDPSResponse,
+  checkPaymentStatus,
+  requeryTransactionStatus
+};

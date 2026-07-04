@@ -1,0 +1,11 @@
+{
+  "name": "NodeJs-Atom",
+  "version": "0.0.1",
+  "description": "Atom Insta Payments Integration using Nodejs",
+  "dependencies": {
+    "body-parser": "^1.13.2",
+    "ejs": "^3.1.6",
+    "express": "^4.13.1",
+    "unirest": "^0.6.0"
+  }
+}

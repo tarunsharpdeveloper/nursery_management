@@ -113,7 +113,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="sidebar-label">
             <h3>Admin Portal</h3>
-            <span>Sanviya Hi-Tech Nursery</span>
+            <span>Saniya Hi-Tech Nursery</span>
           </div>
         </div>
 

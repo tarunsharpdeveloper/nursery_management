@@ -9,6 +9,8 @@
     "serve": "serve out"
   },
   "dependencies": {
+    "@types/canvas-confetti": "^1.9.0",
+    "canvas-confetti": "^1.9.4",
     "express": "^4.18.2",
     "lucide-react": "^0.468.0",
     "next": "14.2.5",

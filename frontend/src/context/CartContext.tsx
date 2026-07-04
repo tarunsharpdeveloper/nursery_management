@@ -109,8 +109,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cartItems.reduce((sum, item) => sum + item.selling_price * item.quantity, 0);
-  const shipping = subtotal > 1000 || subtotal === 0 ? 0 : 120;
-  const total = subtotal + shipping;
+  const shipping = 0; // No delivery charges
+  const total = subtotal; // Total equals subtotal (no shipping)
 
   return (
     <CartContext.Provider

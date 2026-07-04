@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NDPS Payment Test</title>
+</head>
+<body>
+    <h1>NDPS Payment Gateway Test</h1>
+    
+    <h2>Test 1: Direct Form POST</h2>
+    <form action="https://paynetzuat.atomtech.in/ots/aipay/auth" method="POST">
+        <input type="hidden" name="merchId" value="317157">
+        <input type="hidden" name="encData" value="5279F57555F4052D63EA600677DDECC0A030430BA41F1AA911AA1B370726911CF914C741FBD5F430212A728BDF322A5BE148F62E3BD0418621F2B6184059E3EF2A959C8301448C4CE7B46B9BB71EDE7BC94489C6FE52F85C2E1C8B794929212303381B1F">
+        <button type="submit">Test NDPS Payment (Form POST)</button>
+    </form>
+    
+    <hr>
+    
+    <h2>Test 2: Alternative URL</h2>
+    <form action="https://paynetzuat.atomtech.in/paynetz/epi/fts" method="POST">
+        <input type="hidden" name="merchId" value="317157">
+        <input type="hidden" name="encData" value="5279F57555F4052D63EA600677DDECC0A030430BA41F1AA911AA1B370726911CF914C741FBD5F430212A728BDF322A5BE148F62E3BD0418621F2B6184059E3EF2A959C8301448C4CE7B46B9BB71EDE7BC94489C6FE52F85C2E1C8B794929212303381B1F">
+        <button type="submit">Test Alternative URL</button>
+    </form>
+    
+    <hr>
+    
+    <h2>Test 3: GET Request</h2>
+    <a href="https://paynetzuat.atomtech.in/ots/aipay/auth?merchId=317157&test=1" target="_blank">Test GET Request</a>
+    
+    <hr>
+    
+    <h2>Instructions</h2>
+    <ol>
+        <li>Open this HTML file in a browser</li>
+        <li>Try each test button</li>
+        <li>Check what response you get from each URL</li>
+        <li>If all return blank pages, the NDPS UAT server may be down</li>
+    </ol>
+    
+    <h3>Expected Results:</h3>
+    <ul>
+        <li><strong>Working:</strong> Payment form with fields for card details</li>
+        <li><strong>Error:</strong> Error message (authentication failed, etc.)</li>
+        <li><strong>Problem:</strong> Blank page (server issue)</li>
+    </ul>
+    
+    <h3>Debug Info:</h3>
+    <p><strong>Current Date:</strong> <span id="currentDate"></span></p>
+    <p><strong>Browser:</strong> <span id="browserInfo"></span></p>
+    
+    <script>
+        document.getElementById('currentDate').textContent = new Date().toString();
+        document.getElementById('browserInfo').textContent = navigator.userAgent;
+    </script>
+</body>
+</html>

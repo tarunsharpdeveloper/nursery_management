@@ -564,7 +564,7 @@ export default function HomePage() {
                 <div className="vs-product product-style1">
                   <div className="product-img">
                     <Link href={`/products/${prod.id}`}>
-                      <img src={prod.image} alt={prod.name} className="img w-100" style={{ height: "230px", objectFit: "cover" }} />
+                      <img src={prod.image} alt={prod.name} className="img w-100" style={{ height: "230px", objectFit: "contain", padding: "10px" }} />
                     </Link>
                     {prod.stock <= 0 && <span className="product-tag2" style={{ background: "var(--danger)" }}>Out of Stock</span>}
                     {prod.stock > 0 && prod.stock < 100 && <span className="product-tag2" style={{ background: "var(--accent)" }}>Limited Stock</span>}

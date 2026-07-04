@@ -3,24 +3,43 @@ const nodemailer = require("nodemailer");
 let transporter;
 
 function initEmailService() {
-  const emailService = process.env.EMAIL_SERVICE || "gmail";
-  const emailUser = process.env.EMAIL_USER;
-  const emailPassword = process.env.EMAIL_PASSWORD;
+  const smtpHost = process.env.SMTP_HOST;
+  const smtpPort = process.env.SMTP_PORT || 587;
+  const smtpSecure = process.env.SMTP_SECURE === 'true'; // true for 465, false for other ports
+  const smtpUser = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const smtpPassword = process.env.SMTP_PASSWORD || process.env.EMAIL_PASSWORD;
 
-  if (!emailUser || !emailPassword) {
-    console.warn("Email service not configured. Password reset emails will not be sent.");
+  if (!smtpHost || !smtpUser || !smtpPassword) {
+    console.warn("SMTP service not configured. Emails will not be sent.");
+    console.warn("Required: SMTP_HOST, SMTP_USER, SMTP_PASSWORD");
     return null;
   }
 
-  transporter = nodemailer.createTransport({
-    service: emailService,
-    auth: {
-      user: emailUser,
-      pass: emailPassword
-    }
-  });
+  try {
+    transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: parseInt(smtpPort),
+      secure: smtpSecure, // true for 465, false for other ports
+      auth: {
+        user: smtpUser,
+        pass: smtpPassword
+      },
+      tls: {
+        rejectUnauthorized: false // Accept self-signed certificates
+      }
+    });
 
-  return transporter;
+    console.log('✅ SMTP Email Service Configured');
+    console.log(`   Host: ${smtpHost}`);
+    console.log(`   Port: ${smtpPort}`);
+    console.log(`   Secure: ${smtpSecure}`);
+    console.log(`   User: ${smtpUser}`);
+
+    return transporter;
+  } catch (error) {
+    console.error('❌ Failed to initialize SMTP service:', error.message);
+    return null;
+  }
 }
 
 async function sendPasswordResetEmail(userEmail, userName, resetToken, resetUrl) {
@@ -31,7 +50,7 @@ async function sendPasswordResetEmail(userEmail, userName, resetToken, resetUrl)
 
   try {
     const mailOptions = {
-      from: `${process.env.EMAIL_FROM_NAME || "Nursery Management"} <${process.env.EMAIL_USER}>`,
+      from: `${process.env.EMAIL_FROM_NAME || "Nursery Management"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
       to: userEmail,
       subject: "Password Reset Request - Nursery Management",
       html: `
@@ -92,7 +111,7 @@ async function sendAccountCreationEmail(userEmail, userName, password) {
     const loginUrl = `${process.env.CORS_ORIGIN || "http://localhost:3000"}/login`;
     
     const mailOptions = {
-      from: `${process.env.EMAIL_FROM_NAME || "Nursery Management"} <${process.env.EMAIL_USER}>`,
+      from: `${process.env.EMAIL_FROM_NAME || "Nursery Management"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
       to: userEmail,
       subject: "Welcome! Your Account Has Been Created - Nursery Management",
       html: `

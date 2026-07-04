@@ -17,7 +17,7 @@ const { getReviews, submitReview, getReviewStats } = require("./routes/reviews")
 const { initiateNDPSPayment, handleNDPSResponse, checkPaymentStatus, requeryTransactionStatus, handleNDPSPopupResponse } = require("./routes/ndps-payments");
 const { ensureAdminSchema } = require("./migrate");
 const { authenticate, hasPermission } = require("./auth");
-const { login, me, registerCustomer, updateProfile, updatePassword, forgotPassword, resetPassword, verifyResetToken } = require("./routes/auth");
+const { login, me, registerCustomer, updateProfile, updatePassword, forgotPassword, resetPassword, verifyResetToken, autoCreateAccount, autoCreateAccountWithPhone, checkEmailExists } = require("./routes/auth");
 const {
   getDashboard,
   listCustomers,
@@ -56,6 +56,9 @@ const routes = [
   ["GET", "/api/health", null, (_req, res) => sendJson(res, 200, { status: "ok", service: "nursery-node-backend" })],
   ["POST", "/api/auth/login", null, login],
   ["POST", "/api/auth/register-customer", null, registerCustomer],
+  ["POST", "/api/auth/auto-create-account", null, autoCreateAccount],
+  ["POST", "/api/auth/auto-create-account-phone", null, autoCreateAccountWithPhone],
+  ["POST", "/api/auth/check-email", null, checkEmailExists],
   ["POST", "/api/auth/forgot-password", null, forgotPassword],
   ["POST", "/api/auth/reset-password", null, resetPassword],
   ["POST", "/api/auth/verify-reset-token", null, verifyResetToken],

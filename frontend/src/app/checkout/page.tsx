@@ -6,17 +6,22 @@ import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { apiRequest } from "@/lib/api";
-import NDPSPayment from "@/components/NDPSPayment";
+
+// Extend Window interface for AtomPaynetz
+declare global {
+  interface Window {
+    AtomPaynetz: any;
+  }
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cartItems, subtotal, shipping, total, clearCart } = useCart();
+  const { cartItems, subtotal, total, clearCart } = useCart();
   const { user, isLoaded, login } = useCustomerAuth();
 
   const [paymentMethod, setPaymentMethod] = useState("cod"); // Default to COD for testing
   const [sameAddress, setSameAddress] = useState(true);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [showPayment, setShowPayment] = useState(false);
   const [orderId, setOrderId] = useState("");
   const [createdOrder, setCreatedOrder] = useState<any>(null);
   const [orderTotal, setOrderTotal] = useState(0); // Store order total before cart is cleared
@@ -24,6 +29,11 @@ export default function CheckoutPage() {
   const [busy, setBusy] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentError, setPaymentError] = useState("");
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [createAccount, setCreateAccount] = useState(false);
+  const [accountCreationMessage, setAccountCreationMessage] = useState("");
+  const [emailExists, setEmailExists] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -56,6 +66,44 @@ export default function CheckoutPage() {
     }
   }, []);
 
+  // Load AtomPaynetz script dynamically
+  useEffect(() => {
+    const loadAtomScript = () => {
+      // Remove existing script if any
+      const existingScript = document.querySelector('script[src*="atomcheckout.js"]');
+      if (existingScript) {
+        existingScript.remove();
+      }
+
+      // Create new script with timestamp to prevent caching
+      const script = document.createElement('script');
+      script.src = `https://pgtest.atomtech.in/staticdata/ots/js/atomcheckout.js?v=${Date.now()}`;
+      script.async = true;
+      
+      script.onload = () => {
+        console.log('✅ AtomPaynetz script loaded successfully');
+        setScriptLoaded(true);
+      };
+      
+      script.onerror = () => {
+        console.error('❌ Failed to load AtomPaynetz script');
+        setStatus('Failed to load payment system');
+      };
+
+      document.head.appendChild(script);
+    };
+
+    loadAtomScript();
+
+    return () => {
+      // Cleanup
+      const script = document.querySelector('script[src*="atomcheckout.js"]');
+      if (script) {
+        script.remove();
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (user) {
       setFormData(prev => ({
@@ -67,6 +115,38 @@ export default function CheckoutPage() {
     }
   }, [user]);
 
+  // Check if email exists when email changes
+  useEffect(() => {
+    const checkEmail = async () => {
+      if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        setEmailExists(false);
+        return;
+      }
+
+      if (user && user.email === formData.email) {
+        setEmailExists(false);
+        return;
+      }
+
+      setCheckingEmail(true);
+      try {
+        const response = await apiRequest<{ exists: boolean }>("/api/auth/check-email", {
+          method: "POST",
+          body: JSON.stringify({ email: formData.email })
+        });
+        setEmailExists(response.exists);
+      } catch (error) {
+        console.error("Email check error:", error);
+        setEmailExists(false);
+      } finally {
+        setCheckingEmail(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(checkEmail, 500);
+    return () => clearTimeout(debounceTimer);
+  }, [formData.email, user]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === "phone") {
@@ -76,16 +156,156 @@ export default function CheckoutPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handlePayment = async (orderId: number, amount: number, customerEmail: string, customerMobile: string) => {
+    if (!scriptLoaded) {
+      setStatus('Payment system is still loading. Please try again.');
+      return;
+    }
+
+    setBusy(true);
+    
+    try {
+      // Get token from backend using the corrected AES-256-CBC method
+      console.log('Initiating NDPS payment...');
+      console.log('Order ID:', orderId);
+      console.log('Amount:', amount);
+      console.log('Customer:', customerEmail, customerMobile);
+
+      const response = await apiRequest<{
+        success: boolean;
+        paymentId: number;
+        atomTokenId: number;
+        merchId: string;
+        merchTxnId: string;
+        customerEmail: string;
+        customerMobile: string;
+        returnUrl: string;
+        env: 'uat' | 'prod';
+      }>('/api/ndps/initiate', {
+        method: 'POST',
+        body: JSON.stringify({
+          orderId,
+          amount,
+          customerEmail,
+          customerMobile
+        })
+      });
+
+      console.log('=== Backend Response ===');
+      console.log('Full response:', JSON.stringify(response, null, 2));
+      console.log('Token type:', typeof response.atomTokenId);
+      console.log('Token value:', response.atomTokenId);
+
+      // Validate response
+      if (!response.atomTokenId || !response.paymentId) {
+        throw new Error('Invalid response from payment gateway. Please try again or use Cash on Delivery.');
+      }
+
+      // Open AtomPaynetz popup (exact format from working implementation)
+      if (!window.AtomPaynetz) {
+        throw new Error('AtomPaynetz library not loaded');
+      }
+
+      // Configuration object (EXACT format from working implementation)
+      const atomConfig = {
+        atomTokenId: response.atomTokenId.toString(), // Convert number to string
+        merchId: response.merchId.toString(),
+        custEmail: response.customerEmail,
+        custMobile: response.customerMobile,
+        returnUrl: response.returnUrl
+      };
+
+      console.log('=== Opening AtomPaynetz Popup ===');
+      console.log('Config:', JSON.stringify(atomConfig, null, 2));
+      console.log('Environment:', response.env);
+      console.log('AtomPaynetz available:', typeof window.AtomPaynetz);
+
+      // Create AtomPaynetz instance (as per working implementation)
+      new window.AtomPaynetz(atomConfig, response.env);
+      
+      console.log('✅ AtomPaynetz instance created');
+      console.log('Popup should open automatically...');
+      // The popup will open automatically
+      // After payment, user will be redirected to returnUrl
+      
+    } catch (error: any) {
+      console.error('❌ Payment initiation failed:', error);
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
+      
+      // Handle specific errors with user-friendly messages
+      let errorMessage = 'Failed to initiate payment';
+      
+      if (error.message?.includes('empty') || error.message?.includes('content-length')) {
+        errorMessage = 'Payment gateway is temporarily unavailable. Please try Cash on Delivery or contact support.';
+      } else if (error.message?.includes('Invalid response')) {
+        errorMessage = error.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setStatus(errorMessage);
+      setBusy(false);
+    }
+  };
+
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cartItems.length === 0) return;
 
     setBusy(true);
     setStatus("");
+    setAccountCreationMessage("");
 
     try {
       if (!/^\d{10}$/.test(formData.phone)) {
         throw new Error("Phone number must be exactly 10 digits.");
+      }
+
+      // Create account if not already logged in
+      if (!user) {
+        try {
+          if (createAccount) {
+            // Checkbox checked: Create account with random password and send email
+            const accountResponse = await apiRequest<{ 
+              message: string; 
+              accountCreated?: boolean;
+              accountExists?: boolean;
+            }>("/api/auth/auto-create-account", {
+              method: "POST",
+              body: JSON.stringify({
+                name: formData.name,
+                email: formData.email,
+                phone: formData.phone
+              })
+            });
+
+            if (accountResponse.accountCreated) {
+              setAccountCreationMessage("✅ Account created! Login credentials sent to your email.");
+            }
+          } else {
+            // Checkbox not checked: Create account with phone as password (no email)
+            const accountResponse = await apiRequest<{ 
+              message: string; 
+              accountCreated?: boolean;
+              accountExists?: boolean;
+            }>("/api/auth/auto-create-account-phone", {
+              method: "POST",
+              body: JSON.stringify({
+                name: formData.name,
+                email: formData.email,
+                phone: formData.phone
+              })
+            });
+
+            if (accountResponse.accountCreated) {
+              console.log("Account created with phone as password");
+            }
+          }
+        } catch (accountError: any) {
+          console.log("Account creation skipped or failed:", accountError.message);
+          // Continue with order even if account creation fails
+        }
       }
 
       const response = await apiRequest<{ orderId: number; orderNumber: string }>("/api/orders", {
@@ -115,7 +335,7 @@ export default function CheckoutPage() {
         await login(formData.email, formData.phone).catch(() => undefined);
       }
 
-      // Store order details and show payment options
+      // Store order details
       setCreatedOrder({
         id: response.orderId,
         number: response.orderNumber,
@@ -131,32 +351,21 @@ export default function CheckoutPage() {
 
       // Handle different payment methods
       if (paymentMethod === "ndps") {
-        // Show NDPS payment component
-        setShowPayment(true);
+        // Call handlePayment directly to open payment popup
         clearCart(); // Clear cart as order is created
+        await handlePayment(response.orderId, total, formData.email, formData.phone);
       } else {
         // For other payment methods (COD, bank transfer, etc.)
         setOrderId(response.orderNumber);
         setIsSubmitted(true);
         clearCart();
+        setBusy(false);
       }
 
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not place order");
-    } finally {
       setBusy(false);
     }
-  };
-
-  const handlePaymentSuccess = (paymentId: number) => {
-    // Payment successful, show success page
-    setOrderId(createdOrder?.number || "");
-    setIsSubmitted(true);
-  };
-
-  const handlePaymentError = (error: string) => {
-    setStatus(`Payment failed: ${error}`);
-    setBusy(false);
   };
 
   if (!isLoaded) return <div style={{ minHeight: "60vh" }}></div>;
@@ -314,22 +523,7 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {cartItems.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "80px 20px" }}>
-              <i
-                className="fal fa-shopping-cart"
-                style={{ fontSize: "60px", color: "var(--brand)", marginBottom: "20px", display: "block" }}
-              ></i>
-              <h2>No items in your cart</h2>
-              <p style={{ color: "var(--muted)", marginBottom: "30px" }}>
-                Add items to your cart before proceeding to checkout.
-              </p>
-              <Link href="/products" className="vs-btn">
-                Browse Products
-              </Link>
-            </div>
-          ) : (
-            <form action="#" className="woocommerce-checkout mt-40" onSubmit={handlePlaceOrder}>
+          <form action="#" className="woocommerce-checkout mt-40" onSubmit={handlePlaceOrder}>
               <div className="row">
                 <div className="col-lg-7">
                   <div className="woocommerce-checkout__form">
@@ -355,7 +549,46 @@ export default function CheckoutPage() {
                           name="email"
                           value={formData.email}
                           onChange={handleInputChange}
+                          style={{
+                            borderColor: emailExists ? '#dc3545' : formData.email && !checkingEmail ? '#28a745' : undefined
+                          }}
                         />
+                        {checkingEmail && formData.email && (
+                          <div style={{ 
+                            fontSize: '12px', 
+                            color: '#6c757d', 
+                            marginTop: '5px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px'
+                          }}>
+                            <i className="fas fa-spinner fa-spin"></i> Checking email...
+                          </div>
+                        )}
+                        {!checkingEmail && emailExists && (
+                          <div style={{ 
+                            fontSize: '12px', 
+                            color: '#dc3545', 
+                            marginTop: '5px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px'
+                          }}>
+                            <i className="fas fa-exclamation-circle"></i> This email is already registered. <Link href="/login" style={{ color: '#dc3545', textDecoration: 'underline' }}>Login here</Link>
+                          </div>
+                        )}
+                        {!checkingEmail && !emailExists && formData.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
+                          <div style={{ 
+                            fontSize: '12px', 
+                            color: '#28a745', 
+                            marginTop: '5px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px'
+                          }}>
+                            <i className="fas fa-check-circle"></i> Email available
+                          </div>
+                        )}
                       </div>
                       <div className="col-12 form-group">
                         <select className="form-select" defaultValue="IN">
@@ -417,15 +650,65 @@ export default function CheckoutPage() {
                         <input
                           type="checkbox"
                           id="accountNewCreate"
-                          checked={Boolean(user)}
-                          disabled={Boolean(user)}
-                          onChange={(event) => {
-                            if (event.target.checked && !user) {
-                              router.push("/login?redirect=/checkout&mode=signup");
-                            }
-                          }}
+                          checked={createAccount || Boolean(user)}
+                          disabled={Boolean(user) || emailExists}
+                          onChange={(event) => setCreateAccount(event.target.checked)}
                         />
-                        <label htmlFor="accountNewCreate">Create an account for later use</label>
+                        <label htmlFor="accountNewCreate">
+                          Send login credentials to my email
+                        </label>
+                        {emailExists && !user && (
+                          <div style={{
+                            marginTop: '8px',
+                            padding: '10px',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            backgroundColor: '#f8d7da',
+                            color: '#721c24',
+                            border: '1px solid #f5c6cb'
+                          }}>
+                            ⚠️ Email already registered. Account creation is disabled. Please <Link href="/login" style={{ color: '#721c24', textDecoration: 'underline', fontWeight: 'bold' }}>login</Link> or use a different email.
+                          </div>
+                        )}
+                        {!emailExists && createAccount && !user && (
+                          <div style={{
+                            marginTop: '8px',
+                            padding: '10px',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            backgroundColor: '#e7f3ff',
+                            color: '#004085',
+                            border: '1px solid #b8daff'
+                          }}>
+                            ℹ️ A random password will be generated and sent to your email after placing the order.
+                          </div>
+                        )}
+                        {!emailExists && !createAccount && !user && (
+                          <div style={{
+                            marginTop: '8px',
+                            padding: '10px',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            backgroundColor: '#fff3cd',
+                            color: '#856404',
+                            border: '1px solid #ffeaa7'
+                          }}>
+                            ℹ️ Your phone number will be used as the password.
+                          </div>
+                        )}
+                        {accountCreationMessage && (
+                          <div style={{
+                            marginTop: '8px',
+                            padding: '10px',
+                            borderRadius: '4px',
+                            fontSize: '13px',
+                            backgroundColor: '#d4edda',
+                            color: '#155724',
+                            border: '1px solid #c3e6cb'
+                          }}>
+                            {accountCreationMessage}
+                          </div>
+                        )}
                       </div>
                       <p id="ship-to-different-address">
                         <input
@@ -580,7 +863,7 @@ export default function CheckoutPage() {
                             checked={paymentMethod === "bacs"}
                             onChange={() => setPaymentMethod("bacs")}
                           />
-                          <label htmlFor="payment_method_bacs">🏦 Direct Bank Transfer</label>
+                          {/* <label htmlFor="payment_method_bacs">🏦 Direct Bank Transfer</label> */}
                           {paymentMethod === "bacs" && (
                             <div style={{ 
                               fontSize: '12px', 
@@ -595,8 +878,8 @@ export default function CheckoutPage() {
                       </ul>
                       <div className="form-row place-order">
                         {status && <p style={{ color: "#ffd6d6", marginBottom: 12 }}>{status}</p>}
-                        <button type="submit" className="vs-btn style2" disabled={busy}>
-                          {busy ? "Placing Order..." : "Place Order"}
+                        <button type="submit" className="vs-btn style2" disabled={busy || (paymentMethod === "ndps" && !scriptLoaded)}>
+                          {busy ? "Placing Order..." : paymentMethod === "ndps" && !scriptLoaded ? "Loading Payment..." : "Place Order"}
                         </button>
                       </div>
                     </div>
@@ -604,53 +887,6 @@ export default function CheckoutPage() {
                 </div>
               </div>
             </form>
-          )}
-
-          {/* NDPS Payment Component */}
-          {showPayment && createdOrder && (
-            <div className="row justify-content-center" style={{ marginTop: '40px' }}>
-              <div className="col-lg-6">
-                <div style={{ 
-                  backgroundColor: '#fff', 
-                  padding: '40px', 
-                  borderRadius: '10px', 
-                  boxShadow: '0 5px 15px rgba(0,0,0,0.1)',
-                  textAlign: 'center'
-                }}>
-                  <h3 style={{ marginBottom: '20px' }}>Complete Your Payment</h3>
-                  <div style={{ 
-                    backgroundColor: '#f8f9fa', 
-                    padding: '20px', 
-                    borderRadius: '8px', 
-                    marginBottom: '30px' 
-                  }}>
-                    <p><strong>Order:</strong> {createdOrder.number}</p>
-                    <p><strong>Amount:</strong> ₹{orderTotal.toFixed(2)}</p>
-                    <p><strong>Customer:</strong> {createdOrder.customer.name}</p>
-                  </div>
-
-                  <NDPSPayment
-                    orderId={createdOrder.id}
-                    amount={orderTotal}
-                    customerEmail={createdOrder.customer.email}
-                    customerMobile={createdOrder.customer.phone}
-                    onSuccess={handlePaymentSuccess}
-                    onError={handlePaymentError}
-                  />
-
-                  <div style={{ marginTop: '20px' }}>
-                    <button 
-                      onClick={() => setShowPayment(false)}
-                      className="vs-btn style2"
-                      style={{ fontSize: '14px' }}
-                    >
-                      ← Back to Order Details
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
       {/* Checkout Area End */}

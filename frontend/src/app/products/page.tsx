@@ -380,7 +380,8 @@ export default function ProductsPage() {
                                 style={{ 
                                   width: "100%", 
                                   height: "100%", 
-                                  objectFit: "cover",
+                                  objectFit: "contain",
+                                  padding: "10px",
                                   borderRadius: "8px"
                                 }}
                               />
@@ -427,7 +428,7 @@ export default function ProductsPage() {
                         <div className="vs-product product-style1">
                           <div className="product-img">
                             <Link href={`/products/${product.id}`}>
-                              <img src={product.image} alt={product.name} className="img w-100" style={{ height: "230px", objectFit: "cover" }} />
+                              <img src={product.image} alt={product.name} className="img w-100" style={{ height: "230px", objectFit: "contain", padding: "10px" }} />
                             </Link>
                             {product.stock <= 0 && <span className="product-tag2" style={{ background: "var(--danger)" }}>Out of Stock</span>}
                             {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ background: "var(--accent)" }}>Limited Stock</span>}

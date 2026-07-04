@@ -46,6 +46,9 @@ const NDPS_CONFIG = {
 const isProduction = process.env.NODE_ENV === 'production';
 const config = isProduction ? NDPS_CONFIG.PROD : NDPS_CONFIG.UAT;
 
+// Frontend URL for redirects (from CORS_ORIGIN environment variable)
+const frontendUrl = (process.env.CORS_ORIGIN || 'http://localhost:3000').replace(/\/$/, ''); // Remove trailing slash
+
 // AES-256-CBC Configuration (as per working implementation)
 const algorithm = 'aes-256-cbc';
 const iv = Buffer.from([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 'utf8');
@@ -701,7 +704,7 @@ async function handleNDPSPopupResponse(req, res, helpers) {
 
     if (!encryptedResponse) {
       console.log('No encrypted data in NDPS popup response');
-      res.writeHead(302, { 'Location': 'http://localhost:3000/checkout?payment=failed' });
+      res.writeHead(302, { 'Location': `${frontendUrl}/checkout?payment=failed` });
       res.end();
       return;
     }
@@ -719,7 +722,7 @@ async function handleNDPSPopupResponse(req, res, helpers) {
     } catch (decryptError) {
       console.error('NDPS Response decryption failed:', decryptError);
       // Redirect to checkout with error
-      return res.writeHead(302, { 'Location': 'http://localhost:3000/checkout?payment=failed' });
+      return res.writeHead(302, { 'Location': `${frontendUrl}/checkout?payment=failed` });
       res.end();
     }
 
@@ -727,7 +730,7 @@ async function handleNDPSPopupResponse(req, res, helpers) {
     // Note: Popup response sends object directly, not array
     if (!responseData.payInstrument) {
       console.error('Invalid response format - expected payInstrument');
-      return res.writeHead(302, { 'Location': 'http://localhost:3000/checkout?payment=failed' });
+      return res.writeHead(302, { 'Location': `${frontendUrl}/checkout?payment=failed` });
       res.end();
     }
 
@@ -741,7 +744,7 @@ async function handleNDPSPopupResponse(req, res, helpers) {
 
     if (!transaction) {
       console.error('No transaction found in response');
-      return res.writeHead(302, { 'Location': 'http://localhost:3000/checkout?payment=failed' });
+      return res.writeHead(302, { 'Location': `${frontendUrl}/checkout?payment=failed` });
       res.end();
     }
 
@@ -764,7 +767,7 @@ async function handleNDPSPopupResponse(req, res, helpers) {
     console.log('- Total Amount:', totalAmount);
 
     if (!merchTxnId) {
-      return res.writeHead(302, { 'Location': 'http://localhost:3000/checkout?payment=failed' });
+      return res.writeHead(302, { 'Location': `${frontendUrl}/checkout?payment=failed` });
       res.end();
     }
 
@@ -779,7 +782,7 @@ async function handleNDPSPopupResponse(req, res, helpers) {
           console.error('Signature mismatch!');
           console.error('Received:', receivedSignature);
           console.error('Calculated:', calculatedSignature);
-          return res.writeHead(302, { 'Location': 'http://localhost:3000/checkout?payment=failed' });
+          return res.writeHead(302, { 'Location': `${frontendUrl}/checkout?payment=failed` });
           res.end();
         }
         console.log('✅ Signature verified successfully');
@@ -797,22 +800,22 @@ async function handleNDPSPopupResponse(req, res, helpers) {
 
     if (paymentRows.length === 0) {
       console.log('Payment record not found for:', merchTxnId);
-      return res.writeHead(302, { 'Location': 'http://localhost:3000/checkout?payment=failed' });
+      return res.writeHead(302, { 'Location': `${frontendUrl}/checkout?payment=failed` });
       res.end();
     }
 
     const payment = paymentRows[0];
     let newStatus = 'pending';
-    let redirectUrl = 'http://localhost:3000/checkout?payment=failed';
+    let redirectUrl = `${frontendUrl}/checkout?payment=failed`;
 
     // Map status code to payment status
     if (statusCode === 'OTS0000') {
       newStatus = 'paid';
-      redirectUrl = `http://localhost:3000/checkout?orderNumber=${payment.order_id}&success=true`;
+      redirectUrl = `${frontendUrl}/checkout?orderNumber=${payment.order_id}&success=true`;
       console.log('✅ Payment successful');
     } else {
       newStatus = 'failed';
-      redirectUrl = 'http://localhost:3000/checkout?payment=failed';
+      redirectUrl = `${frontendUrl}/checkout?payment=failed`;
       console.log('❌ Payment failed:', statusMessage);
     }
 
@@ -850,7 +853,7 @@ async function handleNDPSPopupResponse(req, res, helpers) {
 
   } catch (error) {
     console.error('NDPS Popup Response handling error:', error);
-    res.writeHead(302, { 'Location': 'http://localhost:3000/checkout?payment=failed' });
+    res.writeHead(302, { 'Location': `${frontendUrl}/checkout?payment=failed` });
     res.end();
   }
 }

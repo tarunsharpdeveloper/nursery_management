@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useToast } from "./ToastContext";
 
 export interface CartItem {
   id: number;
@@ -34,6 +35,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const { showToast } = useToast();
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -56,35 +58,43 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [cartItems, isLoaded]);
 
   const addToCart = (product: any, qty: number) => {
-    setCartItems((prev) => {
-      const cartKey = product.cartKey || String(product.id);
-      const existing = prev.find((item) => (item.cartKey || String(item.id)) === cartKey);
-      const limit = product.available_quantity || 99;
-      if (existing) {
-        const newQty = Math.min(limit, existing.quantity + qty);
-        return prev.map((item) =>
+    const cartKey = product.cartKey || String(product.id);
+    const existing = cartItems.find((item) => (item.cartKey || String(item.id)) === cartKey);
+    const limit = product.available_quantity || 99;
+    
+    if (existing) {
+      const newQty = Math.min(limit, existing.quantity + qty);
+      
+      setCartItems((prev) =>
+        prev.map((item) =>
           (item.cartKey || String(item.id)) === cartKey ? { ...item, quantity: newQty } : item
-        );
-      } else {
-        return [
-          ...prev,
-          {
-            id: product.id,
-            cartKey,
-            variant_id: product.variant_id || null,
-            variant_label: product.variant_label || null,
-            name: product.name,
-            category: product.category || "General",
-            selling_price: Number(product.selling_price || product.price || 0),
-            actual_price: Number(product.actual_price || product.price || 0),
-            photo_url: product.photo_url || product.image || null,
-            quantity: Math.min(limit, qty),
-            available_quantity: limit,
-            unit: product.unit || null,
-          },
-        ];
-      }
-    });
+        )
+      );
+      
+      // Show toast after state update
+      showToast(`Updated ${product.name} quantity to ${newQty}`, "success");
+    } else {
+      setCartItems((prev) => [
+        ...prev,
+        {
+          id: product.id,
+          cartKey,
+          variant_id: product.variant_id || null,
+          variant_label: product.variant_label || null,
+          name: product.name,
+          category: product.category || "General",
+          selling_price: Number(product.selling_price || product.price || 0),
+          actual_price: Number(product.actual_price || product.price || 0),
+          photo_url: product.photo_url || product.image || null,
+          quantity: Math.min(limit, qty),
+          available_quantity: limit,
+          unit: product.unit || null,
+        },
+      ]);
+      
+      // Show toast after state update
+      showToast(`${product.name} added to cart!`, "success");
+    }
   };
 
   const removeFromCart = (cartKey: string) => {
@@ -105,6 +115,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clearCart = () => {
     setCartItems([]);
+    localStorage.removeItem("awantika_cart"); // Also clear from localStorage
   };
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);

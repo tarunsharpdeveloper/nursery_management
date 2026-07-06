@@ -558,7 +558,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          <div className="row">
+          <div className="row justify-content-center">
             {products.slice(0, 8).map((prod) => (
               <div className="col-lg-3 col-md-6" key={prod.id}>
                 <div className="vs-product product-style1">

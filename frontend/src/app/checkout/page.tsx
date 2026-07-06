@@ -56,6 +56,10 @@ export default function CheckoutPage() {
         setPaymentSuccess(true);
         setOrderId(orderNumber);
         setIsSubmitted(true);
+        
+        // Clear cart and localStorage
+        clearCart();
+        
         // Clean URL
         window.history.replaceState({}, document.title, '/checkout');
       } else if (failed === 'failed') {
@@ -64,7 +68,8 @@ export default function CheckoutPage() {
         window.history.replaceState({}, document.title, '/checkout');
       }
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   // Load AtomPaynetz script dynamically
   useEffect(() => {
@@ -352,8 +357,9 @@ export default function CheckoutPage() {
       // Handle different payment methods
       if (paymentMethod === "ndps") {
         // Call handlePayment directly to open payment popup
-        clearCart(); // Clear cart as order is created
+        // DON'T clear cart yet - wait for payment success
         await handlePayment(response.orderId, total, formData.email, formData.phone);
+        // Cart will be cleared on successful payment return
       } else {
         // For other payment methods (COD, bank transfer, etc.)
         setOrderId(response.orderNumber);
@@ -373,7 +379,11 @@ export default function CheckoutPage() {
   if (isSubmitted) {
     return (
       <main>
-        <section className="z-index-common breadcumb-wrapper" style={{ backgroundImage: "url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuwB_fJjOi4hX4YlC-mm76lRdTPTXJEMgZJM0HdFEaNcfOcC_V1EG6OQk&s=10')", backgroundSize: "cover", backgroundPosition: "center" }}>
+        <section className="z-index-common breadcumb-wrapper" style={{ 
+          backgroundImage: "url('https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=1920&q=80')", 
+          backgroundSize: "cover", 
+          backgroundPosition: "center" 
+        }}>
           <div className="container">
             <div className="breadcumb-content">
               <h1 className="breadcumb-title">Order Confirmed</h1>
@@ -381,80 +391,291 @@ export default function CheckoutPage() {
           </div>
         </section>
 
-        <section className="space space-extra-bottom">
-          <div className="container" style={{ textAlign: "center", padding: "80px 20px" }}>
-            {/* Payment Success Banner */}
-            {paymentSuccess && (
-              <div style={{
-                backgroundColor: '#d4edda',
-                border: '2px solid #28a745',
-                borderRadius: '8px',
-                padding: '20px',
-                marginBottom: '40px',
-                textAlign: 'left'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  <i 
-                    className="fal fa-check-circle" 
-                    style={{ fontSize: '32px', color: '#28a745', flexShrink: 0 }}
-                  ></i>
-                  <div>
-                    <h4 style={{ color: '#155724', margin: '0 0 5px 0' }}>✅ Payment Received Successfully!</h4>
-                    <p style={{ color: '#155724', margin: 0, fontSize: '14px' }}>
-                      Your payment has been processed and your order is confirmed.
+        <section className="space space-extra-bottom" style={{ background: "linear-gradient(180deg, #f8fef5 0%, #ffffff 100%)" }}>
+          <div className="container">
+            <div className="row justify-content-center">
+              <div className="col-lg-8 col-xl-7">
+                {/* Success Card Container */}
+                <div style={{
+                  background: "#ffffff",
+                  borderRadius: "20px",
+                  boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
+                  padding: "50px 40px",
+                  textAlign: "center",
+                  border: "1px solid #e8f5e3"
+                }}>
+                  
+                  {/* Payment Success Banner */}
+                  {paymentSuccess && (
+                    <div style={{
+                      background: "linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)",
+                      border: "2px solid #28a745",
+                      borderRadius: "12px",
+                      padding: "20px 25px",
+                      marginBottom: "35px",
+                      textAlign: "left",
+                      boxShadow: "0 4px 12px rgba(40, 167, 69, 0.15)"
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{
+                          width: "50px",
+                          height: "50px",
+                          borderRadius: "50%",
+                          background: "#28a745",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          boxShadow: "0 4px 12px rgba(40, 167, 69, 0.3)"
+                        }}>
+                          <i 
+                            className="fal fa-check" 
+                            style={{ fontSize: '24px', color: '#ffffff' }}
+                          ></i>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <h4 style={{ 
+                            color: '#155724', 
+                            margin: '0 0 5px 0',
+                            fontSize: '18px',
+                            fontWeight: '700'
+                          }}>
+                            Payment Received Successfully!
+                          </h4>
+                          <p style={{ color: '#155724', margin: 0, fontSize: '14px', opacity: 0.9 }}>
+                            Your payment has been processed and confirmed by our payment gateway.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Payment Error Banner */}
+                  {paymentError && (
+                    <div style={{
+                      background: "linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%)",
+                      border: "2px solid #dc3545",
+                      borderRadius: "12px",
+                      padding: "20px 25px",
+                      marginBottom: "35px",
+                      textAlign: "left",
+                      boxShadow: "0 4px 12px rgba(220, 53, 69, 0.15)"
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{
+                          width: "50px",
+                          height: "50px",
+                          borderRadius: "50%",
+                          background: "#dc3545",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          boxShadow: "0 4px 12px rgba(220, 53, 69, 0.3)"
+                        }}>
+                          <i 
+                            className="fal fa-exclamation-triangle" 
+                            style={{ fontSize: '24px', color: '#ffffff' }}
+                          ></i>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <h4 style={{ 
+                            color: '#721c24', 
+                            margin: '0 0 5px 0',
+                            fontSize: '18px',
+                            fontWeight: '700'
+                          }}>
+                            Payment Failed
+                          </h4>
+                          <p style={{ color: '#721c24', margin: 0, fontSize: '14px', opacity: 0.9 }}>
+                            {paymentError}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Success Icon */}
+                  <div style={{
+                    width: "100px",
+                    height: "100px",
+                    margin: "0 auto 25px",
+                    background: "linear-gradient(135deg, #2d5016 0%, #4a7c2e 100%)",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 10px 30px rgba(45, 80, 22, 0.25)",
+                    animation: "pulse 2s ease-in-out infinite"
+                  }}>
+                    <i
+                      className="fal fa-badge-check"
+                      style={{ fontSize: "50px", color: "#ffffff" }}
+                    ></i>
+                  </div>
+
+                  {/* Main Heading */}
+                  <h2 style={{ 
+                    marginBottom: "15px",
+                    fontSize: "32px",
+                    fontWeight: "800",
+                    color: "#2d5016",
+                    letterSpacing: "-0.5px"
+                  }}>
+                    Thank You for Your Order!
+                  </h2>
+
+                  {/* Subheading */}
+                  <p style={{ 
+                    color: "#6b8e23", 
+                    fontSize: "18px", 
+                    marginBottom: "15px",
+                    fontWeight: "500"
+                  }}>
+                    Your order has been placed successfully
+                  </p>
+
+                  {/* Order ID Card */}
+                  <div style={{
+                    background: "linear-gradient(135deg, #f8fef5 0%, #e8f5e3 100%)",
+                    border: "2px solid #c3e6cb",
+                    borderRadius: "12px",
+                    padding: "20px",
+                    margin: "25px 0",
+                    display: "inline-block",
+                    minWidth: "300px"
+                  }}>
+                    <p style={{ 
+                      fontSize: "14px", 
+                      color: "#6b8e23", 
+                      margin: "0 0 8px 0",
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      fontWeight: "600"
+                    }}>
+                      Order ID
+                    </p>
+                    <p style={{ 
+                      fontSize: "24px", 
+                      fontWeight: "800", 
+                      margin: 0,
+                      color: "#2d5016",
+                      fontFamily: "monospace",
+                      letterSpacing: "1px"
+                    }}>
+                      {orderId}
                     </p>
                   </div>
-                </div>
-              </div>
-            )}
 
-            {/* Payment Error Banner */}
-            {paymentError && (
-              <div style={{
-                backgroundColor: '#f8d7da',
-                border: '2px solid #f5c6cb',
-                borderRadius: '8px',
-                padding: '20px',
-                marginBottom: '40px',
-                textAlign: 'left'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  <i 
-                    className="fal fa-exclamation-circle" 
-                    style={{ fontSize: '32px', color: '#dc3545', flexShrink: 0 }}
-                  ></i>
-                  <div>
-                    <h4 style={{ color: '#721c24', margin: '0 0 5px 0' }}>❌ Payment Failed</h4>
-                    <p style={{ color: '#721c24', margin: 0, fontSize: '14px' }}>
-                      {paymentError}
+                  {/* Description */}
+                  <p style={{ 
+                    color: "#666", 
+                    fontSize: "15px",
+                    lineHeight: "1.8",
+                    margin: "30px auto",
+                    maxWidth: "500px"
+                  }}>
+                    We have received your order and are preparing your plants/seeds for shipment. 
+                    A confirmation email has been sent, and our team will get in touch with you shortly.
+                  </p>
+
+                  {/* Divider */}
+                  <div style={{
+                    height: "1px",
+                    background: "linear-gradient(90deg, transparent 0%, #c3e6cb 50%, transparent 100%)",
+                    margin: "35px 0"
+                  }}></div>
+
+                  {/* Action Buttons */}
+                  <div style={{
+                    display: "flex",
+                    gap: "15px",
+                    justifyContent: "center",
+                    flexWrap: "wrap",
+                    marginTop: "30px"
+                  }}>
+                    <Link 
+                      href="/my-orders" 
+                      className="vs-btn"
+                      style={{
+                        background: "linear-gradient(135deg, #2d5016 0%, #4a7c2e 100%)",
+                        border: "none",
+                        padding: "14px 30px",
+                        fontSize: "15px",
+                        fontWeight: "600",
+                        boxShadow: "0 4px 15px rgba(45, 80, 22, 0.3)",
+                        transition: "all 0.3s ease"
+                      }}
+                    >
+                      <i className="fal fa-box-check" style={{ marginRight: "8px" }}></i>
+                      Track Order
+                    </Link>
+                    <Link 
+                      href="/products" 
+                      className="vs-btn style2"
+                      style={{
+                        padding: "14px 30px",
+                        fontSize: "15px",
+                        fontWeight: "600"
+                      }}
+                    >
+                      <i className="fal fa-shopping-bag" style={{ marginRight: "8px" }}></i>
+                      Continue Shopping
+                    </Link>
+                  </div>
+
+                  {/* Support Info */}
+                  <div style={{
+                    marginTop: "40px",
+                    padding: "20px",
+                    background: "#f8f9fa",
+                    borderRadius: "10px",
+                    textAlign: "left"
+                  }}>
+                    <p style={{
+                      fontSize: "13px",
+                      color: "#666",
+                      margin: "0 0 10px 0",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px"
+                    }}>
+                      <i className="fal fa-info-circle" style={{ color: "#6b8e23" }}></i>
+                      <strong>Need Help?</strong>
+                    </p>
+                    <p style={{
+                      fontSize: "13px",
+                      color: "#666",
+                      margin: 0,
+                      lineHeight: "1.6"
+                    }}>
+                      If you have any questions about your order, please contact our support team at{" "}
+                      <a href="tel:+918085263020" style={{ color: "#2d5016", fontWeight: "600", textDecoration: "none" }}>
+                        +91 80852 63020
+                      </a>
+                      {" "}or email us.
                     </p>
                   </div>
+
                 </div>
               </div>
-            )}
-
-            <i
-              className="fal fa-badge-check"
-              style={{ fontSize: "70px", color: "var(--brand)", marginBottom: "25px", display: "block" }}
-            ></i>
-            <h2 style={{ marginBottom: "15px" }}>Thank you for your order!</h2>
-            <p style={{ color: "var(--muted)", fontSize: "18px", marginBottom: "10px" }}>
-              Your order has been placed successfully.
-            </p>
-            <p style={{ fontSize: "16px", fontWeight: "600", marginBottom: "30px" }}>
-              Order ID: <span style={{ color: "var(--brand)" }}>{orderId}</span>
-            </p>
-            <p style={{ color: "var(--muted)", maxWidth: "600px", margin: "0 auto 40px auto", lineHeight: "1.7" }}>
-              We have received your details and are preparing your plants/seeds for shipment. A confirmation email has been sent, and our team will get in touch with you shortly.
-            </p>
-            <Link href="/products" className="vs-btn style2">
-              Continue Shopping
-            </Link>
-            <Link href="/my-orders" className="vs-btn" style={{ marginLeft: 12 }}>
-              Track Order
-            </Link>
+            </div>
           </div>
         </section>
+
+        {/* Add CSS animation */}
+        <style jsx>{`
+          @keyframes pulse {
+            0%, 100% {
+              transform: scale(1);
+              box-shadow: 0 10px 30px rgba(45, 80, 22, 0.25);
+            }
+            50% {
+              transform: scale(1.05);
+              box-shadow: 0 15px 40px rgba(45, 80, 22, 0.35);
+            }
+          }
+        `}</style>
       </main>
     );
   }
@@ -646,70 +867,74 @@ export default function CheckoutPage() {
                           title="Phone number must be exactly 10 digits."
                         />
                       </div>
-                      <div className="col-12 form-group">
-                        <input
-                          type="checkbox"
-                          id="accountNewCreate"
-                          checked={createAccount || Boolean(user)}
-                          disabled={Boolean(user) || emailExists}
-                          onChange={(event) => setCreateAccount(event.target.checked)}
-                        />
-                        <label htmlFor="accountNewCreate">
-                          Send login credentials to my email
-                        </label>
-                        {emailExists && !user && (
-                          <div style={{
-                            marginTop: '8px',
-                            padding: '10px',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            backgroundColor: '#f8d7da',
-                            color: '#721c24',
-                            border: '1px solid #f5c6cb'
-                          }}>
-                            ⚠️ Email already registered. Account creation is disabled. Please <Link href="/login" style={{ color: '#721c24', textDecoration: 'underline', fontWeight: 'bold' }}>login</Link> or use a different email.
-                          </div>
-                        )}
-                        {!emailExists && createAccount && !user && (
-                          <div style={{
-                            marginTop: '8px',
-                            padding: '10px',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            backgroundColor: '#e7f3ff',
-                            color: '#004085',
-                            border: '1px solid #b8daff'
-                          }}>
-                            ℹ️ A random password will be generated and sent to your email after placing the order.
-                          </div>
-                        )}
-                        {!emailExists && !createAccount && !user && (
-                          <div style={{
-                            marginTop: '8px',
-                            padding: '10px',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            backgroundColor: '#fff3cd',
-                            color: '#856404',
-                            border: '1px solid #ffeaa7'
-                          }}>
-                            ℹ️ Your phone number will be used as the password.
-                          </div>
-                        )}
-                        {accountCreationMessage && (
-                          <div style={{
-                            marginTop: '8px',
-                            padding: '10px',
-                            borderRadius: '4px',
-                            fontSize: '13px',
-                            backgroundColor: '#d4edda',
-                            color: '#155724',
-                            border: '1px solid #c3e6cb'
-                          }}>
-                            {accountCreationMessage}
-                          </div>
-                        )}
-                      </div>
+                      
+                      {/* Only show account creation checkbox if user is NOT logged in */}
+                      {!user && (
+                        <div className="col-12 form-group">
+                          <input
+                            type="checkbox"
+                            id="accountNewCreate"
+                            checked={createAccount}
+                            disabled={emailExists}
+                            onChange={(event) => setCreateAccount(event.target.checked)}
+                          />
+                          <label htmlFor="accountNewCreate">
+                            Send login credentials to my email
+                          </label>
+                          {emailExists && (
+                            <div style={{
+                              marginTop: '8px',
+                              padding: '10px',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              backgroundColor: '#f8d7da',
+                              color: '#721c24',
+                              border: '1px solid #f5c6cb'
+                            }}>
+                              ⚠️ Email already registered. Account creation is disabled. Please <Link href="/login" style={{ color: '#721c24', textDecoration: 'underline', fontWeight: 'bold' }}>login</Link> or use a different email.
+                            </div>
+                          )}
+                          {!emailExists && createAccount && (
+                            <div style={{
+                              marginTop: '8px',
+                              padding: '10px',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              backgroundColor: '#e7f3ff',
+                              color: '#004085',
+                              border: '1px solid #b8daff'
+                            }}>
+                              ℹ️ A random password will be generated and sent to your email after placing the order.
+                            </div>
+                          )}
+                          {!emailExists && !createAccount && (
+                            <div style={{
+                              marginTop: '8px',
+                              padding: '10px',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              backgroundColor: '#fff3cd',
+                              color: '#856404',
+                              border: '1px solid #ffeaa7'
+                            }}>
+                              ℹ️ Your phone number will be used as the password.
+                            </div>
+                          )}
+                          {accountCreationMessage && (
+                            <div style={{
+                              marginTop: '8px',
+                              padding: '10px',
+                              borderRadius: '4px',
+                              fontSize: '13px',
+                              backgroundColor: '#d4edda',
+                              color: '#155724',
+                              border: '1px solid #c3e6cb'
+                            }}>
+                              {accountCreationMessage}
+                            </div>
+                          )}
+                        </div>
+                      )}
                       <p id="ship-to-different-address">
                         <input
                           id="ship-to-different-address-checkbox"

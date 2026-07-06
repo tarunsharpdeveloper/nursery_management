@@ -6,6 +6,7 @@ import { Jost, Epilogue } from "next/font/google";
 import { ChevronDown, Facebook, Instagram, Leaf, Search, ShoppingCart, User } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { Footer } from "@/components/footer";
+import { ToastProvider } from "@/context/ToastContext";
 import { CartProvider } from "@/context/CartContext";
 import { CustomerAuthProvider } from "@/context/CustomerAuthContext";
 import "./globals.css";
@@ -62,13 +63,15 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       </head>
       <body suppressHydrationWarning>
         <CustomerAuthProvider>
-          <CartProvider>
-            <div className="site-shell">
-              <SiteHeader />
-              {children}
-              <Footer />
-            </div>
-          </CartProvider>
+          <ToastProvider>
+            <CartProvider>
+              <div className="site-shell">
+                <SiteHeader />
+                {children}
+                <Footer />
+              </div>
+            </CartProvider>
+          </ToastProvider>
         </CustomerAuthProvider>
       </body>
     </html>

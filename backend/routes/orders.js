@@ -165,7 +165,7 @@ async function listCustomerOrders(req, res, { sendJson }) {
   const [rows] = await pool.query(
     `SELECT o.id, o.order_number, o.status, o.payment_status, o.total_amount, o.created_at,
             c.name AS customer_name, c.phone, c.email,
-            p.name AS product_name, p.product_type, p.photo_url, p.available_quantity,
+            p.name AS product_name, p.product_type, p.photo_url, p.media_urls, p.available_quantity,
             oi.quantity, oi.unit_price, oi.line_total
        FROM orders o
        JOIN customers c ON c.id = o.customer_id
@@ -194,10 +194,25 @@ async function listCustomerOrders(req, res, { sendJson }) {
       acc.push(order);
     }
 
+    // Resolve best image: first from media_urls JSON array, then photo_url
+    const FALLBACK_IMG = "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg";
+    let resolvedImage = row.photo_url || FALLBACK_IMG;
+    if (row.media_urls) {
+      try {
+        const parsed = JSON.parse(row.media_urls);
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]) {
+          resolvedImage = parsed[0];
+        }
+      } catch {
+        // media_urls is a plain string URL
+        if (row.media_urls) resolvedImage = row.media_urls;
+      }
+    }
+
     order.items.push({
       product_name: row.product_name,
       product_type: row.product_type,
-      photo_url: row.photo_url,
+      photo_url: resolvedImage,
       available_quantity: row.available_quantity,
       quantity: row.quantity,
       unit_price: Number(row.unit_price),

@@ -61,7 +61,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 "#17a2b8",
               padding: "16px 20px",
               borderRadius: "12px",
-              boxShadow: "0 8px 24px rgba(0, 0, 0, 0.15)",
+              boxShadow: "rgba(0, 0, 0, 2.15) 0px 2px 10px",
               display: "flex",
               alignItems: "center",
               gap: "12px",
@@ -70,12 +70,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               cursor: "pointer",
               position: "relative",
               overflow: "hidden",
-              border: `2px solid ${
-                toast.type === "success" ? "#2d5016" :
-                toast.type === "error" ? "#dc3545" :
-                toast.type === "warning" ? "#ffc107" :
-                "#17a2b8"
-              }`
+              // border: `2px solid ${
+              //   toast.type === "success" ? "#2d5016" :
+              //   toast.type === "error" ? "#dc3545" :
+              //   toast.type === "warning" ? "#ffc107" :
+              //   "#17a2b8"
+              // }`
             }}
             onClick={() => removeToast(toast.id)}
           >
@@ -143,14 +143,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   toast.type === "error" ? "#dc3545" :
                   toast.type === "warning" ? "#856404" :
                   "#17a2b8",
-                width: "24px",
-                height: "24px",
+                width: "30px",
+                height: "30px",
                 borderRadius: "50%",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "16px",
+                fontSize: "20px",
                 flexShrink: 0,
                 transition: "background 0.2s"
               }}

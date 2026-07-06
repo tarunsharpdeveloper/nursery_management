@@ -72,7 +72,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       );
       
       // Show toast after state update
-      showToast(`Updated ${product.name} quantity to ${newQty}`, "success");
+      showToast(`Item added to cart!`, "success");
     } else {
       setCartItems((prev) => [
         ...prev,
@@ -93,7 +93,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       ]);
       
       // Show toast after state update
-      showToast(`${product.name} added to cart!`, "success");
+      showToast(`Item added to cart!`, "success");
     }
   };
 

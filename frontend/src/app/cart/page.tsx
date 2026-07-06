@@ -63,7 +63,7 @@ export default function CartPage() {
                     <tr>
                       <th className="cart-col-productname">Product Detail</th>
                       <th className="cart-col-price">Price</th>
-                      <th className="cart-col-quantity">Quantity</th>
+                      <th className="cart-col-quantity" style={{ textAlign: 'center' }}>Quantity</th>
                       <th className="cart-col-total">Total</th>
                     </tr>
                   </thead>
@@ -100,9 +100,41 @@ export default function CartPage() {
                               </bdi>
                             </span>
                           </td>
-                          <td data-title="Quantity">
-                            <div className="quantity">
-                              <div className="quantity__field quantity-container">
+                          <td data-title="Quantity" style={{ verticalAlign: 'middle', textAlign: 'center' }}>
+                            <div className="quantity" style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                              <div className="quantity__field quantity-container" style={{ 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                background: '#f8fdf5', 
+                                borderRadius: '30px', 
+                                padding: '4px',
+                                border: '1px solid #c3e6cb',
+                                margin: '0 auto',
+                                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+                              }}>
+                                <button
+                                  type="button"
+                                  className="qty-btn"
+                                  onClick={() => updateQuantity(cartKey, item.quantity - 1)}
+                                  style={{ 
+                                    width: '32px',
+                                    height: '32px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    border: 'none', 
+                                    background: '#ffffff', 
+                                    cursor: 'pointer', 
+                                    borderRadius: '50%', 
+                                    fontSize: '14px',
+                                    color: '#2d5016',
+                                    boxShadow: '0 2px 5px rgba(0,0,0,0.08)',
+                                    transition: 'all 0.2s ease'
+                                  }}
+                                >
+                                  <i className="fal fa-minus"></i>
+                                </button>
                                 <input
                                   type="number"
                                   id={`quantity-${cartKey}`}
@@ -114,23 +146,39 @@ export default function CartPage() {
                                   value={item.quantity}
                                   onChange={(e) => updateQuantity(cartKey, Number(e.target.value))}
                                   title="Qty"
+                                  style={{ 
+                                    width: '46px', 
+                                    border: 'none', 
+                                    background: 'transparent',
+                                    textAlign: 'center',
+                                    fontWeight: '700',
+                                    fontSize: '16px',
+                                    color: '#2d5016',
+                                    padding: '0'
+                                  }}
                                 />
-                                <div className="quantity__buttons">
-                                  <button
-                                    type="button"
-                                    className="quantity-plus qty-btn"
-                                    onClick={() => updateQuantity(cartKey, item.quantity + 1)}
-                                  >
-                                    <i className="fas fa-caret-up"></i>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="quantity-minus qty-btn"
-                                    onClick={() => updateQuantity(cartKey, item.quantity - 1)}
-                                  >
-                                    <i className="fas fa-caret-down"></i>
-                                  </button>
-                                </div>
+                                <button
+                                  type="button"
+                                  className="qty-btn"
+                                  onClick={() => updateQuantity(cartKey, item.quantity + 1)}
+                                  style={{ 
+                                    width: '32px',
+                                    height: '32px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    border: 'none', 
+                                    background: '#ffffff', 
+                                    cursor: 'pointer', 
+                                    borderRadius: '50%', 
+                                    fontSize: '14px',
+                                    color: '#2d5016',
+                                    boxShadow: '0 2px 5px rgba(0,0,0,0.08)',
+                                    transition: 'all 0.2s ease'
+                                  }}
+                                >
+                                  <i className="fal fa-plus"></i>
+                                </button>
                               </div>
                             </div>
                           </td>
@@ -300,6 +348,25 @@ export default function CartPage() {
         </div>
       </div>
       {/* Cart Area End */}
+      
+      <style jsx>{`
+        .qty-input::-webkit-outer-spin-button,
+        .qty-input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        .qty-input[type=number] {
+          -moz-appearance: textfield;
+        }
+        .qty-btn:hover {
+          background: #2d5016 !important;
+          color: white !important;
+          transform: scale(1.05);
+        }
+        .qty-btn:active {
+          transform: scale(0.95);
+        }
+      `}</style>
     </main>
   );
 }

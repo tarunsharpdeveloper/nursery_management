@@ -119,6 +119,38 @@ export function Footer() {
           </a>
         </div>
       </div>
+
+      {/* Developer Credit */}
+      <div style={{
+        gridColumn: '1 / -1',
+        textAlign: 'center',
+        marginTop: '40px',
+        paddingTop: '30px',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+      }}>
+        <p style={{ 
+          color: 'rgba(255, 255, 255, 0.7)', 
+          fontSize: '14px',
+          margin: 0 
+        }}>
+          Designed & Developed By:{' '}
+          <a 
+            href="https://ewayitsolutions.com/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{
+              color: 'var(--accent)',
+              fontWeight: '600',
+              textDecoration: 'none',
+              transition: 'color 0.2s ease'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = '#ffffff'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--accent)'}
+          >
+            Eway IT Solutions Pvt. Ltd.
+          </a>
+        </p>
+      </div>
     </footer>
   );
 }

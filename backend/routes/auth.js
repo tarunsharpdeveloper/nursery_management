@@ -2,7 +2,7 @@ const { z } = require("zod");
 const crypto = require("crypto");
 const { pool } = require("../db");
 const { permissionsForRole, signToken, verifyPassword, hashPassword } = require("../auth");
-const { sendPasswordResetEmail } = require("../email");
+const { sendPasswordResetEmail, sendAccountCreationEmail } = require("../email");
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -296,4 +296,219 @@ async function verifyResetToken(req, res, { readJson, sendJson }) {
   sendJson(res, 200, { message: "Token is valid", valid: true });
 }
 
-module.exports = { login, me, registerCustomer, updateProfile, updatePassword, forgotPassword, resetPassword, verifyResetToken };
+// Generate random password
+function generateRandomPassword(length = 12) {
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  const numbers = '0123456789';
+  const symbols = '!@#$%^&*';
+  const all = uppercase + lowercase + numbers + symbols;
+  
+  let password = '';
+  // Ensure at least one of each type
+  password += uppercase[Math.floor(Math.random() * uppercase.length)];
+  password += lowercase[Math.floor(Math.random() * lowercase.length)];
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  password += symbols[Math.floor(Math.random() * symbols.length)];
+  
+  // Fill the rest randomly
+  for (let i = password.length; i < length; i++) {
+    password += all[Math.floor(Math.random() * all.length)];
+  }
+  
+  // Shuffle the password
+  return password.split('').sort(() => Math.random() - 0.5).join('');
+}
+
+const autoCreateAccountSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits")
+});
+
+async function autoCreateAccount(req, res, { readJson, sendJson }) {
+  const payload = autoCreateAccountSchema.parse(await readJson(req));
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    // Check if user already exists
+    const [existingUsers] = await connection.query(
+      "SELECT id, role FROM users WHERE email = :email LIMIT 1",
+      { email: payload.email }
+    );
+
+    if (existingUsers.length) {
+      // User already exists, just return success without creating duplicate
+      await connection.commit();
+      sendJson(res, 200, { 
+        message: "Account already exists",
+        accountExists: true
+      });
+      return;
+    }
+
+    // Get or create customer role
+    let [customerRoles] = await connection.query("SELECT id FROM roles WHERE name = 'customer' LIMIT 1");
+    if (!customerRoles.length) {
+      const [insertRole] = await connection.query("INSERT INTO roles (name) VALUES ('customer')");
+      customerRoles = [{ id: insertRole.insertId }];
+    }
+    const roleId = Number(customerRoles[0].id);
+
+    // Generate random password
+    const randomPassword = generateRandomPassword(12);
+    const hashedPassword = hashPassword(randomPassword);
+
+    // Create user account
+    const [userResult] = await connection.query(
+      `INSERT INTO users (role_id, role, name, email, password_hash)
+       VALUES (:roleId, 'customer', :name, :email, :passwordHash)`,
+      { roleId, name: payload.name, email: payload.email, passwordHash: hashedPassword }
+    );
+    
+    const userId = userResult.insertId;
+
+    // Create or update customer record
+    const [existingCustomers] = await connection.query(
+      "SELECT id FROM customers WHERE email = :email OR phone = :phone ORDER BY id DESC LIMIT 1",
+      { email: payload.email, phone: payload.phone }
+    );
+
+    if (!existingCustomers.length) {
+      await connection.query(
+        "INSERT INTO customers (name, phone, email, address) VALUES (:name, :phone, :email, '')",
+        { name: payload.name, phone: payload.phone, email: payload.email }
+      );
+    } else {
+      await connection.query(
+        "UPDATE customers SET name = :name WHERE id = :id",
+        { name: payload.name, id: existingCustomers[0].id }
+      );
+    }
+
+    await connection.commit();
+
+    // Send email with credentials (async, don't wait)
+    sendAccountCreationEmail(payload.email, payload.name, randomPassword).catch(err => {
+      console.error('Failed to send account creation email:', err);
+    });
+
+    sendJson(res, 201, {
+      message: "Account created successfully. Login credentials have been sent to your email.",
+      accountCreated: true
+    });
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+const autoCreateAccountWithPhoneSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits")
+});
+
+async function autoCreateAccountWithPhone(req, res, { readJson, sendJson }) {
+  const payload = autoCreateAccountWithPhoneSchema.parse(await readJson(req));
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    // Check if user already exists
+    const [existingUsers] = await connection.query(
+      "SELECT id, role FROM users WHERE email = :email LIMIT 1",
+      { email: payload.email }
+    );
+
+    if (existingUsers.length) {
+      // User already exists, just return success without creating duplicate
+      await connection.commit();
+      sendJson(res, 200, { 
+        message: "Account already exists",
+        accountExists: true
+      });
+      return;
+    }
+
+    // Get or create customer role
+    let [customerRoles] = await connection.query("SELECT id FROM roles WHERE name = 'customer' LIMIT 1");
+    if (!customerRoles.length) {
+      const [insertRole] = await connection.query("INSERT INTO roles (name) VALUES ('customer')");
+      customerRoles = [{ id: insertRole.insertId }];
+    }
+    const roleId = Number(customerRoles[0].id);
+
+    // Use phone number as password (no random generation)
+    const hashedPassword = hashPassword(payload.phone);
+
+    // Create user account
+    const [userResult] = await connection.query(
+      `INSERT INTO users (role_id, role, name, email, password_hash)
+       VALUES (:roleId, 'customer', :name, :email, :passwordHash)`,
+      { roleId, name: payload.name, email: payload.email, passwordHash: hashedPassword }
+    );
+    
+    const userId = userResult.insertId;
+
+    // Create or update customer record
+    const [existingCustomers] = await connection.query(
+      "SELECT id FROM customers WHERE email = :email OR phone = :phone ORDER BY id DESC LIMIT 1",
+      { email: payload.email, phone: payload.phone }
+    );
+
+    if (!existingCustomers.length) {
+      await connection.query(
+        "INSERT INTO customers (name, phone, email, address) VALUES (:name, :phone, :email, '')",
+        { name: payload.name, phone: payload.phone, email: payload.email }
+      );
+    } else {
+      await connection.query(
+        "UPDATE customers SET name = :name WHERE id = :id",
+        { name: payload.name, id: existingCustomers[0].id }
+      );
+    }
+
+    await connection.commit();
+
+    // No email sent - phone is the password
+    sendJson(res, 201, {
+      message: "Account created successfully with phone as password.",
+      accountCreated: true
+    });
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+const checkEmailSchema = z.object({
+  email: z.string().email()
+});
+
+async function checkEmailExists(req, res, { readJson, sendJson }) {
+  const payload = checkEmailSchema.parse(await readJson(req));
+
+  try {
+    const [existingUsers] = await pool.query(
+      "SELECT id FROM users WHERE email = :email LIMIT 1",
+      { email: payload.email }
+    );
+
+    sendJson(res, 200, {
+      exists: existingUsers.length > 0,
+      email: payload.email
+    });
+  } catch (error) {
+    throw error;
+  }
+}
+
+module.exports = { login, me, registerCustomer, updateProfile, updatePassword, forgotPassword, resetPassword, verifyResetToken, autoCreateAccount, autoCreateAccountWithPhone, checkEmailExists };

@@ -129,6 +129,67 @@ export default function MyOrdersPage() {
             <div className="order-card-list">
               {orders.map((order) => (
                 <article className="order-card" key={order.id}>
+                  {/* Payment Status Banner */}
+                  {order.payment_status === "paid" && (
+                    <div style={{
+                      backgroundColor: "#d4edda",
+                      borderLeft: "4px solid #28a745",
+                      padding: "12px 20px",
+                      marginBottom: "20px",
+                      borderRadius: "4px"
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ fontSize: "20px" }}>✓</span>
+                        <div>
+                          <strong style={{ color: "#155724", fontSize: "14px" }}>Payment Successful</strong>
+                          <p style={{ color: "#155724", fontSize: "12px", margin: "2px 0 0 0" }}>
+                            Your payment has been received and confirmed
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {order.payment_status === "failed" && (
+                    <div style={{
+                      backgroundColor: "#f8d7da",
+                      borderLeft: "4px solid #dc3545",
+                      padding: "12px 20px",
+                      marginBottom: "20px",
+                      borderRadius: "4px"
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ fontSize: "20px" }}>✕</span>
+                        <div>
+                          <strong style={{ color: "#721c24", fontSize: "14px" }}>Payment Failed</strong>
+                          <p style={{ color: "#721c24", fontSize: "12px", margin: "2px 0 0 0" }}>
+                            Payment was not successful. Please try again or contact support.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {order.payment_status === "pending" && (
+                    <div style={{
+                      backgroundColor: "#fff3cd",
+                      borderLeft: "4px solid #ffc107",
+                      padding: "12px 20px",
+                      marginBottom: "20px",
+                      borderRadius: "4px"
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ fontSize: "20px" }}>⏱</span>
+                        <div>
+                          <strong style={{ color: "#856404", fontSize: "14px" }}>Payment Pending</strong>
+                          <p style={{ color: "#856404", fontSize: "12px", margin: "2px 0 0 0" }}>
+                            Waiting for payment confirmation
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="order-card-header">
                     <div>
                       <span className="order-number">{order.order_number}</span>
@@ -144,7 +205,40 @@ export default function MyOrdersPage() {
                     </div>
                     <div className="order-card-status">
                       <span className="order-status-pill">{order.status}</span>
-                      <span className="payment-status">{order.payment_status}</span>
+                      <span 
+                        className="payment-status"
+                        style={{
+                          padding: "6px 14px",
+                          borderRadius: "6px",
+                          fontSize: "13px",
+                          fontWeight: "600",
+                          textTransform: "capitalize",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          backgroundColor: 
+                            order.payment_status === "paid" ? "#d4edda" :
+                            order.payment_status === "failed" ? "#f8d7da" :
+                            order.payment_status === "pending" ? "#fff3cd" :
+                            "#e2e3e5",
+                          color: 
+                            order.payment_status === "paid" ? "#155724" :
+                            order.payment_status === "failed" ? "#721c24" :
+                            order.payment_status === "pending" ? "#856404" :
+                            "#383d41",
+                          border: `1px solid ${
+                            order.payment_status === "paid" ? "#c3e6cb" :
+                            order.payment_status === "failed" ? "#f5c6cb" :
+                            order.payment_status === "pending" ? "#ffeaa7" :
+                            "#d6d8db"
+                          }`
+                        }}
+                      >
+                        {order.payment_status === "paid" && <span>✓</span>}
+                        {order.payment_status === "failed" && <span>✕</span>}
+                        {order.payment_status === "pending" && <span>⏱</span>}
+                        {order.payment_status}
+                      </span>
                     </div>
                   </div>
 
@@ -162,9 +256,31 @@ export default function MyOrdersPage() {
                       <div className="order-product" key={`${order.id}-${item.product_name}-${index}`}>
                         <div className="order-product-image">
                           {item.photo_url ? (
-                            <img src={item.photo_url} alt={item.product_name} />
+                            <img 
+                              src={item.photo_url} 
+                              alt={item.product_name}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "contain",
+                                padding: "8px"
+                              }}
+                              onError={(e) => {
+                                // Fallback image if the URL fails to load
+                                e.currentTarget.src = "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg";
+                              }}
+                            />
                           ) : (
-                            <Truck size={24} />
+                            <div style={{
+                              width: "100%",
+                              height: "100%",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              background: "#f5f5f5"
+                            }}>
+                              <Truck size={24} color="#999" />
+                            </div>
                           )}
                         </div>
                         <div className="order-product-main">

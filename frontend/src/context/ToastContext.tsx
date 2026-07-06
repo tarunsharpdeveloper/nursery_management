@@ -53,12 +53,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={toast.id}
             style={{
-              background: 
-                toast.type === "success" ? "linear-gradient(135deg, #2d5016 0%, #4a7c2e 100%)" :
-                toast.type === "error" ? "linear-gradient(135deg, #dc3545 0%, #c82333 100%)" :
-                toast.type === "warning" ? "linear-gradient(135deg, #ffc107 0%, #e0a800 100%)" :
-                "linear-gradient(135deg, #17a2b8 0%, #138496 100%)",
-              color: "#ffffff",
+              background: "#ffffff",
+              color: 
+                toast.type === "success" ? "#2d5016" :
+                toast.type === "error" ? "#dc3545" :
+                toast.type === "warning" ? "#856404" :
+                "#17a2b8",
               padding: "16px 20px",
               borderRadius: "12px",
               boxShadow: "0 8px 24px rgba(0, 0, 0, 0.15)",
@@ -69,7 +69,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               animation: "slideInRight 0.3s ease-out, fadeOut 0.3s ease-out " + ((toast.duration || 3000) - 300) + "ms forwards",
               cursor: "pointer",
               position: "relative",
-              overflow: "hidden"
+              overflow: "hidden",
+              border: `2px solid ${
+                toast.type === "success" ? "#2d5016" :
+                toast.type === "error" ? "#dc3545" :
+                toast.type === "warning" ? "#ffc107" :
+                "#17a2b8"
+              }`
             }}
             onClick={() => removeToast(toast.id)}
           >
@@ -79,9 +85,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               bottom: 0,
               left: 0,
               height: "3px",
-              background: "rgba(255, 255, 255, 0.3)",
+              background: 
+                toast.type === "success" ? "#2d5016" :
+                toast.type === "error" ? "#dc3545" :
+                toast.type === "warning" ? "#ffc107" :
+                "#17a2b8",
               animation: `shrink ${toast.duration || 3000}ms linear forwards`,
-              width: "100%"
+              width: "100%",
+              opacity: 0.3
             }} />
             
             {/* Icon */}
@@ -89,28 +100,32 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               width: "40px",
               height: "40px",
               borderRadius: "50%",
-              background: "rgba(255, 255, 255, 0.2)",
+              background: 
+                toast.type === "success" ? "#2d5016" :
+                toast.type === "error" ? "#dc3545" :
+                toast.type === "warning" ? "#ffc107" :
+                "#17a2b8",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0
             }}>
               {toast.type === "success" && (
-                <i className="fal fa-check" style={{ fontSize: "20px" }}></i>
+                <i className="fal fa-check" style={{ fontSize: "20px", color: "#ffffff" }}></i>
               )}
               {toast.type === "error" && (
-                <i className="fal fa-times" style={{ fontSize: "20px" }}></i>
+                <i className="fal fa-times" style={{ fontSize: "20px", color: "#ffffff" }}></i>
               )}
               {toast.type === "warning" && (
-                <i className="fal fa-exclamation" style={{ fontSize: "20px" }}></i>
+                <i className="fal fa-exclamation" style={{ fontSize: "20px", color: "#ffffff" }}></i>
               )}
               {toast.type === "info" && (
-                <i className="fal fa-info" style={{ fontSize: "20px" }}></i>
+                <i className="fal fa-info" style={{ fontSize: "20px", color: "#ffffff" }}></i>
               )}
             </div>
 
             {/* Message */}
-            <div style={{ flex: 1, fontSize: "14px", fontWeight: "500" }}>
+            <div style={{ flex: 1, fontSize: "14px", fontWeight: "600" }}>
               {toast.message}
             </div>
 
@@ -121,9 +136,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 removeToast(toast.id);
               }}
               style={{
-                background: "rgba(255, 255, 255, 0.2)",
+                background: "rgba(0, 0, 0, 0.05)",
                 border: "none",
-                color: "#ffffff",
+                color: 
+                  toast.type === "success" ? "#2d5016" :
+                  toast.type === "error" ? "#dc3545" :
+                  toast.type === "warning" ? "#856404" :
+                  "#17a2b8",
                 width: "24px",
                 height: "24px",
                 borderRadius: "50%",
@@ -135,8 +154,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 flexShrink: 0,
                 transition: "background 0.2s"
               }}
-              onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.3)"}
-              onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)"}
+              onMouseEnter={(e) => e.currentTarget.style.background = "rgba(0, 0, 0, 0.1)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "rgba(0, 0, 0, 0.05)"}
             >
               ×
             </button>

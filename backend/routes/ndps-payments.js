@@ -794,7 +794,7 @@ async function handleNDPSPopupResponse(req, res, helpers) {
 
     // Find the payment record
     const [paymentRows] = await pool.query(
-      'SELECT * FROM payments WHERE gateway_payment_id = ?',
+      'SELECT p.*, o.order_number FROM payments p JOIN orders o ON p.order_id = o.id WHERE p.gateway_payment_id = ?',
       [merchTxnId]
     );
 
@@ -811,7 +811,7 @@ async function handleNDPSPopupResponse(req, res, helpers) {
     // Map status code to payment status
     if (statusCode === 'OTS0000') {
       newStatus = 'paid';
-      redirectUrl = `${frontendUrl}/checkout?orderNumber=${payment.order_id}&success=true`;
+      redirectUrl = `${frontendUrl}/checkout?orderNumber=${payment.order_number}&success=true`;
       console.log('✅ Payment successful');
     } else {
       newStatus = 'failed';

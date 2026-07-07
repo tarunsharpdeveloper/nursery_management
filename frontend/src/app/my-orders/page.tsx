@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CalendarDays, PackageCheck, Search, Truck } from "lucide-react";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
-import { apiRequest } from "@/lib/api";
+import { apiRequest, getMediaUrl } from "@/lib/api";
 
 type CustomerOrder = {
   id: number;
@@ -257,7 +257,7 @@ export default function MyOrdersPage() {
                         <div className="order-product-image">
                           {item.photo_url ? (
                             <img 
-                              src={item.photo_url} 
+                              src={getMediaUrl(item.photo_url)} 
                               alt={item.product_name}
                               style={{
                                 width: "100%",

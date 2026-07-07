@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { apiRequest } from "@/lib/api";
+import { apiRequest, getMediaUrl } from "@/lib/api";
 import type { Product, ProductType } from "@/lib/types";
 import { useCart } from "@/context/CartContext";
 
@@ -95,7 +95,7 @@ export default function ProductsPage() {
             price: Number(product.selling_price),
             stock: Math.max(0, Number(product.available_quantity)),
             sold: 0,
-            image: resolvedImage,
+            image: getMediaUrl(resolvedImage),
             active: Boolean(product.is_active)
           };
         });

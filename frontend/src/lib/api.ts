@@ -1,5 +1,11 @@
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
+export function getMediaUrl(url: string | null | undefined): string {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:") || url.startsWith("blob:") || url.startsWith("/")) return url;
+  return `/uploads/${url}`;
+}
+
 export type AdminUser = {
   id: number;
   name: string;
@@ -47,7 +53,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {})
     }

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { apiRequest } from "@/lib/api";
+import { apiRequest, getMediaUrl } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -292,21 +292,21 @@ export default function ProductDetailsClient({
     try {
       const parsed = JSON.parse(product.media_urls);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        mediaList = parsed.filter(Boolean) as string[];
+        mediaList = (parsed.filter(Boolean) as string[]).map(url => getMediaUrl(url));
       }
     } catch {
       // media_urls might be a plain URL string
-      if (product.media_urls) mediaList = [product.media_urls];
+      if (product.media_urls) mediaList = [getMediaUrl(product.media_urls)];
     }
   }
 
   // Main image: first uploaded image from media_urls, fallback to photo_url, then default
-  const mainImage = mediaList[0] || product.photo_url || DEFAULT_IMG;
+  const mainImage = mediaList[0] || (product.photo_url ? getMediaUrl(product.photo_url) : DEFAULT_IMG);
 
   // Build the full thumbnail strip from media_urls; if none, fall back to photo_url
   let thumbImages: string[] = mediaList.length > 0
     ? mediaList.slice(0, 4)
-    : [product.photo_url || DEFAULT_IMG];
+    : [product.photo_url ? getMediaUrl(product.photo_url) : DEFAULT_IMG];
 
   const displayImage = thumbImages[activeThumb] || mainImage;
   const variants = product.variants || [];
@@ -898,7 +898,7 @@ export default function ProductDetailsClient({
                       <div className="product-img">
                         <Link href={`/products/${rp.id}`}>
                           <img
-                            src={relatedImage}
+                            src={getMediaUrl(relatedImage)}
                             alt={rp.name}
                             className="img w-100"
                             style={{ objectFit: "cover", height: "220px", width: "100%", display: "block" }}

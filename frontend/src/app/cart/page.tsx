@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import { getMediaUrl } from "@/lib/api";
 
 const DEFAULT_IMG =
   "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=900&q=80";
@@ -79,7 +80,7 @@ export default function CartPage() {
                                 <img
                                   width={91}
                                   height={91}
-                                  src={item.photo_url || DEFAULT_IMG}
+                                  src={getMediaUrl(item.photo_url) || DEFAULT_IMG}
                                   alt={item.name}
                                   style={{ objectFit: "cover", borderRadius: "10px" }}
                                 />

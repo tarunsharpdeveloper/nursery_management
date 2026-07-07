@@ -49,6 +49,7 @@ const {
 
 const { listUsers, createUser, editUser, toggleUser, deleteUser } = require("./routes/users");
 const { listRoles, createRole, editRole, deleteRole } = require("./routes/roles");
+const { uploadFiles } = require("./routes/upload");
 
 const helpers = { readJson, readFormData, sendJson };
 
@@ -130,7 +131,8 @@ const routes = [
   ["POST", "/Response", null, handleNDPSPopupResponse],
   ["GET", "/api/ndps/status/:paymentId", null, checkPaymentStatus],
   ["POST", "/api/ndps/requery", null, requeryTransactionStatus],
-  ["GET", "/api/admin/data-list", null, getUnifiedList]
+  ["GET", "/api/admin/data-list", null, getUnifiedList],
+  ["POST", "/api/upload", null, uploadFiles]
 ];
 
 // Route matcher that handles path parameters
@@ -166,6 +168,40 @@ const server = http.createServer(async (req, res) => {
   }
 
   const url = new URL(req.url, `http://${req.headers.host}`);
+
+  if (req.method === "GET" && url.pathname.startsWith("/uploads/")) {
+    const fs = require("fs");
+    const path = require("path");
+    const filePath = path.join(__dirname, url.pathname);
+    
+    fs.stat(filePath, (err, stats) => {
+      if (err || !stats.isFile()) {
+        notFound(res);
+        return;
+      }
+      
+      const ext = path.extname(filePath).toLowerCase();
+      const mimeTypes = {
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif',
+        '.webp': 'image/webp',
+        '.svg': 'image/svg+xml',
+        '.mp4': 'video/mp4',
+        '.webm': 'video/webm'
+      };
+      const contentType = mimeTypes[ext] || 'application/octet-stream';
+      
+      res.writeHead(200, {
+        "Access-Control-Allow-Origin": process.env.CORS_ORIGIN || "*",
+        "Content-Type": contentType
+      });
+      fs.createReadStream(filePath).pipe(res);
+    });
+    return;
+  }
+
   const match = routes.find(([method, path]) => matchRoute(req.method, url.pathname, method, path));
 
   if (!match) {

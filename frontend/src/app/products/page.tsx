@@ -304,7 +304,7 @@ export default function ProductsPage() {
                       Showing {filteredProducts.length} of {products.length} results
                     </p>
                   </div>
-                  <div className="col-md-auto d-flex align-items-center gap-3">
+                  <div className="col-md-auto d-flex align-items-center gap-3" style={{zIndex:'-1'}}>
                     <div className="woocommerce-ordering">
                       <select
                         className="orderby"

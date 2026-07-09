@@ -69,6 +69,17 @@ export default function ProductsPage() {
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
 
   useEffect(() => {
+    function handleResize() {
+      if (typeof window !== "undefined" && window.innerWidth < 768) {
+        setViewMode("grid");
+      }
+    }
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
     async function loadProducts() {
       try {
         const data = await apiRequest<BackendProduct[]>("/api/products");
@@ -142,6 +153,12 @@ export default function ProductsPage() {
     setSelectedCategory(category);
     const nextUrl = category ? `/products?category=${encodeURIComponent(category)}` : "/products";
     window.history.pushState(null, "", nextUrl);
+    document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const selectType = (type: ProductType | "all") => {
+    setSelectedType(type);
+    document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" });
   };
 
   const filteredProducts = useMemo(() => {
@@ -187,7 +204,7 @@ export default function ProductsPage() {
       </section>
 
       {/* ── Product Area ── */}
-      <section className="space space-extra-bottom">
+      <section className="space space-extra-bottom" id="products-section" style={{ scrollMarginTop: "120px" }}>
         <div className="container">
           <div className="row">
             {/* ── Sidebar (Left Column) ── */}
@@ -255,7 +272,7 @@ export default function ProductsPage() {
                     <li>
                       <a
                         href="#"
-                        onClick={(e) => { e.preventDefault(); setSelectedType("all"); }}
+                        onClick={(e) => { e.preventDefault(); selectType("all"); }}
                         style={selectedType === "all" ? { backgroundColor: "var(--theme-color)", color: "var(--white-color)" } : {}}
                       >
                         All Types
@@ -264,7 +281,7 @@ export default function ProductsPage() {
                     <li>
                       <a
                         href="#"
-                        onClick={(e) => { e.preventDefault(); setSelectedType("plant"); }}
+                        onClick={(e) => { e.preventDefault(); selectType("plant"); }}
                         style={selectedType === "plant" ? { backgroundColor: "var(--theme-color)", color: "var(--white-color)" } : {}}
                       >
                         Plants
@@ -273,7 +290,7 @@ export default function ProductsPage() {
                     <li>
                       <a
                         href="#"
-                        onClick={(e) => { e.preventDefault(); setSelectedType("seed"); }}
+                        onClick={(e) => { e.preventDefault(); selectType("seed"); }}
                         style={selectedType === "seed" ? { backgroundColor: "var(--theme-color)", color: "var(--white-color)" } : {}}
                       >
                         Seeds
@@ -304,7 +321,7 @@ export default function ProductsPage() {
                       Showing {filteredProducts.length} of {products.length} results
                     </p>
                   </div>
-                  <div className="col-md-auto d-flex align-items-center gap-3" style={{zIndex:'-1'}}>
+                  <div className="col-md-auto d-flex align-items-center gap-3" style={{ position: 'relative', zIndex: 10 }}>
                     <div className="woocommerce-ordering">
                       <select
                         className="orderby"
@@ -318,7 +335,7 @@ export default function ProductsPage() {
                         <option value="stock">Sort by stock</option>
                       </select>
                     </div>
-                    <ul className="nav nav-tabs" role="tablist" style={{ borderBottom: 0 }}>
+                    <ul className="nav nav-tabs d-none d-md-flex" role="tablist" style={{ borderBottom: 0 }}>
                       <li className="nav-item" role="presentation">
                         <button
                           className={`nav-link ${viewMode === "list" ? "active" : ""}`}
@@ -333,7 +350,7 @@ export default function ProductsPage() {
                             borderRadius: "50%"
                           }}
                         >
-                          <i className="fad fa-th-list"></i>
+                          <i className="fas fa-list"></i>
                         </button>
                       </li>
                       <li className="nav-item" role="presentation">
@@ -350,7 +367,7 @@ export default function ProductsPage() {
                             borderRadius: "50%"
                           }}
                         >
-                          <i className="fad fa-th"></i>
+                          <i className="fas fa-th"></i>
                         </button>
                       </li>
                     </ul>
@@ -370,51 +387,54 @@ export default function ProductsPage() {
                   <div className="row">
                     {filteredProducts.map((product) => (
                       <div className="col-12 mb-30" key={product.id}>
-                        <div className="vs-product product-style7" style={{ display: "flex", alignItems: "stretch", minHeight: "200px" }}>
-                          <div className="product-img" style={{ position: "relative", width: "300px", height: "300px", flexShrink: 0 }}>
-                            <Link href={`/products/${product.id}`} style={{ width: "100%", height: "100%", display: "block" }}>
+                        <div className="vs-product product-style1 modern-card" style={{ display: "flex", alignItems: "stretch", height: "240px", flexDirection: "row", textAlign: "left" }}>
+                          <div className="product-img" style={{ position: "relative", width: "240px", height: "100%", flexShrink: 0, padding: "20px", background: "#f8fcf6", borderRight: "1px solid rgba(0,0,0,0.02)", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                            <Link href={`/products/${product.id}`} style={{ width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
                               <img
                                 src={product.image}
                                 alt={product.name}
-                                className="img"
+                                className="img-fluid"
                                 style={{ 
-                                  width: "100%", 
-                                  height: "100%", 
-                                  objectFit: "contain",
-                                  padding: "10px",
-                                  borderRadius: "8px"
+                                  height: "180px", 
+                                  width: "auto",
+                                  objectFit: "contain"
                                 }}
                               />
                             </Link>
-                            {product.stock <= 0 && <span className="product-tag2" style={{ position: "absolute", top: "15px", left: "15px", fontSize: "12px", fontWeight: 600, padding: "3px 12px", borderRadius: "15px", background: "var(--danger)", color: "#fff", zIndex: 2, border: "1px solid #fff" }}>Out of Stock</span>}
-                            {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ position: "absolute", top: "15px", left: "15px", fontSize: "12px", fontWeight: 600, padding: "3px 12px", borderRadius: "15px", background: "var(--accent)", color: "#fff", zIndex: 2, border: "1px solid #fff", whiteSpace: "nowrap" }}>Limited Stock</span>}
+                            {product.stock <= 0 && <span className="product-tag2" style={{ position: "absolute", top: "15px", left: "15px", fontSize: "12px", fontWeight: 600, padding: "4px 14px", borderRadius: "20px", background: "var(--danger)", color: "#fff", zIndex: 2, border: "1px solid rgba(255,255,255,0.5)" }}>Out of Stock</span>}
+                            {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ position: "absolute", top: "15px", left: "15px", fontSize: "12px", fontWeight: 600, padding: "4px 14px", borderRadius: "20px", background: "var(--accent)", color: "#fff", zIndex: 2, border: "1px solid rgba(255,255,255,0.5)", whiteSpace: "nowrap" }}>Limited Stock</span>}
                           </div>
-                          <div className="product-content" style={{ flex: 1, padding: "20px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                            <div className="star-rating">
+                          <div className="product-content" style={{ flex: 1, padding: "25px 30px", display: "flex", flexDirection: "column", justifyContent: "flex-start", position: "relative", height: "100%" }}>
+                            <div className="star-rating" style={{ marginBottom: "5px" }}>
                               <span style={{ width: "100%" }}>Rated 5.0 out of 5</span>
                             </div>
-                            <h3 className="product-title">
+                            <h3 className="product-title" style={{ marginBottom: "8px", fontSize: "1.2rem" }}>
                               <Link href={`/products/${product.id}`}>{product.name}</Link>
                             </h3>
-                            <span className="product-weight">{product.category} - {product.type}</span>
-                            <p style={{ fontSize: "14px", color: "var(--muted)", margin: "10px 0" }}>
-                              {product.description}
+                            <p style={{ fontSize: "13px", color: "#777777", margin: "0 0 12px 0", lineHeight: "1.5", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                              {product.description || "No description available."}
                             </p>
-                            <span className="product-price">
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                              <span className="product-cate" style={{ margin: 0, fontSize: "10px", fontWeight: 700 }}>
+                                SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{product.category}</span>
+                              </span>
+                            </div>
+                            
+                            <span className="product-price" style={{ fontSize: "22px", color: "var(--title-color)", fontWeight: "800", display: "flex", alignItems: "center", gap: "10px", position: "absolute", bottom: "22px", left: "30px" }}>
                               Rs. {product.price}
-                              <span style={{ fontSize: "13px", fontWeight: "normal", color: "var(--muted)", marginLeft: "12px" }}>
-                                {product.stock.toLocaleString("en-IN")} in stock
+                              <span style={{ fontSize: "12px", fontWeight: "normal", color: "var(--muted)", padding: "3px 8px", background: "#f4f4f4", borderRadius: "8px" }}>
+                                {product.stock} in stock
                               </span>
                             </span>
-                            <button
-                              type="button"
-                              className="cart-btn"
-                              aria-label="Add to cart"
-                              style={{ border: "none", cursor: "pointer" }}
-                              onClick={() => addToCart(product, 1)}
-                            >
-                              <i className="fas fa-shopping-basket"></i>
-                            </button>
+                            
+                            <div className="product-actions" style={{ right: "30px", bottom: "16px", position: "absolute" }}>
+                              <button type="button" className="vs-btn" onClick={() => addToCart(product, 1)}>
+                                Add to Cart
+                              </button>
+                              <button type="button" className="cart-btn" onClick={() => addToCart(product, 1)} aria-label={`Add ${product.name} to cart`}>
+                                <i className="fas fa-shopping-basket"></i>
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -424,8 +444,8 @@ export default function ProductsPage() {
                   /* ── Grid View (product-style1 from homepage) ── */
                   <div className="row">
                     {filteredProducts.map((product) => (
-                      <div className="col-xl-4 col-md-6 mb-30" key={product.id}>
-                        <div className="vs-product product-style1">
+                      <div className="col-xl-6 col-lg-6 col-md-6 mb-30" key={product.id}>
+                        <div className="vs-product product-style1 modern-card">
                           <div className="product-img">
                             <Link href={`/products/${product.id}`}>
                               <img src={product.image} alt={product.name} className="img w-100" style={{ height: "230px", objectFit: "contain", padding: "10px" }} />
@@ -433,15 +453,39 @@ export default function ProductsPage() {
                             {product.stock <= 0 && <span className="product-tag2" style={{ background: "var(--danger)" }}>Out of Stock</span>}
                             {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ background: "var(--accent)" }}>Limited Stock</span>}
                           </div>
-                          <div className="product-content">
+                          <div className="product-content" style={{ paddingBottom: "40px" }}>
                             <div className="star-rating">
                               <span style={{ width: "100%" }}>Rated 5.0 out of 5</span>
                             </div>
-                            <h3 className="product-title">
+                            <h3 className="product-title" style={{
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              marginBottom: "6px"
+                            }}>
                               <Link href={`/products/${product.id}`}>{product.name}</Link>
                             </h3>
-                            <span className="product-cate">{product.category}</span>
-                            <span className="product-price">Rs. {product.price}</span>
+                            <p style={{
+                              fontSize: "13px",
+                              color: "#777777",
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              marginBottom: "12px",
+                              lineHeight: "1.4"
+                            }}>
+                              {product.description || "No description available."}
+                            </p>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                              <span className="product-cate" style={{ margin: 0, fontSize: "11px", fontWeight: 700 }}>
+                                SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{product.category}</span>
+                              </span>
+                              <span className="product-price">Rs. {product.price}</span>
+                            </div>
                             <div className="product-actions">
                               <button type="button" className="vs-btn" onClick={() => addToCart(product, 1)}>
                                 Add to Cart

@@ -7,6 +7,7 @@ import CreatableSelect from "react-select/creatable";
 import { Save, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/api";
 import Link from "next/link";
+import { useToast } from "@/context/ToastContext";
 
 type Customer = { id: number; name: string; phone?: string; email?: string; address?: string };
 type Variant = { id: number; unit: string; unit_value: string; selling_price: number };
@@ -69,6 +70,7 @@ const selectStyles = {
 
 export default function CreateOrderPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [busy, setBusy] = useState(false);
@@ -189,7 +191,11 @@ export default function CreateOrderPage() {
       });
       router.push("/admin/orders");
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Could not save order");
+      const errorMsg = error instanceof Error ? error.message : "Could not save order";
+      setStatus(errorMsg);
+      if (errorMsg.includes("enough stock")) {
+        showToast(errorMsg, "error", 5000);
+      }
       setBusy(false);
     }
   }

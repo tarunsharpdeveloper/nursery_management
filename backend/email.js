@@ -166,4 +166,137 @@ async function sendAccountCreationEmail(userEmail, userName, password) {
   }
 }
 
-module.exports = { initEmailService, sendPasswordResetEmail, sendAccountCreationEmail };
+async function sendOrderConfirmationEmail(orderData) {
+  if (!transporter) {
+    console.warn(`Order confirmation email not sent to ${orderData.email}: Email service not configured`);
+    return false;
+  }
+
+  try {
+    const itemsHtml = orderData.items.map(item => `
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${item.name}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: center;">${item.quantity}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">₹${item.unitPrice}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">₹${item.quantity * item.unitPrice}</td>
+      </tr>
+    `).join('');
+
+    const mailOptions = {
+      from: `${process.env.EMAIL_FROM_NAME || "Nursery Management"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
+      to: orderData.email,
+      subject: `Order Confirmation - ${orderData.orderNumber}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h2 style="color: #2d5016; margin: 0;">Order Confirmed!</h2>
+            </div>
+            
+            <p>Hello <strong>${orderData.customerName}</strong>,</p>
+            
+            <p>Thank you for shopping with us! We have received your order and are currently processing it. Here are the details of your order:</p>
+            
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0;">
+              <p style="margin: 5px 0;"><strong>Order Number:</strong> ${orderData.orderNumber}</p>
+              <p style="margin: 5px 0;"><strong>Total Amount:</strong> ₹${orderData.totalAmount}</p>
+            </div>
+            
+            <h3 style="color: #2d5016; border-bottom: 2px solid #4CAF50; padding-bottom: 5px;">Order Summary</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+              <thead>
+                <tr style="background-color: #f4f4f4;">
+                  <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Item</th>
+                  <th style="padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">Qty</th>
+                  <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Price</th>
+                  <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsHtml}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3" style="padding: 10px; text-align: right; font-weight: bold;">Grand Total:</td>
+                  <td style="padding: 10px; text-align: right; font-weight: bold; color: #2d5016;">₹${orderData.totalAmount}</td>
+                </tr>
+              </tfoot>
+            </table>
+            
+            <p style="color: #666; font-size: 14px;">We will notify you again once your order is dispatched.</p>
+            
+            <p style="color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;">
+              If you have any questions, please contact our support team.
+            </p>
+            
+            <p style="color: #999; font-size: 12px;">
+              Best regards,<br/>
+              <strong>Nursery Management Team</strong>
+            </p>
+          </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`Order confirmation email sent to ${orderData.email}`);
+    return true;
+  } catch (error) {
+    console.error(`Failed to send order confirmation email to ${orderData.email}:`, error.message);
+    return false;
+  }
+}
+
+async function sendOrderDeliveredEmail(orderData) {
+  if (!transporter) {
+    console.warn(`Order delivered email not sent to ${orderData.email}: Email service not configured`);
+    return false;
+  }
+
+  try {
+    const mailOptions = {
+      from: `${process.env.EMAIL_FROM_NAME || "Nursery Management"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
+      to: orderData.email,
+      subject: `Your Order ${orderData.orderNumber} has been Delivered`,
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h2 style="color: #2d5016; margin: 0;">Order Delivered!</h2>
+            </div>
+            
+            <p>Hello <strong>${orderData.customerName}</strong>,</p>
+            
+            <p>Great news! Your order <strong>${orderData.orderNumber}</strong> has been successfully delivered.</p>
+            
+            <p>We hope you are satisfied with your purchase. If you have any feedback or if there are any issues with your order, please do not hesitate to reach out to us.</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${process.env.CORS_ORIGIN || "http://localhost:3000"}/my-orders" style="background-color: #4CAF50; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                View Order Details
+              </a>
+            </div>
+            
+            <p style="color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;">
+              Thank you for shopping with us!
+            </p>
+            
+            <p style="color: #999; font-size: 12px;">
+              Best regards,<br/>
+              <strong>Nursery Management Team</strong>
+            </p>
+          </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`Order delivered email sent to ${orderData.email}`);
+    return true;
+  } catch (error) {
+    console.error(`Failed to send order delivered email to ${orderData.email}:`, error.message);
+    return false;
+  }
+}
+
+module.exports = { initEmailService, sendPasswordResetEmail, sendAccountCreationEmail, sendOrderConfirmationEmail, sendOrderDeliveredEmail };

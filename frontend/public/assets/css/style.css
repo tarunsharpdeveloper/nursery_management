@@ -12922,7 +12922,7 @@ blockquote.vs-quote .quote-author {
   display: flex;
   position: absolute;
   right: 0.4rem;
-  bottom: 25px;
+  bottom: 22px;
   align-items: center;
 }
 
@@ -12994,7 +12994,7 @@ blockquote.vs-quote .quote-author {
 .product-style4 .product-price,
 .product-style5 .product-price,
 .product-style6 .product-price {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 800;
 }
 

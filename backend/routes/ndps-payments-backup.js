@@ -171,13 +171,171 @@ async function initiateNDPSPayment(req, res, helpers) {
       });
     }
 
-    const [orderRows] = await pool.query(
-      'SELECT * FROM orders WHERE id = ?',
-      [orderId]
+    // NOTE: For the new flow, orderId is just a temporary ID (timestamp)
+    // Real order will be created after payment success
+    console.log('Processing payment initiation for temporary order ID:', orderId);
+
+    // Generate unique merchant transaction ID
+    const merchTxnId = `NURSERY_${orderId}_${Date.now().toString(36)}`;
+    const merchTxnDate = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+    // Create NDPS payment payload (EXACT format from working implementation)
+    const paymentRequest = {
+      payInstrument: {
+        headDetails: {
+          version: config.version,
+          api: config.api,
+          platform: config.platform
+        },
+        merchDetails: {
+          merchId: config.merchId,
+          userId: config.userId,
+          password: config.password,
+          merchTxnId: merchTxnId,
+          merchTxnDate: merchTxnDate
+        },
+        payDetails: {
+          amount: parseFloat(amount).toFixed(2),
+          product: config.product,
+          custAccNo: orderId.toString(),
+          txnCurrency: "INR"
+        },
+        custDetails: {
+          custEmail: customerEmail,
+          custMobile: customerMobile
+        },
+        extras: {
+          udf1: `temp_order_${orderId}`,
+          udf2: "nursery_payment",
+          udf3: config.returnUrl,
+          udf4: "",
+          udf5: ""
+        }
+      }
+    };
+
+    // Convert to JSON string
+    const paymentData = JSON.stringify(paymentRequest);
+    console.log('=== Payment JSON Before Encryption ===');
+    console.log(paymentData);
+    
+    // Encrypt the payment data (using AES-256-CBC with PBKDF2)
+    const encryptedData = encryptData(paymentData);
+    console.log('=== Encryption Complete ===');
+    console.log('Original length:', paymentData.length);
+    console.log('Encrypted length:', encryptedData.length);
+
+    console.log('=== Sending to NTT AUTH API ===');
+    console.log('Merchant ID:', config.merchId);
+    console.log('Merchant Txn ID:', merchTxnId);
+    console.log('Amount:', amount);
+    console.log('Request URL:', config.apiUrl);
+
+    // Call NTT AUTH API (using form-urlencoded format like working implementation)
+    const formBody = `encData=${encryptedData}&merchId=${config.merchId}`;
+    
+    const authResponse = await fetch(config.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cache-Control': 'no-cache'
+      },
+      body: formBody
+    });
+
+    const authResponseText = await authResponse.text();
+    console.log('=== NTT AUTH API Response ===');
+    console.log('Status:', authResponse.status);
+    console.log('Status Text:', authResponse.statusText);
+    console.log('Response Length:', authResponseText.length, 'characters');
+    console.log('Response Content:', authResponseText);
+
+    if (!authResponse.ok) {
+      throw new Error(`NTT AUTH API returned ${authResponse.status}: ${authResponseText}`);
+    }
+
+    if (!authResponseText || authResponseText.length === 0) {
+      throw new Error('Empty response from NTT AUTH API. Please contact NTT DATA support.');
+    }
+
+    // Parse the response (format: merchId=xxx&encData=yyy)
+    let encryptedResponse;
+    
+    if (authResponseText.includes('encData=')) {
+      const parts = authResponseText.split('&');
+      for (const part of parts) {
+        if (part.startsWith('encData=')) {
+          encryptedResponse = part.substring(8); // Remove 'encData=' prefix
+          break;
+        }
+      }
+    } else if (authResponseText.length > 50 && !authResponseText.includes('<')) {
+      // Direct encrypted string
+      encryptedResponse = authResponseText.trim();
+    }
+
+    if (!encryptedResponse) {
+      console.error('Could not extract encrypted data from response');
+      throw new Error(`No encrypted response from NTT AUTH API. Response was: ${authResponseText.substring(0, 200)}`);
+    }
+
+    // Decrypt the response
+    console.log('=== Decrypting Response ===');
+    const decryptedResponse = decryptData(encryptedResponse);
+    console.log('Decrypted response:', decryptedResponse);
+    
+    const responseData = JSON.parse(decryptedResponse);
+    console.log('Parsed response data:', responseData);
+
+    // Check for atomTokenId
+    if (!responseData.atomTokenId) {
+      const statusCode = responseData.responseDetails?.txnStatusCode || 'UNKNOWN';
+      const message = responseData.responseDetails?.txnMessage || 'Unknown error';
+      throw new Error(`Token generation failed (${statusCode}): ${message}`);
+    }
+
+    // Store payment initiation record (without order_id since order doesn't exist yet)
+    const [paymentResult] = await pool.query(
+      `INSERT INTO payments 
+       (order_id, payment_gateway, payment_method, payment_status, amount, gateway_payment_id, remarks, created_at) 
+       VALUES (?, 'ndps', 'online', 'pending', ?, ?, ?, NOW())`,
+      [0, amount, merchTxnId, `Token: ${responseData.atomTokenId} - Temp Order: ${orderId}`]
     );
 
-    if (orderRows.length === 0) {
-      const send = helpers ? helpers.sendJson : sendJson;
+    const paymentId = paymentResult.insertId;
+
+    console.log('=== Preparing Response ===');
+    console.log('Payment ID:', paymentId);
+    console.log('Atom Token ID:', responseData.atomTokenId);
+    console.log('Atom Token ID type:', typeof responseData.atomTokenId);
+    console.log('Merchant ID:', config.merchId);
+    console.log('Return URL:', config.returnUrl);
+
+    // Return token and config for frontend
+    const send = helpers ? helpers.sendJson : sendJson;
+    const responsePayload = {
+      success: true,
+      paymentId: paymentId,
+      atomTokenId: responseData.atomTokenId,
+      merchId: config.merchId,
+      merchTxnId: merchTxnId,
+      customerEmail: customerEmail,
+      customerMobile: customerMobile,
+      returnUrl: config.returnUrl,
+      env: isProduction ? 'prod' : 'uat'
+    };
+    
+    console.log('=== Sending Response to Frontend ===');
+    console.log(JSON.stringify(responsePayload, null, 2));
+    
+    send(res, 200, responsePayload);
+
+  } catch (error) {
+    console.error('NDPS Payment initiation error:', error);
+    const send = helpers ? helpers.sendJson : sendJson;
+    send(res, 500, { error: 'Failed to initiate payment', details: error.message });
+  }
+}
       return send(res, 404, { error: 'Order not found' });
     }
 
@@ -794,7 +952,7 @@ async function handleNDPSPopupResponse(req, res, helpers) {
 
     // Find the payment record
     const [paymentRows] = await pool.query(
-      'SELECT p.*, o.order_number FROM payments p JOIN orders o ON p.order_id = o.id WHERE p.gateway_payment_id = ?',
+      'SELECT * FROM payments WHERE gateway_payment_id = ?',
       [merchTxnId]
     );
 
@@ -811,7 +969,7 @@ async function handleNDPSPopupResponse(req, res, helpers) {
     // Map status code to payment status
     if (statusCode === 'OTS0000') {
       newStatus = 'paid';
-      redirectUrl = `${frontendUrl}/checkout?orderNumber=${payment.order_number}&success=true`;
+      redirectUrl = `${frontendUrl}/checkout?orderNumber=${payment.order_id}&success=true`;
       console.log('✅ Payment successful');
     } else {
       newStatus = 'failed';
@@ -864,4 +1022,165 @@ module.exports = {
   checkPaymentStatus,
   requeryTransactionStatus,
   handleNDPSPopupResponse
+};
+
+
+/**
+ * Create order after successful payment
+ * This endpoint is called after payment gateway confirms successful payment
+ */
+async function createOrderAfterPayment(req, res, helpers) {
+  const connection = await pool.getConnection();
+  
+  try {
+    const send = helpers ? helpers.sendJson : sendJson;
+    const readData = helpers ? helpers.readJson : readJson;
+    const body = await readData(req);
+    
+    const { orderData, paymentData } = body;
+    
+    if (!orderData || !paymentData) {
+      return send(res, 400, { error: 'Missing orderData or paymentData' });
+    }
+
+    await connection.beginTransaction();
+
+    const { hashPassword } = require("../auth");
+
+    // Get customer role
+    const [customerRoles] = await connection.query("SELECT id FROM roles WHERE name = 'customer' LIMIT 1");
+    if (!customerRoles.length) {
+      throw new Error("Customer role is not configured");
+    }
+    const roleId = Number(customerRoles[0].id);
+    
+    // Handle account creation if needed
+    if (orderData.createAccount) {
+      const passwordHash = hashPassword(orderData.customer.phone);
+      
+      const [existingUsers] = await connection.query(
+        "SELECT id, role FROM users WHERE email = :email LIMIT 1",
+        { email: orderData.customer.email }
+      );
+      
+      if (!existingUsers.length) {
+        await connection.query(
+          `INSERT INTO users (role_id, role, name, email, password_hash)
+           VALUES (:roleId, 'customer', :name, :email, :passwordHash)`,
+          { roleId, name: orderData.customer.name, email: orderData.customer.email, passwordHash }
+        );
+      }
+    }
+
+    // Get or create customer
+    const [existingCustomers] = await connection.query(
+      "SELECT id FROM customers WHERE email = :email OR phone = :phone ORDER BY id DESC LIMIT 1",
+      { email: orderData.customer.email, phone: orderData.customer.phone }
+    );
+
+    let customerId = Number(existingCustomers[0]?.id || 0);
+    if (customerId) {
+      await connection.query(
+        `UPDATE customers
+            SET name = :name,
+                phone = :phone,
+                email = :email,
+                address = :address
+          WHERE id = :customerId`,
+        { ...orderData.customer, customerId }
+      );
+    } else {
+      const [customerResult] = await connection.query(
+        "INSERT INTO customers (name, phone, email, address) VALUES (:name, :phone, :email, :address)",
+        orderData.customer
+      );
+      customerId = Number(customerResult.insertId);
+    }
+
+    // Calculate total amount
+    const totalAmount = orderData.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    const orderNumber = `ORD-${Date.now()}`;
+
+    // Create order with 'paid' payment status
+    const [orderResult] = await connection.query(
+      `INSERT INTO orders (customer_id, order_number, order_source, status, payment_status, total_amount)
+       VALUES (:customerId, :orderNumber, 'online', 'received', 'paid', :totalAmount)`,
+      { customerId, orderNumber, totalAmount }
+    );
+    const orderId = Number(orderResult.insertId);
+
+    // Add order items
+    for (const item of orderData.items) {
+      await connection.query(
+        `INSERT INTO order_items (order_id, product_id, variant_id, quantity, unit_price, line_total)
+         VALUES (:orderId, :productId, :variantId, :quantity, :unitPrice, :lineTotal)`,
+        { ...item, orderId, variantId: item.variantId || null, lineTotal: item.quantity * item.unitPrice }
+      );
+
+      // Update stock
+      if (item.variantId) {
+        const [stockResult] = await connection.query(
+          `UPDATE product_variants
+              SET available_quantity = available_quantity - :quantity
+            WHERE id = :variantId AND available_quantity >= :quantity`,
+          item
+        );
+        if (stockResult.affectedRows === 0) {
+          throw new Error("One or more product variants do not have enough stock");
+        }
+      } else {
+        const [stockResult] = await connection.query(
+          `UPDATE products
+              SET available_quantity = available_quantity - :quantity
+            WHERE id = :productId AND available_quantity >= :quantity`,
+          item
+        );
+        if (stockResult.affectedRows === 0) {
+          throw new Error("One or more products do not have enough stock");
+        }
+      }
+
+      // Add to stock ledger
+      await connection.query(
+        `INSERT INTO stock_ledger (product_id, movement_type, quantity_change, reference_type, reference_id, remarks)
+         VALUES (:productId, 'online_order', :quantityChange, 'orders', :orderId, 'Online checkout order - paid')`,
+        { productId: item.productId, quantityChange: -item.quantity, orderId }
+      );
+    }
+
+    // Create payment record
+    await connection.query(
+      `INSERT INTO payments 
+       (order_id, payment_gateway, payment_method, payment_status, amount, gateway_payment_id, paid_at, remarks, created_at) 
+       VALUES (?, 'ndps', 'online', 'paid', ?, ?, NOW(), ?, NOW())`,
+      [orderId, totalAmount, paymentData.merchTxnId, `Payment successful: ${paymentData.atomTxnId || 'N/A'}`]
+    );
+
+    await connection.commit();
+    
+    console.log('✅ Order created after successful payment:', orderNumber);
+    
+    send(res, 201, { 
+      success: true,
+      orderId, 
+      orderNumber,
+      message: 'Order created successfully'
+    });
+
+  } catch (error) {
+    await connection.rollback();
+    console.error('Create order after payment error:', error);
+    const send = helpers ? helpers.sendJson : sendJson;
+    send(res, 500, { error: 'Failed to create order', details: error.message });
+  } finally {
+    connection.release();
+  }
+}
+
+module.exports = { 
+  initiateNDPSPayment, 
+  handleNDPSResponse, 
+  checkPaymentStatus, 
+  requeryTransactionStatus,
+  createOrderAfterPayment
 };

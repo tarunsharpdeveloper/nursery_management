@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { apiRequest } from "@/lib/api";
+import { apiRequest, getMediaUrl } from "@/lib/api";
 import type { Product, ProductType } from "@/lib/types";
 import { useCart } from "@/context/CartContext";
 
@@ -95,7 +95,7 @@ export default function ProductsPage() {
             price: Number(product.selling_price),
             stock: Math.max(0, Number(product.available_quantity)),
             sold: 0,
-            image: resolvedImage,
+            image: getMediaUrl(resolvedImage),
             active: Boolean(product.is_active)
           };
         });
@@ -304,7 +304,7 @@ export default function ProductsPage() {
                       Showing {filteredProducts.length} of {products.length} results
                     </p>
                   </div>
-                  <div className="col-md-auto d-flex align-items-center gap-3">
+                  <div className="col-md-auto d-flex align-items-center gap-3" style={{zIndex:'-1'}}>
                     <div className="woocommerce-ordering">
                       <select
                         className="orderby"

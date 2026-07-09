@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
-import { apiRequest } from "@/lib/api";
+import { apiRequest, getMediaUrl } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 import type { Product } from "@/lib/types";
 
@@ -160,7 +160,7 @@ export default function HomePage() {
             price: Number(product.selling_price),
             stock: Math.max(0, Number(product.available_quantity)),
             sold: 0,
-            image: resolvedImage,
+            image: getMediaUrl(resolvedImage),
             active: Boolean(product.is_active)
           };
         });
@@ -197,10 +197,10 @@ export default function HomePage() {
     if (dbCat && dbCat.photo_urls) {
       try {
         const urls = JSON.parse(dbCat.photo_urls);
-        if (Array.isArray(urls) && urls.length > 0) return urls[0];
-        if (typeof urls === 'string') return urls;
+        if (Array.isArray(urls) && urls.length > 0) return getMediaUrl(urls[0]);
+        if (typeof urls === 'string') return getMediaUrl(urls);
       } catch {
-        return dbCat.photo_urls;
+        return getMediaUrl(dbCat.photo_urls);
       }
     }
     return categoryArt[categoryName] || "/assets/img/cate/c-1-1.png";
@@ -558,7 +558,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          <div className="row">
+          <div className="row justify-content-center">
             {products.slice(0, 8).map((prod) => (
               <div className="col-lg-3 col-md-6" key={prod.id}>
                 <div className="vs-product product-style1">

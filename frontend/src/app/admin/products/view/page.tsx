@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiRequest } from "@/lib/api";
+import { apiRequest, getMediaUrl } from "@/lib/api";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -171,9 +171,9 @@ function ProductDetailContent() {
                     if (urls.length === 0) return <div className="meta" style={{ fontStyle: "italic" }}>No media available</div>;
                     return urls.map((url: string, i: number) => {
                       if (url.startsWith("data:video") || url.match(/\.(mp4|webm)$/)) {
-                        return <video key={i} src={url} controls style={{ width: 120, height: 120, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--line)' }} />;
+                        return <video key={i} src={getMediaUrl(url)} controls style={{ width: 120, height: 120, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--line)' }} />;
                       }
-                      return <img key={i} src={url} alt={`product media ${i + 1}`} style={{ width: 120, height: 120, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--line)' }} />;
+                      return <img key={i} src={getMediaUrl(url)} alt={`product media ${i + 1}`} style={{ width: 120, height: 120, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--line)' }} />;
                     });
                   } catch {
                     return <div className="meta">Invalid media format</div>;

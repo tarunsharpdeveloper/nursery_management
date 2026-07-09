@@ -31,6 +31,12 @@ const fileToBase64 = (file: File): Promise<string> =>
     reader.onerror = error => reject(error);
   });
 
+function getMediaUrl(url: string) {
+  if (!url) return "";
+  if (url.startsWith("http") || url.startsWith("data:") || url.startsWith("blob:") || url.startsWith("/")) return url;
+  return `/uploads/${url}`;
+}
+
 export default function AdminCategoriesPage() {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -121,9 +127,12 @@ export default function AdminCategoriesPage() {
     try {
       let photoUrls = null;
       if (fileInputRef.current?.files?.length) {
-        const files = Array.from(fileInputRef.current.files);
-        const base64s = await Promise.all(files.map(fileToBase64));
-        photoUrls = JSON.stringify(base64s);
+        const formData = new FormData();
+        Array.from(fileInputRef.current.files).forEach(f => formData.append("files", f));
+        const res = await apiRequest<{urls: string[]}>("/api/upload", { method: "POST", body: formData });
+        if (res.urls && res.urls.length > 0) {
+          photoUrls = JSON.stringify(res.urls);
+        }
       }
 
       await apiRequest("/api/categories", {
@@ -154,9 +163,12 @@ export default function AdminCategoriesPage() {
     try {
       let photoUrls = editing.photo_urls;
       if (fileInputRef.current?.files?.length) {
-        const files = Array.from(fileInputRef.current.files);
-        const base64s = await Promise.all(files.map(fileToBase64));
-        photoUrls = JSON.stringify(base64s);
+        const formData = new FormData();
+        Array.from(fileInputRef.current.files).forEach(f => formData.append("files", f));
+        const res = await apiRequest<{urls: string[]}>("/api/upload", { method: "POST", body: formData });
+        if (res.urls && res.urls.length > 0) {
+          photoUrls = JSON.stringify(res.urls);
+        }
       }
 
       await apiRequest("/api/categories", {
@@ -364,10 +376,10 @@ export default function AdminCategoriesPage() {
                   try {
                     const urls = JSON.parse(editing.photo_urls);
                     return (Array.isArray(urls) ? urls : [urls]).map((url, i) => (
-                      <img key={i} src={url} alt="category" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid var(--line)" }} />
+                      <img key={i} src={getMediaUrl(url)} alt="category" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid var(--line)" }} />
                     ));
                   } catch {
-                    return <img src={editing.photo_urls} alt="category" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid var(--line)" }} />;
+                    return <img src={getMediaUrl(editing.photo_urls)} alt="category" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid var(--line)" }} />;
                   }
                 })()}
               </div>

@@ -60,6 +60,12 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+function getMediaUrl(url: string) {
+  if (!url) return "";
+  if (url.startsWith("http") || url.startsWith("data:") || url.startsWith("blob:") || url.startsWith("/")) return url;
+  return `/uploads/${url}`;
+}
+
 function generateId() {
   return Math.random().toString(36).substring(2, 9);
 }
@@ -287,15 +293,26 @@ export default function AdminProductsPage() {
 
     try {
       // Process media
-      const base64Array = [];
+      const finalUrls: string[] = [];
+      const newFiles = mediaItems.filter(m => m.file);
+      let uploadedUrls: string[] = [];
+
+      if (newFiles.length > 0) {
+        const formData = new FormData();
+        newFiles.forEach(m => formData.append("files", m.file as File));
+        const res = await apiRequest<{urls: string[]}>("/api/upload", { method: "POST", body: formData });
+        uploadedUrls = res.urls || [];
+      }
+
+      let uploadIdx = 0;
       for (const item of mediaItems) {
         if (item.file) {
-          base64Array.push(await fileToBase64(item.file));
+          finalUrls.push(uploadedUrls[uploadIdx++]);
         } else if (item.isExisting) {
-          base64Array.push(item.url);
+          finalUrls.push(item.url);
         }
       }
-      const mediaUrlsJson = JSON.stringify(base64Array);
+      const mediaUrlsJson = JSON.stringify(finalUrls);
 
       // Process variants
       const payloadVariants = variants.map(v => ({
@@ -414,15 +431,26 @@ export default function AdminProductsPage() {
     setBusy(true);
 
     try {
-      const base64Array = [];
+      const finalUrls: string[] = [];
+      const newFiles = mediaItems.filter(m => m.file);
+      let uploadedUrls: string[] = [];
+
+      if (newFiles.length > 0) {
+        const formData = new FormData();
+        newFiles.forEach(m => formData.append("files", m.file as File));
+        const res = await apiRequest<{urls: string[]}>("/api/upload", { method: "POST", body: formData });
+        uploadedUrls = res.urls || [];
+      }
+
+      let uploadIdx = 0;
       for (const item of mediaItems) {
         if (item.file) {
-          base64Array.push(await fileToBase64(item.file));
+          finalUrls.push(uploadedUrls[uploadIdx++]);
         } else if (item.isExisting) {
-          base64Array.push(item.url); // original base64 or URL
+          finalUrls.push(item.url); // original base64 or URL
         }
       }
-      const mediaUrlsJson = JSON.stringify(base64Array);
+      const mediaUrlsJson = JSON.stringify(finalUrls);
 
       const payloadVariants = variants.map(v => ({
         unit: v.unit || null,
@@ -660,9 +688,9 @@ export default function AdminProductsPage() {
                   {mediaItems.map((item) => (
                     <div key={item.id} style={{ position: "relative", width: 60, height: 60, borderRadius: 6, overflow: "hidden", border: "1px solid #e2e8f0" }}>
                       {(item.file?.type.startsWith('video/') || item.url.startsWith('data:video') || item.url.match(/\.(mp4|webm)$/)) ? (
-                        <video src={item.url} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <video src={getMediaUrl(item.url)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       ) : (
-                        <img src={item.url} alt="upload preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <img src={getMediaUrl(item.url)} alt="upload preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       )}
                       <button
                         type="button"
@@ -833,7 +861,7 @@ export default function AdminProductsPage() {
                       }
                       return imgSrc ? (
                         <img
-                          src={imgSrc}
+                          src={getMediaUrl(imgSrc)}
                           alt={p.name}
                           style={{
                             width: 52,

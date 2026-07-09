@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { apiRequest } from "@/lib/api";
+import { useToast } from "@/context/ToastContext";
 
 // Extend Window interface for AtomPaynetz
 declare global {
@@ -18,6 +19,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, subtotal, total, clearCart } = useCart();
   const { user, isLoaded, login } = useCustomerAuth();
+  const { showToast } = useToast();
 
   const [paymentMethod, setPaymentMethod] = useState("cod"); // Default to COD for testing
   const [sameAddress, setSameAddress] = useState(true);
@@ -369,7 +371,11 @@ export default function CheckoutPage() {
       }
 
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Could not place order");
+      const errorMsg = error instanceof Error ? error.message : "Could not place order";
+      setStatus(errorMsg);
+      if (errorMsg.includes("enough stock")) {
+        showToast(errorMsg, "error", 5000);
+      }
       setBusy(false);
     }
   };
@@ -999,35 +1005,24 @@ export default function CheckoutPage() {
                 <div className="col-lg-5">
                   <div className="cart-totals--cart" style={{ backgroundImage: "url('/assets/img/pattern/my-account-pattern-1-1.png')" }}>
                     <h2 className="h4 summary-title text-white">Cart Totals</h2>
-                    <div className="cart_totals">
-                      <table>
-                        <tbody>
-                          <tr>
-                            <td>Sub Total</td>
-                            <td data-title="Cart Subtotal">
-                              <span className="amount"><bdi><span>Rs. </span>{subtotal.toFixed(2)}</bdi></span>
-                            </td>
-                          </tr>
-                          <tr className="shipping">
-                            <th>Delivery</th>
-                            <td data-title="Shipping and Handling">
-                              <ul className="woocommerce-shipping-methods list-unstyled">
-                                <li>
-                                  <label htmlFor="free_shipping">Free Delivery</label>
-                                </li>
-                              </ul>
-                            </td>
-                          </tr>
-                        </tbody>
-                        <tfoot>
-                          <tr className="order-total">
-                            <td>Order Total</td>
-                            <td data-title="Total">
-                              <strong><span className="amount"><bdi><span>Rs. </span>{total.toFixed(2)}</bdi></span></strong>
-                            </td>
-                          </tr>
-                        </tfoot>
-                      </table>
+                    <div className="checkout-totals-list" style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "30px" }}>
+                      {/* Sub Total */}
+                      <div className="d-flex justify-content-between align-items-center" style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.15)", paddingBottom: "14px" }}>
+                        <span style={{ color: "white", fontSize: "15px", fontWeight: "600" }}>Sub Total</span>
+                        <span style={{ color: "#8cc63f", fontSize: "16px", fontWeight: "700" }}>Rs. {subtotal.toFixed(2)}</span>
+                      </div>
+
+                      {/* Delivery */}
+                      <div className="d-flex justify-content-between align-items-center" style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.15)", paddingBottom: "14px" }}>
+                        <span style={{ color: "white", fontSize: "15px", fontWeight: "600" }}>Delivery</span>
+                        <span style={{ color: "white", fontSize: "15px", fontWeight: "600" }}>Free Delivery</span>
+                      </div>
+
+                      {/* Order Total */}
+                      <div className="d-flex justify-content-between align-items-center" style={{ paddingTop: "4px" }}>
+                        <span style={{ color: "white", fontSize: "16px", fontWeight: "800", textTransform: "uppercase" }}>Order Total</span>
+                        <span style={{ color: "#8cc63f", fontSize: "22px", fontWeight: "800" }}>Rs. {total.toFixed(2)}</span>
+                      </div>
                     </div>
                     <div className="woocommerce-checkout-payment">
                       <h2 className="summary-title text-capitalize text-white">Payment Method</h2>

@@ -1,6 +1,7 @@
 const { z } = require("zod");
 const { pool } = require("../db");
 const { hashPassword } = require("../auth");
+const { sendOrderConfirmationEmail } = require("../email");
 
 const orderSchema = z.object({
   customer: z.object({
@@ -121,6 +122,39 @@ async function createOrder(req, res, { readJson, sendJson }) {
     }
 
     await connection.commit();
+    
+    // Prepare and send confirmation email asynchronously
+    try {
+      const productIds = payload.items.map(item => item.productId);
+      if (productIds.length > 0) {
+        const [products] = await pool.query(
+          "SELECT id, name FROM products WHERE id IN (?)",
+          [productIds]
+        );
+        const productMap = products.reduce((acc, p) => {
+          acc[p.id] = p.name;
+          return acc;
+        }, {});
+        
+        const orderData = {
+          email: payload.customer.email,
+          customerName: payload.customer.name,
+          orderNumber,
+          totalAmount,
+          items: payload.items.map(item => ({
+            name: productMap[item.productId] || "Product",
+            quantity: item.quantity,
+            unitPrice: item.unitPrice
+          }))
+        };
+        
+        // Fire and forget
+        sendOrderConfirmationEmail(orderData).catch(err => console.error("Email send error:", err));
+      }
+    } catch (emailErr) {
+      console.error("Failed to prepare confirmation email:", emailErr);
+    }
+
     sendJson(res, 201, { orderId, orderNumber });
   } catch (error) {
     await connection.rollback();
@@ -158,8 +192,8 @@ async function listCustomerOrders(req, res, { sendJson }) {
     params.phone = filters.phone;
   }
   if (filters.orderNumber) {
-    clauses.push("o.order_number = :orderNumber");
-    params.orderNumber = filters.orderNumber;
+    clauses.push("o.order_number LIKE :orderNumber");
+    params.orderNumber = `%${filters.orderNumber}%`;
   }
 
   const [rows] = await pool.query(
@@ -171,7 +205,7 @@ async function listCustomerOrders(req, res, { sendJson }) {
        JOIN customers c ON c.id = o.customer_id
        JOIN order_items oi ON oi.order_id = o.id
        JOIN products p ON p.id = oi.product_id
-      WHERE ${clauses.join(" OR ")}
+      WHERE ${clauses.join(" AND ")}
       ORDER BY o.created_at DESC, o.id DESC`,
     params
   );

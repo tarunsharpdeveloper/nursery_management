@@ -185,7 +185,7 @@ export default function AboutPage() {
                   <img src="/assets/img/icons/s-1-1.png" alt="icon" />
                 </div>
                 <span className="sec-subtitle">Our Services and Benefits</span>
-                <h2 className="sec-title">Built for gardeners, farms, and nursery buyers</h2>
+                <h2 className="sec-title" style={{ fontSize: "55px" }}>Built for gardeners, farms, and nursery buyers</h2>
               </div>
             </div>
           </div>

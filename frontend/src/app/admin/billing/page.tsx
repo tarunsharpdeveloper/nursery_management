@@ -49,6 +49,7 @@ const selectStyles = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
   }),
+  menuPortal: (base: any) => ({ ...base, zIndex: 9999 }),
   menu: (base: any) => ({
     ...base,
     zIndex: 9999

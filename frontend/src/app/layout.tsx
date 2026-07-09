@@ -9,6 +9,7 @@ import { Footer } from "@/components/footer";
 import { ToastProvider } from "@/context/ToastContext";
 import { CartProvider } from "@/context/CartContext";
 import { CustomerAuthProvider } from "@/context/CustomerAuthContext";
+import ScrollToTop from "@/components/ScrollToTop";
 import "./globals.css";
 
 const jost = Jost({
@@ -69,6 +70,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
                 <SiteHeader />
                 {children}
                 <Footer />
+                <ScrollToTop />
               </div>
             </CartProvider>
           </ToastProvider>

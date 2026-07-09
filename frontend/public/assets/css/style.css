@@ -1013,17 +1013,16 @@ ul.wp-block-rss a {
     02. Reset
 ==================================*/
 /*------------------- 2.1. Container -------------------*/
-@media only screen and (min-width: 1300px) {
-
+@media only screen and (min-width: 1400px) {
   .container-xxl,
   .container-xl,
   .container-lg,
   .container-md,
   .container-sm,
   .container {
-    max-width: calc(var(--main-container) + var(--container-gutters));
-    padding-left: calc(var(--container-gutters) / 2);
-    padding-right: calc(var(--container-gutters) / 2);
+    max-width: 1440px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 }
 
@@ -4400,7 +4399,7 @@ a.text-theme:hover,
 
 .sidebar-area.product {
   background-color: var(--smoke-color);
-  padding: 30px;
+  padding: 15px;
   border-radius: 30px;
   margin-bottom: 30px;
 }

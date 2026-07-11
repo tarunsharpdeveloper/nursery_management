@@ -41,6 +41,52 @@ async function getReport(req, res, { sendJson }) {
     return;
   }
 
+  if (report === "product_wise_sales") {
+    const [rows] = await pool.query(
+      `SELECT p.name AS product_name,
+              SUM(bi.quantity) AS total_quantity,
+              SUM(bi.line_total) AS total_revenue
+         FROM bill_items bi
+         JOIN bills b ON b.id = bi.bill_id
+         JOIN products p ON p.id = bi.product_id
+        WHERE b.bill_date BETWEEN :fromDate AND :toDate
+          AND b.is_deleted = 0
+        GROUP BY p.id, p.name
+        ORDER BY total_revenue DESC`,
+      { fromDate, toDate }
+    );
+    sendJson(res, 200, rows);
+    return;
+  }
+
+  if (report === "advance_bookings") {
+    const [rows] = await pool.query(
+      `SELECT a.booking_number, c.name AS customer, p.name AS product,
+              a.quantity, a.advance_amount, a.total_bill_amount, a.status, a.delivery_date
+         FROM advance_bookings a
+         JOIN customers c ON c.id = a.customer_id
+         JOIN products p ON p.id = a.product_id
+        WHERE a.delivery_date BETWEEN :fromDate AND :toDate
+        ORDER BY a.delivery_date DESC`,
+      { fromDate, toDate }
+    );
+    sendJson(res, 200, rows);
+    return;
+  }
+
+  if (report === "attendance") {
+    const [rows] = await pool.query(
+      `SELECT e.name AS employee, a.attendance_date, a.status, a.remarks
+         FROM attendance a
+         JOIN employees e ON e.id = a.employee_id
+        WHERE a.attendance_date BETWEEN :fromDate AND :toDate
+        ORDER BY a.attendance_date DESC, e.name`,
+      { fromDate, toDate }
+    );
+    sendJson(res, 200, rows);
+    return;
+  }
+
   const search = url.searchParams.get("search") || "";
   const filterKey = url.searchParams.get("filterKey");
   const filterValue = url.searchParams.get("filterValue");

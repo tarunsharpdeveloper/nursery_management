@@ -159,7 +159,7 @@ export default function ReportsPage() {
 
       const columns = reportConfig.columns;
       const headers = columns.map(c => `"${c.label.replace(/"/g, '""')}"`).join(',');
-      const csvRows = data.map(row => 
+      const csvRows = data.map((row: any) => 
         columns.map(c => {
           let val = row[c.key];
           if (val === null || val === undefined) val = "";

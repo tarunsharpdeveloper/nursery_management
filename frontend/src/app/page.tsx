@@ -822,8 +822,8 @@ export default function HomePage() {
             </div>
             <div className="col-auto">
               <div className="sec-btns" style={{ marginBottom: 0 }}>
-                <button className="vs-btn style4" onClick={testiPrev} aria-label="Previous testimonials"><i className="far fa-arrow-left"></i></button>
-                <button className="vs-btn style4" onClick={testiNext} aria-label="Next testimonials"><i className="far fa-arrow-right"></i></button>
+                <button className="vs-btn style4 testi-prev-btn" onClick={testiPrev} aria-label="Previous testimonials"><i className="far fa-arrow-left"></i></button>
+                <button className="vs-btn style4 testi-next-btn" onClick={testiNext} aria-label="Next testimonials"><i className="far fa-arrow-right"></i></button>
               </div>
             </div>
           </div>

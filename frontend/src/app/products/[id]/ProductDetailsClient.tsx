@@ -98,6 +98,11 @@ export default function ProductDetailsClient({
   const [reviewRating, setReviewRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   
+  // Slider states for mobile/tablet
+  const [reviewSlideIndex, setReviewSlideIndex] = useState(0);
+  const [relatedSlideIndex, setRelatedSlideIndex] = useState(0);
+  const [isMobileView, setIsMobileView] = useState(false);
+  
   // Review states
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
@@ -111,6 +116,16 @@ export default function ProductDetailsClient({
 
   const countdown = useCountdown(OFFER_DATE);
   const pad = (n: number) => String(n).padStart(2, "0");
+
+  // Detect mobile/tablet view
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileView(window.innerWidth <= 1024);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Fetch all products (public endpoint) and find the one matching this id
   useEffect(() => {
@@ -721,41 +736,127 @@ export default function ProductDetailsClient({
                 <p style={{ color: "var(--muted)" }}>No reviews yet. Be the first to review this product!</p>
               </div>
             ) : (
-              reviews.map((review) => {
-                // Format date
-                const reviewDate = new Date(review.created_at);
-                const formattedDate = reviewDate.toLocaleDateString('en-US', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                });
-
-                return (
-                  <div key={review.id} className="vs-post-comment">
-                    <div className="rating-select">
-                      <p className="stars">
-                        <span>
-                          {[1, 2, 3, 4, 5].map((s) => (
-                            <a key={s} className={`star-${s}${s <= review.rating ? ' active' : ''}`} href="#">{s}</a>
-                          ))}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="comment-avater">
-                      <img
-                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80"
-                        alt="Comment Author"
-                      />
-                    </div>
-                    <div className="comment-content">
-                      <h4 className="name h4">
-                        {review.customer_name} <span className="commented-on">{formattedDate}</span>
-                      </h4>
-                      <p className="text">{review.review_text}</p>
-                    </div>
+              <>
+                {/* Slider navigation for mobile/tablet */}
+                {isMobileView && reviews.length > 1 && (
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                    <button 
+                      onClick={() => setReviewSlideIndex(prev => prev === 0 ? reviews.length - 1 : prev - 1)}
+                      style={{
+                        background: "transparent",
+                        border: "1px solid #ddd",
+                        borderRadius: "50%",
+                        width: "40px",
+                        height: "40px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer"
+                      }}
+                      aria-label="Previous review"
+                    >
+                      <i className="far fa-arrow-left"></i>
+                    </button>
+                    <span style={{ color: "#777", fontSize: "14px" }}>
+                      {reviewSlideIndex + 1} / {reviews.length}
+                    </span>
+                    <button 
+                      onClick={() => setReviewSlideIndex(prev => prev === reviews.length - 1 ? 0 : prev + 1)}
+                      style={{
+                        background: "transparent",
+                        border: "1px solid #ddd",
+                        borderRadius: "50%",
+                        width: "40px",
+                        height: "40px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer"
+                      }}
+                      aria-label="Next review"
+                    >
+                      <i className="far fa-arrow-right"></i>
+                    </button>
                   </div>
-                );
-              })
+                )}
+                
+                <div className={isMobileView ? "reviews-slider-wrapper" : ""}>
+                  {isMobileView ? (
+                    // Mobile/tablet: Show one review at a time
+                    (() => {
+                      const review = reviews[reviewSlideIndex];
+                      const reviewDate = new Date(review.created_at);
+                      const formattedDate = reviewDate.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      });
+
+                      return (
+                        <div key={review.id} className="vs-post-comment">
+                          <div className="rating-select">
+                            <p className="stars">
+                              <span>
+                                {[1, 2, 3, 4, 5].map((s) => (
+                                  <a key={s} className={`star-${s}${s <= review.rating ? ' active' : ''}`} href="#">{s}</a>
+                                ))}
+                              </span>
+                            </p>
+                          </div>
+                          <div className="comment-avater">
+                            <img
+                              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80"
+                              alt="Comment Author"
+                            />
+                          </div>
+                          <div className="comment-content">
+                            <h4 className="name h4">
+                              {review.customer_name} <span className="commented-on">{formattedDate}</span>
+                            </h4>
+                            <p className="text">{review.review_text}</p>
+                          </div>
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    // Desktop: Show all reviews
+                    reviews.map((review) => {
+                      const reviewDate = new Date(review.created_at);
+                      const formattedDate = reviewDate.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      });
+
+                      return (
+                        <div key={review.id} className="vs-post-comment">
+                          <div className="rating-select">
+                            <p className="stars">
+                              <span>
+                                {[1, 2, 3, 4, 5].map((s) => (
+                                  <a key={s} className={`star-${s}${s <= review.rating ? ' active' : ''}`} href="#">{s}</a>
+                                ))}
+                              </span>
+                            </p>
+                          </div>
+                          <div className="comment-avater">
+                            <img
+                              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80"
+                              alt="Comment Author"
+                            />
+                          </div>
+                          <div className="comment-content">
+                            <h4 className="name h4">
+                              {review.customer_name} <span className="commented-on">{formattedDate}</span>
+                            </h4>
+                            <p className="text">{review.review_text}</p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </>
             )}
           </div>
 
@@ -866,9 +967,171 @@ export default function ProductDetailsClient({
       {related.length > 0 && (
         <section className="space-extra-bottom">
           <div className="container">
-            <h3 className="blog-inner-title">Related Products</h3>
-            <div className="row">
-              {related.map((rp) => {
+            <div className="row mb-40">
+              <div className="col-lg-8 mx-auto">
+                <div className="title-area text-center">
+                  <div className="sec-icon"><img src="/assets/img/icons/s-1-2.png" alt="icon" /></div>
+                  <span className="sec-subtitle">You Might Also Like</span>
+                  <h2 className="sec-title">Related Products</h2>
+                </div>
+              </div>
+            </div>
+            
+            {/* Slider navigation for mobile/tablet */}
+            {isMobileView && related.length > 1 && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", padding: "0 15px" }}>
+                <button 
+                  onClick={() => setRelatedSlideIndex(prev => prev === 0 ? related.length - 1 : prev - 1)}
+                  style={{
+                    background: "transparent",
+                    border: "1px solid #ddd",
+                    borderRadius: "50%",
+                    width: "40px",
+                    height: "40px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer"
+                  }}
+                  aria-label="Previous product"
+                >
+                  <i className="far fa-arrow-left"></i>
+                </button>
+                <span style={{ color: "#777", fontSize: "14px" }}>
+                  {relatedSlideIndex + 1} / {related.length}
+                </span>
+                <button 
+                  onClick={() => setRelatedSlideIndex(prev => prev === related.length - 1 ? 0 : prev + 1)}
+                  style={{
+                    background: "transparent",
+                    border: "1px solid #ddd",
+                    borderRadius: "50%",
+                    width: "40px",
+                    height: "40px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer"
+                  }}
+                  aria-label="Next product"
+                >
+                  <i className="far fa-arrow-right"></i>
+                </button>
+              </div>
+            )}
+            
+            <div className="row justify-content-center">
+              {isMobileView ? (
+                // Mobile/tablet: Show one product at a time
+                (() => {
+                  const rp = related[relatedSlideIndex];
+                  let relatedImage = DEFAULT_IMG;
+                  
+                  if (rp.media_urls) {
+                    try {
+                      const parsed = JSON.parse(rp.media_urls);
+                      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]) {
+                        relatedImage = parsed[0];
+                      }
+                    } catch {
+                      if (rp.media_urls) relatedImage = rp.media_urls;
+                    }
+                  }
+                  
+                  if (relatedImage === DEFAULT_IMG && rp.photo_url) {
+                    relatedImage = rp.photo_url;
+                  }
+
+                  return (
+                    <div key={rp.id} className="col-12 mb-30">
+                      <div className="vs-product product-style1 modern-card">
+                        <div className="product-img">
+                          <Link href={`/products/${rp.id}`}>
+                            <img
+                              src={getMediaUrl(relatedImage)}
+                              alt={rp.name}
+                              className="img w-100"
+                              style={{ height: "230px", objectFit: "contain", padding: "10px" }}
+                            />
+                          </Link>
+                          {rp.available_quantity <= 0 && (
+                            <span className="product-tag2" style={{ background: "var(--danger)" }}>
+                              Out of Stock
+                            </span>
+                          )}
+                          {rp.available_quantity > 0 && rp.available_quantity < 100 && (
+                            <span className="product-tag2" style={{ background: "var(--accent)" }}>
+                              Limited Stock
+                            </span>
+                          )}
+                        </div>
+                        <div className="product-content" style={{ paddingBottom: "40px" }}>
+                          <div className="star-rating">
+                            <span style={{ width: "100%" }}>Rated 5.0 out of 5</span>
+                          </div>
+                          <h3 className="product-title" style={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            marginBottom: "6px"
+                          }}>
+                            <Link href={`/products/${rp.id}`}>{rp.name}</Link>
+                          </h3>
+                          <p style={{
+                            fontSize: "13px",
+                            color: "#777777",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            marginBottom: "12px",
+                            lineHeight: "1.4"
+                          }}>
+                            {rp.description || `Premium quality ${rp.product_type} sourced from our nursery. Healthy and ready for growth.`}
+                          </p>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                            <span className="product-cate" style={{ margin: 0, fontSize: "11px", fontWeight: 700 }}>
+                              SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{rp.category}</span>
+                            </span>
+                            <span className="product-price">Rs. {Number(rp.selling_price).toFixed(2)}</span>
+                          </div>
+                          <div className="product-actions">
+                            <button 
+                              type="button" 
+                              className="vs-btn"
+                              disabled={rp.available_quantity <= 0}
+                              onClick={() => {
+                                addToCart(rp, 1);
+                                router.push("/cart");
+                              }}
+                            >
+                              Add to Cart
+                            </button>
+                            <button
+                              type="button"
+                              className="cart-btn"
+                              onClick={() => {
+                                addToCart(rp, 1);
+                                router.push("/cart");
+                              }}
+                              aria-label={`Add ${rp.name} to cart`}
+                              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                              disabled={rp.available_quantity <= 0}
+                            >
+                              <i className="fas fa-shopping-basket"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()
+              ) : (
+                // Desktop: Show all products in grid
+                related.map((rp) => {
                 // Resolve best image for each related product
                 let relatedImage = DEFAULT_IMG;
                 
@@ -891,35 +1154,64 @@ export default function ProductDetailsClient({
                 }
 
                 return (
-                  <div key={rp.id} className="col-xl-3 col-lg-4 col-md-6 mb-30">
-                    <div className="vs-product product-style6">
+                  <div key={rp.id} className="col-lg-4 col-md-6 mb-30">
+                    <div className="vs-product product-style1 modern-card">
                       <div className="product-img">
                         <Link href={`/products/${rp.id}`}>
                           <img
                             src={getMediaUrl(relatedImage)}
                             alt={rp.name}
                             className="img w-100"
-                            style={{ objectFit: "cover", height: "220px", width: "100%", display: "block" }}
+                            style={{ height: "230px", objectFit: "contain", padding: "10px" }}
                           />
                         </Link>
                         {rp.available_quantity <= 0 && (
-                          <Link href={`/products/${rp.id}`} className="product-tag2">
+                          <span className="product-tag2" style={{ background: "var(--danger)" }}>
                             Out of Stock
-                          </Link>
+                          </span>
+                        )}
+                        {rp.available_quantity > 0 && rp.available_quantity < 100 && (
+                          <span className="product-tag2" style={{ background: "var(--accent)" }}>
+                            Limited Stock
+                          </span>
                         )}
                       </div>
-                      <div className="product-content">
-                        <StarRating rating={5} />
-                        <h3 className="product-title">
+                      <div className="product-content" style={{ paddingBottom: "40px" }}>
+                        <div className="star-rating">
+                          <span style={{ width: "100%" }}>Rated 5.0 out of 5</span>
+                        </div>
+                        <h3 className="product-title" style={{
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          marginBottom: "6px"
+                        }}>
                           <Link href={`/products/${rp.id}`}>{rp.name}</Link>
                         </h3>
-                        <span className="product-cate">{rp.category}</span>
-                        <span className="product-price">
-                          Rs.&nbsp;{Number(rp.selling_price).toFixed(2)}
-                        </span>
+                        <p style={{
+                          fontSize: "13px",
+                          color: "#777777",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          marginBottom: "12px",
+                          lineHeight: "1.4"
+                        }}>
+                          {rp.description || `Premium quality ${rp.product_type} sourced from our nursery. Healthy and ready for growth.`}
+                        </p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                          <span className="product-cate" style={{ margin: 0, fontSize: "11px", fontWeight: 700 }}>
+                            SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{rp.category}</span>
+                          </span>
+                          <span className="product-price">Rs. {Number(rp.selling_price).toFixed(2)}</span>
+                        </div>
                         <div className="product-actions">
-                          <button
-                            type="button"
+                          <button 
+                            type="button" 
                             className="vs-btn"
                             disabled={rp.available_quantity <= 0}
                             onClick={() => {
@@ -932,12 +1224,13 @@ export default function ProductDetailsClient({
                           <button
                             type="button"
                             className="cart-btn"
-                            aria-label="Cart"
-                            disabled={rp.available_quantity <= 0}
                             onClick={() => {
                               addToCart(rp, 1);
                               router.push("/cart");
                             }}
+                            aria-label={`Add ${rp.name} to cart`}
+                            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                            disabled={rp.available_quantity <= 0}
                           >
                             <i className="fas fa-shopping-basket"></i>
                           </button>
@@ -946,7 +1239,8 @@ export default function ProductDetailsClient({
                     </div>
                   </div>
                 );
-              })}
+              })
+              )}
             </div>
           </div>
         </section>

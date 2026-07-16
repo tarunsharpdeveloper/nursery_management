@@ -185,7 +185,7 @@ export default function AboutPage() {
                   <img src="/assets/img/icons/s-1-1.png" alt="icon" />
                 </div>
                 <span className="sec-subtitle">Our Services and Benefits</span>
-                <h2 className="sec-title">Built for gardeners, farms, and nursery buyers</h2>
+                <h2 className="sec-title" style={{ fontSize: "55px" }}>Built for gardeners, farms, and nursery buyers</h2>
               </div>
             </div>
           </div>
@@ -216,19 +216,7 @@ export default function AboutPage() {
             </div>
             <div className="col-xxl-4 col-xl-4 col-lg-auto mx-auto mb-30">
               <div className="img-box8" style={{ maxWidth: '100%', height: 'auto' }}>
-                <img 
-                  src="/assets/img/about/about-p-1-1.png" 
-                  alt="feature-img" 
-                  className="img1"
-                  style={{
-                    width: '100%',
-                    maxWidth: '500px',
-                    height: 'auto',
-                    objectFit: 'contain',
-                    margin: '0 auto',
-                    display: 'block'
-                  }}
-                />
+                <img src="/assets/img/about/about-p-1-1.png"  alt="feature-img" className="about-feature-img" />
               </div>
             </div>
             <div className="col-xxl-4 col-xl-4 col-lg-7 mx-auto mb-30">

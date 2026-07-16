@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { X } from "lucide-react";
+import { X, ShoppingCart } from "lucide-react";
 import { apiRequest, getMediaUrl } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 import type { Product } from "@/lib/types";
@@ -271,8 +271,9 @@ export default function HomePage() {
               </div>
               <div className="col-xxl-auto col-xl-6 col-lg-8 mx-auto">
                 <div className="hero-img">
+                  <div className="circle">
                   <img src={slide.img} alt={slide.imgAlt} />
-                  <span className="circle"></span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -560,8 +561,8 @@ export default function HomePage() {
           </div>
           <div className="row justify-content-center">
             {products.slice(0, 8).map((prod) => (
-              <div className="col-lg-3 col-md-6" key={prod.id}>
-                <div className="vs-product product-style1">
+              <div className="col-lg-4 col-md-6 mb-4" key={prod.id}>
+                <div className="vs-product product-style1 modern-card">
                   <div className="product-img">
                     <Link href={`/products/${prod.id}`}>
                       <img src={prod.image} alt={prod.name} className="img w-100" style={{ height: "230px", objectFit: "contain", padding: "10px" }} />
@@ -569,20 +570,44 @@ export default function HomePage() {
                     {prod.stock <= 0 && <span className="product-tag2" style={{ background: "var(--danger)" }}>Out of Stock</span>}
                     {prod.stock > 0 && prod.stock < 100 && <span className="product-tag2" style={{ background: "var(--accent)" }}>Limited Stock</span>}
                   </div>
-                  <div className="product-content">
+                  <div className="product-content" style={{ paddingBottom: "40px" }}>
                     <div className="star-rating">
                       <span style={{ width: "100%" }}>Rated 5.0 out of 5</span>
                     </div>
-                    <h3 className="product-title">
+                    <h3 className="product-title" style={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      marginBottom: "6px"
+                    }}>
                       <Link href={`/products/${prod.id}`}>{prod.name}</Link>
                     </h3>
-                    <span className="product-cate">{prod.category}</span>
-                    <span className="product-price">Rs. {prod.price}</span>
+                    <p style={{
+                      fontSize: "13px",
+                      color: "#777777",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      marginBottom: "12px",
+                      lineHeight: "1.4"
+                    }}>
+                      {prod.description || "No description available."}
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                      <span className="product-cate" style={{ margin: 0, fontSize: "11px", fontWeight: 700 }}>
+                        SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{prod.category}</span>
+                      </span>
+                      <span className="product-price">Rs. {prod.price}</span>
+                    </div>
                     <div className="product-actions">
                       <button type="button" className="vs-btn" onClick={() => handleAddToCart(prod)}>
                         Add to Cart
                       </button>
-                      <button type="button" className="cart-btn" onClick={() => handleAddToCart(prod)} aria-label={`Add ${prod.name} to cart`}>
+                      <button type="button" className="cart-btn" onClick={() => handleAddToCart(prod)} aria-label={`Add ${prod.name} to cart`} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                         <i className="fas fa-shopping-basket"></i>
                       </button>
                     </div>
@@ -611,7 +636,7 @@ export default function HomePage() {
                 <h2 className="sec-title">What Makes Awantika Seeds Different?</h2>
               </div>
             </div>
-            <div className="col-auto">
+            <div className="col-auto center-feature">
               <div className="call-card">
                 <div className="call-card__content">
                   <span className="call-card__title">Need Help?</span>
@@ -621,9 +646,9 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          <div className="row align-items-center">
+          <div className="row align-items-center justify-content-center">
             <div className="col-lg-6">
-              <div className="row">
+              <div className="row justify-content-center">
                 {[
                   { title: "Direct From Our Nursery", img: "/assets/img/icons/feature-1-1.png", text: "Healthy saplings cultivated in local regional weather fields." },
                   { title: "Certified Organic Fertilizer", img: "/assets/img/icons/feature-1-2.png", text: "Enriched with custom mineral bases and organic vermicompost." },
@@ -643,10 +668,10 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
-            <div className="col-lg-6 mx-auto">
-              <div className="img-box2" style={{ display: 'block', maxWidth: '100%', overflow: 'hidden' }}>
+            <div className="col-lg-6 mx-auto text-center">
+              <div className="img-box2">
                 <div className="img-circle" style={{ backgroundImage: "url('/assets/img/features/feature-1-2.png')" }}></div>
-                <img src="assets\img\features\feature-1-3.png" alt="feature" />
+                <img src="/assets/img/features/feature-1-3.png" alt="feature" className="img-fluid" />
               </div>
             </div>
           </div>

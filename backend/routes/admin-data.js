@@ -1,5 +1,6 @@
 const { z } = require("zod");
 const { pool } = require("../db");
+const { sendOrderDeliveredEmail } = require("../email");
 
 async function getDashboard(_req, res, { sendJson }) {
   const [[products]] = await pool.query("SELECT COUNT(*) AS total_products, COALESCE(SUM(available_quantity), 0) AS total_stock FROM products WHERE is_deleted = 0");
@@ -261,6 +262,28 @@ const orderStatusSchema = z.object({
 async function updateOrderStatus(req, res, { readJson, sendJson }) {
   const payload = orderStatusSchema.parse(await readJson(req));
   await pool.query("UPDATE orders SET status = :status WHERE id = :orderId", payload);
+  
+  if (payload.status === "delivered") {
+    try {
+      const [orderRows] = await pool.query(
+        `SELECT o.order_number, c.email, c.name AS customerName
+           FROM orders o
+           JOIN customers c ON c.id = o.customer_id
+          WHERE o.id = ?`,
+        [payload.orderId]
+      );
+      if (orderRows.length > 0 && orderRows[0].email) {
+        sendOrderDeliveredEmail({
+          email: orderRows[0].email,
+          customerName: orderRows[0].customerName,
+          orderNumber: orderRows[0].order_number
+        }).catch(err => console.error("Email send error:", err));
+      }
+    } catch (err) {
+      console.error("Failed to send delivered email on order update:", err);
+    }
+  }
+
   sendJson(res, 200, { updated: true });
 }
 
@@ -403,6 +426,27 @@ async function updateDispatchStatus(req, res, { readJson, sendJson }) {
           "UPDATE orders SET status = :orderStatus WHERE id = :orderId",
           { orderStatus, orderId: dispatch.order_id }
         );
+        
+        if (orderStatus === "delivered") {
+          try {
+            const [orderRows] = await pool.query(
+              `SELECT o.order_number, c.email, c.name AS customerName
+                 FROM orders o
+                 JOIN customers c ON c.id = o.customer_id
+                WHERE o.id = ?`,
+              [dispatch.order_id]
+            );
+            if (orderRows.length > 0 && orderRows[0].email) {
+              sendOrderDeliveredEmail({
+                email: orderRows[0].email,
+                customerName: orderRows[0].customerName,
+                orderNumber: orderRows[0].order_number
+              }).catch(err => console.error("Email send error:", err));
+            }
+          } catch (err) {
+            console.error("Failed to send delivered email on dispatch update:", err);
+          }
+        }
       }
     } else if (dispatch.advance_booking_id) {
       let bookingStatus;
@@ -665,7 +709,7 @@ async function getUnifiedList(req, res, { sendJson }) {
     else if (model === 'payments' && filterKey === 'payment_method') fKey = 'p.payment_method';
     else if (model === 'bills' && filterKey === 'bill_type') fKey = 'b.bill_type';
     else if (model === 'bills' && filterKey === 'payment_type') fKey = 'b.payment_type';
-    else if (model === 'employees' && filterKey === 'employee_type') fKey = 'e.employee_type'; // employees table is just employee_type, but let's just use the column name
+    else if (model === 'employees' && filterKey === 'employee_type') fKey = 'employee_type'; // employees table is just employee_type, but let's just use the column name
 
     whereClause += ` AND ${fKey} = :filterValue`;
     params.filterValue = filterValue;

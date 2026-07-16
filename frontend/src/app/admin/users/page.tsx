@@ -23,6 +23,7 @@ export default function UsersPage() {
   const [roles, setRoles] = useState<{ id: number; name: string }[]>([]);
   const [openActionId, setOpenActionId] = useState<number | null>(null);
   const [dropdownDirection, setDropdownDirection] = useState<"up" | "down">("down");
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [confirmState, setConfirmState] = useState<{
     isOpen: boolean;
     title: string;
@@ -191,7 +192,13 @@ export default function UsersPage() {
                 } else {
                   const rect = e.currentTarget.getBoundingClientRect();
                   const spaceBelow = window.innerHeight - rect.bottom;
-                  setDropdownDirection(spaceBelow < 200 ? "up" : "down");
+                  const direction = spaceBelow < 200 ? "up" : "down";
+                  setDropdownDirection(direction);
+                  
+                  const top = direction === "down" ? rect.bottom + 4 : rect.top - 4;
+                  const left = rect.right - 160;
+                  
+                  setDropdownPosition({ top, left });
                   setOpenActionId(row.id);
                 }
               }}
@@ -207,7 +214,15 @@ export default function UsersPage() {
                   className="actions-dropdown-overlay" 
                   onClick={(e) => { e.stopPropagation(); setOpenActionId(null); }} 
                 />
-                <div className={`actions-dropdown-menu direction-${dropdownDirection}`}>
+                <div 
+                  className={`actions-dropdown-menu direction-${dropdownDirection}`}
+                  style={{
+                    position: 'fixed',
+                    top: dropdownDirection === "down" ? dropdownPosition.top : 'auto',
+                    bottom: dropdownDirection === "up" ? window.innerHeight - dropdownPosition.top : 'auto',
+                    left: dropdownPosition.left,
+                  }}
+                >
                   <button 
                     className="button secondary actions-dropdown-item" 
                     type="button" 

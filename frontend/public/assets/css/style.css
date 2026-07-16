@@ -1007,23 +1007,38 @@ ul.wp-block-rss a {
   .page--content.clearfix+.vs-comment-form {
     margin-top: 24px;
   }
+  .summary-title{
+    font-size: 17px;
+  }
+  .feature-item
+ {
+    margin-bottom: 30px;
+    display: grid;
+    place-items: center;
+}
+.center-feature{
+  display: grid;
+  place-items: center;
+  width:auto;
+  flex: 0 0 auto;
+   width: auto;
+}
 }
 
 /*=================================
     02. Reset
 ==================================*/
 /*------------------- 2.1. Container -------------------*/
-@media only screen and (min-width: 1300px) {
-
+@media only screen and (min-width: 1400px) {
   .container-xxl,
   .container-xl,
   .container-lg,
   .container-md,
   .container-sm,
   .container {
-    max-width: calc(var(--main-container) + var(--container-gutters));
-    padding-left: calc(var(--container-gutters) / 2);
-    padding-right: calc(var(--container-gutters) / 2);
+    max-width: 1440px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 }
 
@@ -2656,7 +2671,7 @@ textarea.is-invalid {
   font-family: var(--title-font);
   font-size: 16px;
   font-weight: 900;
-  margin: -0.25em 0 15px 0;
+  margin: 2.25em 0 15px 0;
   letter-spacing: 0.12em;
 }
 
@@ -4400,7 +4415,7 @@ a.text-theme:hover,
 
 .sidebar-area.product {
   background-color: var(--smoke-color);
-  padding: 30px;
+  padding: 15px;
   border-radius: 30px;
   margin-bottom: 30px;
 }
@@ -6221,7 +6236,7 @@ a.text-theme:hover,
   white-space: normal;
   word-break: break-word;
   font-weight: 700;
-  font-size: 18px;
+  font-size: 16 px;
   font-family: var(--body-font);
   text-transform: uppercase;
 }
@@ -6246,13 +6261,13 @@ a.text-theme:hover,
 
 .breadcumb-wrapper {
   background-color: var(--title-color);
-  padding: 80px 0;
+  padding: 55px 0;
   /* Medium devices */
 }
 
 @media (max-width: 991px) {
   .breadcumb-wrapper {
-    padding: 120px 0;
+    padding: 55px 0;
   }
 }
 
@@ -8092,8 +8107,8 @@ blockquote.vs-quote .quote-author {
 
 .hero-img .circle {
   border-radius: 50%;
-  width: 590px;
-  height: 590px;
+  width: 459px;
+  height: 459px;
   background-color: var(--white-color);
   display: inline-block;
   position: absolute;
@@ -8105,8 +8120,8 @@ blockquote.vs-quote .quote-author {
 
 @media (max-width: 767px) {
   .hero-img .circle {
-    width: 300px;
-    height: 300px;
+    width: 376px;
+    height: 392px;
   }
 }
 
@@ -8836,8 +8851,8 @@ blockquote.vs-quote .quote-author {
 .img-box2 .img-circle {
   bottom: auto;
   position: absolute;
-  width: 567.24px;
-  height: 580.08px;
+  width: 482.24px;
+  height: 450.08px;
   background-color: var(--theme-color2);
   border-radius: 50%;
   z-index: -1;
@@ -8848,8 +8863,8 @@ blockquote.vs-quote .quote-author {
 
 @media (max-width: 767px) {
   .img-box2 .img-circle {
-    width: 240px;
-    height: 240px;
+    width: 331px;
+    height: 331px;
   }
 }
 
@@ -11856,7 +11871,7 @@ blockquote.vs-quote .quote-author {
 
 .contact-box {
   background-color: var(--bg2-color);
-  min-width: 480px;
+  /* min-width: 480px; */
   overflow: hidden;
   height: auto;
   padding: 60px;
@@ -11881,7 +11896,14 @@ blockquote.vs-quote .quote-author {
   left: 0;
   background-color: var(--theme-color);
 }
-
+.about-feature-img {
+    width:  100% !important;
+    max-width: 500px !important ;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
 .contact-box__text {
   max-width: 84%;
 }
@@ -12490,8 +12512,10 @@ blockquote.vs-quote .quote-author {
   position: relative;
   margin-bottom: 22px;
   text-transform: uppercase;
-  font-size: 26px;
+  font-size: 18px;
   font-weight: 800;
+  display: flex;
+  justify-content: center;
 }
 
 .cart_totals tfoot .order-total td {
@@ -12949,7 +12973,7 @@ blockquote.vs-quote .quote-author {
 .product-style6 .vs-btn {
   font-size: 14px;
   padding: 11px 59px 11px 22px;
-  margin-right: -47px;
+  margin-right: -21px;
   transform: scaleX(0);
   transform-origin: right;
   opacity: 0;
@@ -14072,11 +14096,11 @@ blockquote.vs-quote .quote-author {
 }
 
 .product-big-img {
-  background-color: var(--bg4-color);
-  border: 1px solid var(--theme-color2);
+  /* background-color: var(--bg4-color); */
+  /* border: 1px solid var(--theme-color2); */
   margin-bottom: 25px;
   text-align: center;
-  border-radius: 30px;
+  /* border-radius: 30px; */
   overflow: hidden;
 }
 
@@ -15277,4 +15301,36 @@ blockquote.vs-quote .quote-author {
   background-color: transparent !important;
   border-radius: 0 !important;
   padding: 0 !important;
+}
+@media (max-width: 509px) {
+ .breadcumb-title {
+  font-size:32px;
+ }
+ 
+.counter-media__title {
+  font-size: 40px;
+  margin: -0.25em 0 0px 0;
+}
+.media-body{
+    display: grid;
+    place-items: center;
+}
+.summary-title{
+  font-size: 17px;
+} 
+}
+
+@media (min-width: 509px) and (max-width: 769px) {
+  .sec-subtitle {
+    margin: 4.25em 0 15px 0;
+  }
+  .media-body{
+    display: grid;
+    place-items: center;
+}
+.summary-title{
+  display: flex;
+  justify-content: center;
+  font-size: 17px;
+} 
 }

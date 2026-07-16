@@ -359,8 +359,24 @@ export default function ProductDetailsClient({
                     <img
                       src={displayImage}
                       alt={product.name}
-                      style={{ width: "100%", height: "480px", objectFit: "cover", borderRadius: "inherit" }}
+                      style={{ width: "100%", height: "450px", objectFit: "contain" }}
                     />
+                  </div>
+                </div>
+
+                {/* Product Info Below Image */}
+                <div className="product-slide-info">
+                  <div className="product-slide-info-item">
+                    <strong>SKU Code</strong>
+                    <span>PROD-{String(product.id).padStart(4, "0")}</span>
+                  </div>
+                  <div className="product-slide-info-item">
+                    <strong>Category</strong>
+                    <span>{product.category}</span>
+                  </div>
+                  <div className="product-slide-info-item">
+                    <strong>Type</strong>
+                    <span>{product.product_type}</span>
                   </div>
                 </div>
 
@@ -368,7 +384,7 @@ export default function ProductDetailsClient({
                 {thumbImages.length > 1 && (
                   <div
                     className="product-thumb-slide"
-                    style={{ display: "flex", gap: "12px", marginTop: "15px" }}
+                    style={{ display: "flex", gap: "12px", marginTop: "20px" }}
                   >
                     {thumbImages.map((src, i) => (
                       <div
@@ -380,7 +396,7 @@ export default function ProductDetailsClient({
                         <img
                           src={src}
                           alt={`View ${i + 1}`}
-                          style={{ width: "100%", height: "90px", objectFit: "cover" }}
+                          style={{ width: "100%", height: "85px", objectFit: "cover" }}
                         />
                       </div>
                     ))}
@@ -455,11 +471,11 @@ export default function ProductDetailsClient({
                 )}
 
                 {/* Description snippet */}
-                {product.description && (
+                {/* {product.description && (
                   <p style={{ marginBottom: "24px", color: "var(--muted)", lineHeight: "1.7" }}>
                     {product.description}
                   </p>
-                )}
+                )} */}
 
                 {/* Quantity selector */}
                 <div className="actions">
@@ -552,24 +568,6 @@ export default function ProductDetailsClient({
                   <button type="button" className="icon-btn" aria-label="Wishlist">
                     <i className="far fa-heart"></i>
                   </button>
-                </div>
-
-                {/* Meta info */}
-                <div className="product_meta">
-                  <span className="sku_wrapper">
-                    <p>SKU:</p>
-                    <span className="sku">PROD-{String(product.id).padStart(4, "0")}</span>
-                  </span>
-                  <span>
-                    <p>Category:</p>
-                    <Link href="/products" rel="tag">{product.category}</Link>
-                  </span>
-                  <span>
-                    <p>Type:</p>
-                    <span style={{ textTransform: "capitalize", color: "#555", fontWeight: 700 }}>
-                      {product.product_type}
-                    </span>
-                  </span>
                 </div>
 
                 {/* Payment image */}

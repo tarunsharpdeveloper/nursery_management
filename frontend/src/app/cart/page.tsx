@@ -75,7 +75,7 @@ export default function CartPage() {
                       return (
                         <tr className="cart_item" key={cartKey}>
                           <td data-title="Name">
-                            <div className="d-flex align-items-center gap-4">
+                            <div className="d-flex flex-column flex-md-row align-items-center gap-3 gap-md-4">
                               <Link className="cart-productimage" href={`/products/${item.id}`}>
                                 <img
                                   width={91}
@@ -85,7 +85,7 @@ export default function CartPage() {
                                   style={{ objectFit: "cover", borderRadius: "10px" }}
                                 />
                               </Link>
-                              <div className="cart_item__des">
+                              <div className="cart_item__des text-center text-md-start">
                                 <Link className="cart-productname" href={`/products/${item.id}`}>
                                   {item.name}
                                 </Link>
@@ -229,7 +229,8 @@ export default function CartPage() {
                     borderRadius: "24px",
                     padding: "32px",
                     border: "2px solid #cfe9a4",
-                    boxShadow: "0 8px 32px rgba(140,198,63,0.10)"
+                    boxShadow: "0 8px 32px rgba(140,198,63,0.10)",
+                    textAlign:'center'
                   }}>
                     {/* Title */}
                     <h2 style={{
@@ -304,10 +305,10 @@ export default function CartPage() {
                       boxShadow: "0 6px 20px rgba(140,198,63,0.35)",
                       marginBottom: "24px"
                     }}>
-                      <span style={{ fontSize: "15px", fontWeight: 800, color: "white", textTransform: "uppercase", letterSpacing: "1px" }}>
+                      <span style={{ fontSize: "0.9rem", fontWeight: 800, color: "white", textTransform: "uppercase", letterSpacing: "1px" }}>
                         Order Total
                       </span>
-                      <span style={{ fontSize: "22px", fontWeight: 800, color: "white" }}>
+                      <span style={{ fontSize: "0.95rem", fontWeight: 800, color: "white" }}>
                         Rs.&nbsp;{total.toFixed(2)}
                       </span>
                     </div>
@@ -351,6 +352,25 @@ export default function CartPage() {
       {/* Cart Area End */}
       
       <style jsx>{`
+        /* Keep original design structure, but override font sizes and padding to prevent bloated UI */
+        .cart_table th {
+          font-size: 15px !important;
+          // padding: 16px 20px !important;
+        }
+        .cart_table td {
+          font-size: 14px !important;
+          // padding: 16px 20px !important;
+        }
+        .cart_table .cart-productname {
+          font-size: 15px !important;
+        }
+        .cart_table .cart_item__des span {
+          font-size: 12px !important;
+        }
+        .cart_table .amount {
+          font-size: 15px !important;
+        }
+        
         .qty-input::-webkit-outer-spin-button,
         .qty-input::-webkit-inner-spin-button {
           -webkit-appearance: none;
@@ -366,6 +386,19 @@ export default function CartPage() {
         }
         .qty-btn:active {
           transform: scale(0.95);
+        }
+
+        @media (max-width: 767px) {
+          .cart_table td[data-title="Name"] {
+            padding-left: 15px !important;
+            text-align: center !important;
+          }
+          .cart_table td[data-title="Name"]::before {
+            display: none !important;
+          }
+          .cart_table td[data-title="Name"] > div {
+            justify-content: center !important;
+          }
         }
       `}</style>
     </main>

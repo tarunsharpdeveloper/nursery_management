@@ -6232,7 +6232,7 @@ a.text-theme:hover,
 
 .breadcumb-title {
   width: 100%;
-  font-size: 70px;
+  font-size: 30px;
   color: var(--white-color);
   line-height: 1.1;
   margin: -0.14em 0 15px 0;

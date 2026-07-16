@@ -1037,7 +1037,7 @@ export default function CheckoutPage() {
                             checked={paymentMethod === "ndps"}
                             onChange={() => setPaymentMethod("ndps")}
                           />
-                          <label htmlFor="payment_method_ndps">
+                          <label htmlFor="payment_method_ndps" style={{lineHeight:'20px'}}>
                             💳 Pay Online (Cards, UPI, Net Banking)
                           </label>
                           {paymentMethod === "ndps" && (

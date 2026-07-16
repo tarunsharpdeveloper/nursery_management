@@ -236,9 +236,7 @@ export function SiteHeader() {
             <X size={28} />
           </button>
 
-          <h2 style={{ color: "white", marginBottom: "35px", fontSize: "40px", fontWeight: 700, fontFamily: "var(--title-font)" }}>
-            What are you looking for?
-          </h2>
+          <h2 className="section-heading">What are you looking for?</h2>
 
           <form 
             onSubmit={(e) => { 

@@ -271,8 +271,9 @@ export default function HomePage() {
               </div>
               <div className="col-xxl-auto col-xl-6 col-lg-8 mx-auto">
                 <div className="hero-img">
+                  <div className="circle">
                   <img src={slide.img} alt={slide.imgAlt} />
-                  <span className="circle"></span>
+                  </div>
                 </div>
               </div>
             </div>

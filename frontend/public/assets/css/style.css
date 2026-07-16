@@ -1007,6 +1007,9 @@ ul.wp-block-rss a {
   .page--content.clearfix+.vs-comment-form {
     margin-top: 24px;
   }
+  .summary-title{
+    font-size: 17px;
+  }
 }
 
 /*=================================
@@ -2655,7 +2658,7 @@ textarea.is-invalid {
   font-family: var(--title-font);
   font-size: 16px;
   font-weight: 900;
-  margin: -0.25em 0 15px 0;
+  margin: 2.25em 0 15px 0;
   letter-spacing: 0.12em;
 }
 
@@ -6220,7 +6223,7 @@ a.text-theme:hover,
   white-space: normal;
   word-break: break-word;
   font-weight: 700;
-  font-size: 18px;
+  font-size: 16 px;
   font-family: var(--body-font);
   text-transform: uppercase;
 }
@@ -6245,13 +6248,13 @@ a.text-theme:hover,
 
 .breadcumb-wrapper {
   background-color: var(--title-color);
-  padding: 80px 0;
+  padding: 55px 0;
   /* Medium devices */
 }
 
 @media (max-width: 991px) {
   .breadcumb-wrapper {
-    padding: 120px 0;
+    padding: 55px 0;
   }
 }
 
@@ -8091,8 +8094,8 @@ blockquote.vs-quote .quote-author {
 
 .hero-img .circle {
   border-radius: 50%;
-  width: 590px;
-  height: 590px;
+  width: 459px;
+  height: 459px;
   background-color: var(--white-color);
   display: inline-block;
   position: absolute;
@@ -8104,8 +8107,8 @@ blockquote.vs-quote .quote-author {
 
 @media (max-width: 767px) {
   .hero-img .circle {
-    width: 300px;
-    height: 300px;
+    width: 376px;
+    height: 392px;
   }
 }
 
@@ -11855,7 +11858,7 @@ blockquote.vs-quote .quote-author {
 
 .contact-box {
   background-color: var(--bg2-color);
-  min-width: 480px;
+  /* min-width: 480px; */
   overflow: hidden;
   height: auto;
   padding: 60px;
@@ -11880,7 +11883,14 @@ blockquote.vs-quote .quote-author {
   left: 0;
   background-color: var(--theme-color);
 }
-
+.about-feature-img {
+    width:  100% !important;
+    max-width: 500px !important ;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
 .contact-box__text {
   max-width: 84%;
 }
@@ -12489,8 +12499,10 @@ blockquote.vs-quote .quote-author {
   position: relative;
   margin-bottom: 22px;
   text-transform: uppercase;
-  font-size: 26px;
+  font-size: 18px;
   font-weight: 800;
+  display: flex;
+  justify-content: center;
 }
 
 .cart_totals tfoot .order-total td {
@@ -12948,7 +12960,7 @@ blockquote.vs-quote .quote-author {
 .product-style6 .vs-btn {
   font-size: 14px;
   padding: 11px 59px 11px 22px;
-  margin-right: -47px;
+  margin-right: -21px;
   transform: scaleX(0);
   transform-origin: right;
   opacity: 0;
@@ -15276,4 +15288,36 @@ blockquote.vs-quote .quote-author {
   background-color: transparent !important;
   border-radius: 0 !important;
   padding: 0 !important;
+}
+@media (max-width: 509px) {
+ .breadcumb-title {
+  font-size:32px;
+ }
+ 
+.counter-media__title {
+  font-size: 40px;
+  margin: -0.25em 0 0px 0;
+}
+.media-body{
+    display: grid;
+    place-items: center;
+}
+.summary-title{
+  font-size: 17px;
+} 
+}
+
+@media (min-width: 509px) and (max-width: 769px) {
+  .sec-subtitle {
+    margin: 4.25em 0 15px 0;
+  }
+  .media-body{
+    display: grid;
+    place-items: center;
+}
+.summary-title{
+  display: flex;
+  justify-content: center;
+  font-size: 17px;
+} 
 }

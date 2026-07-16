@@ -34,7 +34,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: clamp(14px, 1.5vw, 15px);
   line-height: 1.55;
   text-rendering: optimizeLegibility;
 }
@@ -75,7 +75,14 @@ textarea:focus-visible {
   top: 0;
   z-index: 21;
 }
-
+.section-heading {
+    color: #fff;
+    margin-bottom: 35px;
+    font-size: 46px;
+    font-weight: 700;
+    font-family: var(--title-font);
+    padding-left: 30px;
+}
 .promo-inner {
   display: flex;
   justify-content: space-between;
@@ -497,20 +504,20 @@ p {
 }
 
 h1 {
-  font-size: clamp(34px, 4vw, 48px);
-  line-height: 1.08;
+  font-size: clamp(28px, 4vw, 48px);
+  line-height: 1.15;
   margin-bottom: 14px;
 }
 
 h2 {
-  font-size: clamp(26px, 3vw, 38px);
-  line-height: 1.14;
+  font-size: clamp(22px, 3vw, 38px);
+  line-height: 1.2;
   margin-bottom: 12px;
 }
 
 h3 {
-  font-size: 18px;
-  line-height: 1.22;
+  font-size: clamp(16px, 2vw, 18px);
+  line-height: 1.3;
   margin-bottom: 8px;
 }
 
@@ -5470,18 +5477,20 @@ body.mobile-menu-open {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 9;
+  z-index: 998;
+  background: transparent;
+  cursor: default;
 }
 
 .actions-dropdown-menu {
-  position: absolute;
+  position: fixed;
   right: 0;
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  z-index: 10;
-  min-width: 140px;
+  z-index: 999;
+  min-width: 160px;
   padding: 4px;
   display: flex;
   flex-direction: column;
@@ -6160,4 +6169,1083 @@ body.mobile-menu-open {
     transform: translateY(-80px) scale(1.15);
     opacity: 0;
   }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE HOMEPAGE TEXT STYLES
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Hero Section Responsive Text */
+.hero-style1 .hero-title {
+  font-size: clamp(28px, 5vw, 56px) !important;
+  line-height: 1.1 !important;
+  margin-bottom: clamp(12px, 2vw, 20px) !important;
+}
+
+.hero-style1 .hero-text {
+  font-size: clamp(14px, 1.8vw, 17px) !important;
+  line-height: 1.5 !important;
+  margin-bottom: clamp(12px, 2vw, 16px) !important;
+}
+
+.hero-style1 .hero-subtitle {
+  font-size: clamp(12px, 1.5vw, 15px) !important;
+  line-height: 1.4 !important;
+}
+
+/* Section Titles Responsive */
+.sec-title {
+  font-size: clamp(24px, 4vw, 42px) !important;
+  line-height: 1.2 !important;
+  margin-bottom: clamp(12px, 2vw, 20px) !important;
+}
+
+.sec-subtitle {
+  font-size: clamp(12px, 1.5vw, 15px) !important;
+  line-height: 1.3 !important;
+  display: inline-block;
+  margin-bottom: clamp(8px, 1.5vw, 12px) !important;
+}
+
+/* Category Section Responsive */
+.category-card h3 {
+  font-size: clamp(16px, 2vw, 20px) !important;
+  line-height: 1.3 !important;
+}
+
+.category-card span {
+  font-size: clamp(11px, 1.2vw, 13px) !important;
+}
+
+/* About Section Responsive */
+.about-content1 .about-text {
+  font-size: clamp(14px, 1.6vw, 16px) !important;
+  line-height: 1.6 !important;
+}
+
+.list-style1 li {
+  font-size: clamp(13px, 1.5vw, 15px) !important;
+  line-height: 1.5 !important;
+}
+
+/* Product Card Responsive */
+.product-title {
+  font-size: clamp(15px, 1.8vw, 18px) !important;
+  line-height: 1.3 !important;
+}
+
+.product-price {
+  font-size: clamp(18px, 2.5vw, 24px) !important;
+  line-height: 1.2 !important;
+}
+
+.product-cate {
+  font-size: clamp(10px, 1.2vw, 11px) !important;
+}
+
+.vs-product .product-content p {
+  font-size: clamp(12px, 1.3vw, 13px) !important;
+  line-height: 1.4 !important;
+}
+
+/* Feature Section Responsive */
+.feature-title {
+  font-size: clamp(15px, 1.8vw, 18px) !important;
+  line-height: 1.3 !important;
+}
+
+.feature-text {
+  font-size: clamp(13px, 1.4vw, 14px) !important;
+  line-height: 1.5 !important;
+}
+
+/* Banner Section Responsive */
+.banner-title {
+  font-size: clamp(18px, 2.5vw, 28px) !important;
+  line-height: 1.2 !important;
+}
+
+.banner-text {
+  font-size: clamp(13px, 1.4vw, 15px) !important;
+  line-height: 1.4 !important;
+}
+
+/* Testimonials Responsive */
+.testi-title {
+  font-size: clamp(15px, 1.8vw, 18px) !important;
+  line-height: 1.3 !important;
+}
+
+.testi-text {
+  font-size: clamp(13px, 1.5vw, 15px) !important;
+  line-height: 1.6 !important;
+}
+
+.testi-author {
+  font-size: clamp(12px, 1.3vw, 14px) !important;
+}
+
+/* Call Card Responsive */
+.call-card__title {
+  font-size: clamp(13px, 1.5vw, 15px) !important;
+}
+
+.call-card__number {
+  font-size: clamp(18px, 2.2vw, 24px) !important;
+  line-height: 1.2 !important;
+}
+
+/* Button Text Responsive */
+.vs-btn {
+  font-size: clamp(13px, 1.4vw, 15px) !important;
+  padding: clamp(10px, 1.5vw, 12px) clamp(18px, 2.5vw, 24px) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE SPECIFIC ADJUSTMENTS (max-width: 768px)
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* Hero Section */
+  .hero-style1 .hero-title {
+    font-size: 28px !important;
+    line-height: 1.15 !important;
+    margin-bottom: 12px !important;
+  }
+
+  .hero-style1 .hero-text {
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    margin-bottom: 12px !important;
+  }
+
+  .hero-style1 .hero-subtitle {
+    font-size: 12px !important;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .hero-style1 .hero-subtitle img {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Section Titles */
+  .sec-title {
+    font-size: 24px !important;
+    line-height: 1.25 !important;
+  }
+
+  .sec-subtitle {
+    font-size: 12px !important;
+  }
+
+  /* Category Cards */
+  .category-card h3 {
+    font-size: 16px !important;
+    line-height: 1.3 !important;
+  }
+
+  .category-card span {
+    font-size: 11px !important;
+  }
+
+  /* Product Cards */
+  .product-title {
+    font-size: 15px !important;
+    line-height: 1.35 !important;
+  }
+
+  .product-price {
+    font-size: 18px !important;
+  }
+
+  .product-cate {
+    font-size: 10px !important;
+  }
+
+  /* Feature Items */
+  .feature-title {
+    font-size: 15px !important;
+  }
+
+  .feature-text {
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Testimonials */
+  .testi-title {
+    font-size: 15px !important;
+  }
+
+  .testi-text {
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+  }
+
+  /* Banners */
+  .banner-title {
+    font-size: 18px !important;
+    line-height: 1.3 !important;
+  }
+
+  .banner-text {
+    font-size: 13px !important;
+  }
+
+  /* About Section */
+  .about-content1 .about-text {
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+  }
+
+  .list-style1 li {
+    font-size: 13px !important;
+  }
+
+  /* Buttons */
+  .vs-btn {
+    font-size: 13px !important;
+    padding: 10px 18px !important;
+  }
+
+  /* Call Card */
+  .call-card__title {
+    font-size: 12px !important;
+  }
+
+  .call-card__number {
+    font-size: 18px !important;
+  }
+
+  /* Hero Content Centering for Mobile */
+  .hero-style1 .hero-content {
+    text-align: center;
+  }
+
+  .hero-style1 .d-flex {
+    justify-content: center;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TABLET SPECIFIC ADJUSTMENTS (769px - 1024px)
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Hero Section */
+  .hero-style1 .hero-title {
+    font-size: 38px !important;
+    line-height: 1.1 !important;
+  }
+
+  .hero-style1 .hero-text {
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+  }
+
+  .hero-style1 .hero-subtitle {
+    font-size: 13px !important;
+  }
+
+  /* Section Titles */
+  .sec-title {
+    font-size: 32px !important;
+    line-height: 1.2 !important;
+  }
+
+  .sec-subtitle {
+    font-size: 13px !important;
+  }
+
+  /* Category Cards */
+  .category-card h3 {
+    font-size: 18px !important;
+  }
+
+  .category-card span {
+    font-size: 12px !important;
+  }
+
+  /* Product Cards */
+  .product-title {
+    font-size: 16px !important;
+    line-height: 1.3 !important;
+  }
+
+  .product-price {
+    font-size: 20px !important;
+  }
+
+  /* Feature Items */
+  .feature-title {
+    font-size: 16px !important;
+  }
+
+  .feature-text {
+    font-size: 14px !important;
+  }
+
+  /* Testimonials */
+  .testi-title {
+    font-size: 16px !important;
+  }
+
+  .testi-text {
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+  }
+
+  /* Banners */
+  .banner-title {
+    font-size: 22px !important;
+  }
+
+  .banner-text {
+    font-size: 14px !important;
+  }
+
+  /* About Section */
+  .about-content1 .about-text {
+    font-size: 15px !important;
+    line-height: 1.6 !important;
+  }
+
+  .list-style1 li {
+    font-size: 14px !important;
+  }
+
+  /* Buttons */
+  .vs-btn {
+    font-size: 14px !important;
+    padding: 11px 20px !important;
+  }
+
+  /* Call Card */
+  .call-card__title {
+    font-size: 13px !important;
+  }
+
+  .call-card__number {
+    font-size: 20px !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SMALL MOBILE ADJUSTMENTS (max-width: 480px)
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+  /* Extra small text adjustments for very small screens */
+  .hero-style1 .hero-title {
+    font-size: 24px !important;
+    line-height: 1.2 !important;
+  }
+
+  .hero-style1 .hero-text {
+    font-size: 13px !important;
+  }
+
+  .sec-title {
+    font-size: 20px !important;
+  }
+
+  .product-title {
+    font-size: 14px !important;
+  }
+
+  .feature-title {
+    font-size: 14px !important;
+  }
+
+  .banner-title {
+    font-size: 16px !important;
+  }
+
+  .vs-btn {
+    font-size: 12px !important;
+    padding: 9px 35px !important;
+  }
+
+  /* Reduce padding for container on very small screens */
+  .container {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  /* Stack hero content better on small screens */
+  .hero-style1 .row {
+    gap: 20px;
+  }
+  
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   UTILITY CLASSES FOR RESPONSIVE TEXT
+   ═══════════════════════════════════════════════════════════════════ */
+
+.text-responsive-xs {
+  font-size: clamp(11px, 1.2vw, 13px) !important;
+}
+
+.text-responsive-sm {
+  font-size: clamp(12px, 1.4vw, 14px) !important;
+}
+
+.text-responsive-md {
+  font-size: clamp(14px, 1.6vw, 16px) !important;
+}
+
+.text-responsive-lg {
+  font-size: clamp(16px, 2vw, 20px) !important;
+}
+
+.text-responsive-xl {
+  font-size: clamp(20px, 3vw, 28px) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   HERO IMAGE & CIRCLE FIX FOR MOBILE
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Base hero-img styles */
+.hero-img {
+  position: relative;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  padding: 20px;
+  min-height: 600px;
+}
+
+.hero-img img {
+  position: relative;
+  z-index: 2;
+  width: 85%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+.hero-img .circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: white;
+  width: 590px;
+  height: 590px;
+  z-index: 1;
+  box-shadow: 0 20px 60px rgba(47, 107, 63, 0.12);
+}
+
+/* Tablet adjustments (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .hero-img {
+    padding: 15px;
+    min-height: 480px;
+  }
+
+  .hero-img .circle {
+    width: 450px;
+    height: 450px;
+  }
+
+  .hero-img img {
+    width: 80%;
+  }
+}
+
+/* Mobile adjustments (max-width: 768px) */
+@media (max-width: 768px) {
+  .hero-img {
+    padding: 20px 10px;
+    margin: 30px auto;
+    min-height: 400px;
+  }
+
+  .hero-img .circle {
+    width: 90vw;
+    max-width: 380px;
+    height: 90vw;
+    max-height: 380px;
+  }
+
+  .hero-img img {
+    width: 75%;
+  }
+
+  /* Center the hero image column on mobile */
+  .hero-style1 .col-xxl-auto {
+    display: flex;
+    justify-content: center;
+  }
+  
+  /* Ensure proper spacing */
+  .hero-style1 .col-xxl-6,
+  .hero-style1 .col-xl-6 {
+    /* margin-bottom: 30px; */
+  }
+}
+
+/* Small mobile adjustments (max-width: 480px) */
+@media (max-width: 480px) {
+  .hero-img {
+    padding: 15px 10px;
+    margin: 20px auto;
+    min-height: 350px;
+  }
+
+  .hero-img .circle {
+    width: 85vw;
+    max-width: 320px;
+    height: 85vw;
+    max-height: 320px;
+  }
+
+  .hero-img img {
+    width: 70%;
+  }
+}
+
+/* Extra small screens (max-width: 375px) */
+@media (max-width: 375px) {
+  .hero-img {
+    padding: 10px;
+    margin: 15px auto;
+    min-height: 300px;
+  }
+
+  .hero-img .circle {
+    width: 80vw;
+    max-width: 280px;
+    height: 80vw;
+    max-height: 280px;
+  }
+
+  .hero-img img {
+    width: 65%;
+  }
+}
+
+/* Make sure hero section handles overflow properly */
+.hero-style1 {
+  overflow-x: hidden;
+  padding: 70px 0 100px 0;
+  position: relative;
+}
+
+.hero-style1 .container {
+  overflow: visible;
+}
+
+.hero-style1 .row {
+  overflow: visible;
+  align-items: center;
+}
+
+/* Ensure proper spacing on mobile */
+@media (max-width: 768px) {
+  .hero-style1 {
+    padding: 50px 0 80px 0;
+  }
+
+  .hero-style1 .row.gy-4 {
+    row-gap: 2rem !important;
+  }
+  
+  .hero-style1 .col-xxl-6,
+  .hero-style1 .col-xl-6,
+  .hero-style1 .col-xxl-auto {
+    padding-bottom: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-style1 {
+    padding: 40px 0 70px 0;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   IMG-BOX2 & IMG-CIRCLE FIX FOR MOBILE (Features Section)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Base img-box2 styles */
+.img-box2 {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 20px;
+  margin: 0 auto;
+}
+
+.img-box2 .img-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  z-index: 1;
+  box-shadow: 0 15px 40px rgba(47, 107, 63, 0.1);
+}
+
+.img-box2 .img-fluid {
+  position: relative;
+  z-index: 2;
+  width: 85%;
+  max-width: 420px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: -20px auto;
+}
+
+/* Tablet adjustments (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .img-box2 {
+    padding: 15px;
+  }
+
+  .img-box2 .img-circle {
+    width: 400px;
+    height: 400px;
+  }
+
+  .img-box2 .img-fluid {
+    width: 80%;
+    max-width: 330px;
+  }
+}
+
+/* Mobile adjustments (max-width: 768px) */
+@media (max-width: 768px) {
+  .img-box2 {
+    padding: 20px 10px;
+    margin: 30px auto;
+  }
+
+  .img-box2 .img-circle {
+    width: 90vw;
+    max-width: 350px;
+    height: 90vw;
+    max-height: 350px;
+  }
+
+  .img-box2 .img-fluid {
+    width: 75%;
+    max-width: 280px;
+  }
+}
+
+/* Small mobile adjustments (max-width: 480px) */
+@media (max-width: 480px) {
+  .img-box2 {
+    padding: 15px 10px;
+    margin: 20px auto;
+  }
+
+  .img-box2 .img-circle {
+    width: 85vw;
+    max-width: 300px;
+    height: 85vw;
+    max-height: 300px;
+  }
+
+  .img-box2 .img-fluid {
+    width: 70%;
+    max-width: 230px;
+  }
+  .section-heading {
+    
+    font-size: 26px;
+    
+}
+}
+
+/* Extra small screens (max-width: 375px) */
+@media (max-width: 375px) {
+  .img-box2 {
+    padding: 10px;
+    margin: 15px auto;
+  }
+
+  .img-box2 .img-circle {
+    width: 80vw;
+    max-width: 260px;
+    height: 80vw;
+    max-height: 260px;
+  }
+
+  .img-box2 .img-fluid {
+    width: 65%;
+    max-width: 200px;
+  }
+}
+
+/* Ensure the feature section container handles this properly */
+@media (max-width: 768px) {
+  .space-extra-bottom .col-lg-6.mx-auto.text-center {
+    margin-bottom: 30px;
+  }
+  .section-heading {
+   
+    font-size: 30px;
+   padding-left: 10px;
+}
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   ADMIN DATA TABLES - SCROLLABLE BOTH VERTICALLY AND HORIZONTALLY
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Table wrapper containers - Enable both scrolling directions */
+.table-wrapper,
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 70vh;
+  position: relative;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  display: block;
+}
+
+/* When dropdown is open, allow overflow */
+.table-wrapper:has(.dropdown-open),
+.table-wrap:has(.dropdown-open) {
+  overflow: visible;
+}
+
+/* Alternative: create specific overflow for table body */
+.table-wrapper.has-dropdown,
+.table-wrap.has-dropdown {
+  overflow: visible;
+}
+
+/* Custom scrollbar styling for better UX */
+.table-wrapper::-webkit-scrollbar,
+.table-wrap::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.table-wrapper::-webkit-scrollbar-track,
+.table-wrap::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb,
+.table-wrap::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+  border: 2px solid #f1f5f9;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover,
+.table-wrap::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Data table base styles */
+.data-table,
+.admin-table {
+  width: 100%;
+  min-width: max-content;
+  border-collapse: collapse;
+  border-spacing: 0;
+  background: white;
+  margin: 0;
+  display: table;
+}
+
+/* Table header - sticky on vertical scroll */
+.data-table thead,
+.admin-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.data-table thead tr,
+.admin-table thead tr {
+  background: #f8fafc;
+}
+
+.data-table thead th,
+.admin-table thead th {
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 13px;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e2e8f0;
+  background: #f8fafc;
+  white-space: nowrap;
+  vertical-align: middle;
+  position: relative;
+}
+
+/* Add shadow to sticky header when scrolling */
+.data-table thead::after,
+.admin-table thead::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Table body */
+.data-table tbody,
+.admin-table tbody {
+  background: white;
+}
+
+.data-table tbody tr,
+.admin-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.15s ease;
+}
+
+.data-table tbody tr:last-child,
+.admin-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.data-table tbody tr:hover,
+.admin-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.data-table tbody td,
+.admin-table tbody td {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #374151;
+  vertical-align: middle;
+  white-space: nowrap;
+  background: white;
+}
+
+.data-table tbody tr:hover td,
+.admin-table tbody tr:hover td {
+  background-color: #f9fafb;
+}
+
+/* First column sticky on horizontal scroll (optional) */
+.data-table.sticky-first-col thead th:first-child,
+.data-table.sticky-first-col tbody td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background: inherit;
+}
+
+.data-table.sticky-first-col thead th:first-child {
+  z-index: 25;
+  background: #f8fafc;
+}
+
+.data-table.sticky-first-col tbody td:first-child {
+  background: white;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.data-table.sticky-first-col tbody tr:hover td:first-child {
+  background: #f9fafb;
+}
+
+/* Action buttons in tables */
+.data-table td button,
+.admin-table td button,
+.data-table td a,
+.admin-table td a {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Dropdown menus in table cells */
+.data-table td .dropdown,
+.admin-table td .dropdown,
+.data-table td [class*="dropdown"],
+.admin-table td [class*="dropdown"] {
+  position: relative;
+}
+
+.data-table td .dropdown-menu,
+.admin-table td .dropdown-menu,
+.data-table td [class*="dropdown-menu"],
+.admin-table td [class*="dropdown-menu"],
+.data-table td [class*="popover"],
+.admin-table td [class*="popover"] {
+  position: fixed !important;
+  z-index: 9999 !important;
+  overflow: visible !important;
+}
+
+/* Ensure action column allows overflow */
+.data-table td:last-child,
+.admin-table td:last-child {
+  overflow: visible;
+  position: relative;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 1024px) {
+  .table-wrapper,
+  .table-wrap {
+    max-height: 60vh;
+  }
+
+  .data-table thead th,
+  .admin-table thead th {
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+
+  .data-table tbody td,
+  .admin-table tbody td {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-wrapper,
+  .table-wrap {
+    max-height: 50vh;
+    border-radius: 6px;
+  }
+
+  .data-table thead th,
+  .admin-table thead th {
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+
+  .data-table tbody td,
+  .admin-table tbody td {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  /* Disable first column sticky on mobile for better UX */
+  .data-table.sticky-first-col thead th:first-child,
+  .data-table.sticky-first-col tbody td:first-child {
+    position: relative;
+    box-shadow: none;
+  }
+}
+
+/* Card container with table inside */
+.card .table-wrapper,
+.card .table-wrap {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Ensure cards don't interfere with scrolling */
+.card {
+  overflow: visible !important;
+}
+
+/* Loading overlay compatibility */
+.table-wrap[style*="position: relative"] {
+  position: relative !important;
+}
+
+/* Empty state in tables */
+.data-table tbody tr td[colspan],
+.admin-table tbody tr td[colspan] {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+  font-style: italic;
+  background: white !important;
+}
+
+/* Zebra striping (optional - add .striped class to table) */
+.data-table.striped tbody tr:nth-child(even) td,
+.admin-table.striped tbody tr:nth-child(even) td {
+  background-color: #f9fafb;
+}
+
+.data-table.striped tbody tr:nth-child(even):hover td,
+.admin-table.striped tbody tr:nth-child(even):hover td {
+  background-color: #f3f4f6;
+}
+
+/* Compact table variant (add .compact class to table) */
+.data-table.compact thead th,
+.admin-table.compact thead th {
+  padding: 10px 12px;
+  font-size: 12px;
+}
+
+.data-table.compact tbody td,
+.admin-table.compact tbody td {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+/* Ensure proper table display */
+.table-wrapper table,
+.table-wrap table {
+  display: table;
+  border-collapse: collapse;
+}
+
+.table-wrapper thead,
+.table-wrap thead {
+  display: table-header-group;
+}
+
+.table-wrapper tbody,
+.table-wrap tbody {
+  display: table-row-group;
+}
+
+.table-wrapper tr,
+.table-wrap tr {
+  display: table-row;
+}
+
+.table-wrapper th,
+.table-wrapper td,
+.table-wrap th,
+.table-wrap td {
+  display: table-cell;
 }

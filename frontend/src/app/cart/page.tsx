@@ -229,7 +229,8 @@ export default function CartPage() {
                     borderRadius: "24px",
                     padding: "32px",
                     border: "2px solid #cfe9a4",
-                    boxShadow: "0 8px 32px rgba(140,198,63,0.10)"
+                    boxShadow: "0 8px 32px rgba(140,198,63,0.10)",
+                    textAlign:'center'
                   }}>
                     {/* Title */}
                     <h2 style={{
@@ -304,10 +305,10 @@ export default function CartPage() {
                       boxShadow: "0 6px 20px rgba(140,198,63,0.35)",
                       marginBottom: "24px"
                     }}>
-                      <span style={{ fontSize: "15px", fontWeight: 800, color: "white", textTransform: "uppercase", letterSpacing: "1px" }}>
+                      <span style={{ fontSize: "0.9rem", fontWeight: 800, color: "white", textTransform: "uppercase", letterSpacing: "1px" }}>
                         Order Total
                       </span>
-                      <span style={{ fontSize: "22px", fontWeight: 800, color: "white" }}>
+                      <span style={{ fontSize: "0.95rem", fontWeight: 800, color: "white" }}>
                         Rs.&nbsp;{total.toFixed(2)}
                       </span>
                     </div>

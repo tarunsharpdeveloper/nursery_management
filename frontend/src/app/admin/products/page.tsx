@@ -102,6 +102,7 @@ export default function AdminProductsPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [openActionId, setOpenActionId] = useState<number | null>(null);
   const [dropdownDirection, setDropdownDirection] = useState<"up" | "down">("down");
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [confirmState, setConfirmState] = useState<{
     isOpen: boolean;
@@ -918,7 +919,14 @@ export default function AdminProductsPage() {
                           } else {
                             const rect = e.currentTarget.getBoundingClientRect();
                             const spaceBelow = window.innerHeight - rect.bottom;
-                            setDropdownDirection(spaceBelow < 200 ? "up" : "down");
+                            const direction = spaceBelow < 200 ? "up" : "down";
+                            setDropdownDirection(direction);
+                            
+                            // Calculate fixed position
+                            const top = direction === "down" ? rect.bottom + 4 : rect.top - 4;
+                            const left = rect.right - 160; // 160px is min-width of dropdown
+                            
+                            setDropdownPosition({ top, left });
                             setOpenActionId(p.id);
                           }
                         }}
@@ -934,7 +942,15 @@ export default function AdminProductsPage() {
                             className="actions-dropdown-overlay" 
                             onClick={(e) => { e.stopPropagation(); setOpenActionId(null); }} 
                           />
-                          <div className={`actions-dropdown-menu direction-${dropdownDirection}`}>
+                          <div 
+                            className={`actions-dropdown-menu direction-${dropdownDirection}`}
+                            style={{
+                              position: 'fixed',
+                              top: dropdownDirection === "down" ? dropdownPosition.top : 'auto',
+                              bottom: dropdownDirection === "up" ? window.innerHeight - dropdownPosition.top : 'auto',
+                              left: dropdownPosition.left,
+                            }}
+                          >
                             <Link 
                               href={`/admin/products/view?id=${p.id}`}
                               className="button secondary actions-dropdown-item" 

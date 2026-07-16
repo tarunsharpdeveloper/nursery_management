@@ -636,7 +636,7 @@ export default function HomePage() {
                 <h2 className="sec-title">What Makes Awantika Seeds Different?</h2>
               </div>
             </div>
-            <div className="col-auto">
+            <div className="col-auto center-feature">
               <div className="call-card">
                 <div className="call-card__content">
                   <span className="call-card__title">Need Help?</span>
@@ -646,9 +646,9 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          <div className="row align-items-center">
+          <div className="row align-items-center justify-content-center">
             <div className="col-lg-6">
-              <div className="row">
+              <div className="row justify-content-center">
                 {[
                   { title: "Direct From Our Nursery", img: "/assets/img/icons/feature-1-1.png", text: "Healthy saplings cultivated in local regional weather fields." },
                   { title: "Certified Organic Fertilizer", img: "/assets/img/icons/feature-1-2.png", text: "Enriched with custom mineral bases and organic vermicompost." },

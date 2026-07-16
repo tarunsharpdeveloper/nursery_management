@@ -1010,6 +1010,19 @@ ul.wp-block-rss a {
   .summary-title{
     font-size: 17px;
   }
+  .feature-item
+ {
+    margin-bottom: 30px;
+    display: grid;
+    place-items: center;
+}
+.center-feature{
+  display: grid;
+  place-items: center;
+  width:auto;
+  flex: 0 0 auto;
+   width: auto;
+}
 }
 
 /*=================================
@@ -8838,8 +8851,8 @@ blockquote.vs-quote .quote-author {
 .img-box2 .img-circle {
   bottom: auto;
   position: absolute;
-  width: 567.24px;
-  height: 580.08px;
+  width: 482.24px;
+  height: 450.08px;
   background-color: var(--theme-color2);
   border-radius: 50%;
   z-index: -1;
@@ -8850,8 +8863,8 @@ blockquote.vs-quote .quote-author {
 
 @media (max-width: 767px) {
   .img-box2 .img-circle {
-    width: 240px;
-    height: 240px;
+    width: 331px;
+    height: 331px;
   }
 }
 
@@ -14083,11 +14096,11 @@ blockquote.vs-quote .quote-author {
 }
 
 .product-big-img {
-  background-color: var(--bg4-color);
-  border: 1px solid var(--theme-color2);
+  /* background-color: var(--bg4-color); */
+  /* border: 1px solid var(--theme-color2); */
   margin-bottom: 25px;
   text-align: center;
-  border-radius: 30px;
+  /* border-radius: 30px; */
   overflow: hidden;
 }
 

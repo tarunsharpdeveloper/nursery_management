@@ -380,18 +380,18 @@ export default function ProductDetailsClient({
                 </div>
 
                 {/* Product Info Below Image */}
-                <div className="product-slide-info">
-                  <div className="product-slide-info-item">
-                    <strong>SKU Code</strong>
-                    <span>PROD-{String(product.id).padStart(4, "0")}</span>
+                <div className="product-info-cards">
+                  <div className="product-info-card sku-card">
+                    <span className="product-info-label">SKU Code</span>
+                    <span className="product-info-value">PROD-{String(product.id).padStart(4, "0")}</span>
                   </div>
-                  <div className="product-slide-info-item">
-                    <strong>Category</strong>
-                    <span>{product.category}</span>
+                  <div className="product-info-card category-card">
+                    <span className="product-info-label">Category</span>
+                    <span className="product-info-value">{product.category}</span>
                   </div>
-                  <div className="product-slide-info-item">
-                    <strong>Type</strong>
-                    <span>{product.product_type}</span>
+                  <div className="product-info-card type-card">
+                    <span className="product-info-label">Type</span>
+                    <span className="product-info-value">{product.product_type}</span>
                   </div>
                 </div>
 

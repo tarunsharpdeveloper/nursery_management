@@ -7745,6 +7745,80 @@ body.mobile-menu-open {
   visibility: hidden !important;
 }
 
+/* Product info cards styling - Theme matched */
+.product-info-cards {
+  display: flex;
+  gap: 12px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.product-info-card {
+  background: #ffffff;
+  border: 2px solid #e8f5e9;
+  border-radius: 12px;
+  padding: 18px 22px;
+  flex: 1;
+  min-width: 150px;
+  box-shadow: 0 2px 12px rgba(47, 107, 63, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.product-info-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--brand);
+  transition: width 0.3s ease;
+}
+
+.product-info-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(47, 107, 63, 0.15);
+  border-color: var(--brand);
+}
+
+.product-info-card:hover::before {
+  width: 100%;
+  opacity: 0.05;
+}
+
+.product-info-card.sku-card::before {
+  background: linear-gradient(135deg, #2f6b3f 0%, #5cb85c 100%);
+}
+
+.product-info-card.category-card::before {
+  background: linear-gradient(135deg, #8cc63f 0%, #b8e986 100%);
+}
+
+.product-info-card.type-card::before {
+  background: linear-gradient(135deg, #689f38 0%, #9ccc65 100%);
+}
+
+.product-info-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #689f38;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+  display: block;
+  font-family: inherit;
+}
+
+.product-info-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2f6b3f;
+  display: block;
+  font-family: inherit;
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    CONTACT PAGE - MOBILE/TABLET FULL WIDTH
    ═══════════════════════════════════════════════════════════════════ */
@@ -7780,5 +7854,16 @@ body.mobile-menu-open {
 
   .form-style2 .vs-btn {
     margin: 0 auto !important;
+  }
+
+  /* Product info cards - vertical layout on mobile/tablet */
+  .product-info-cards {
+    flex-direction: column !important;
+    gap: 15px !important;
+  }
+
+  .product-info-card {
+    width: 100% !important;
+    max-width: none !important;
   }
 }

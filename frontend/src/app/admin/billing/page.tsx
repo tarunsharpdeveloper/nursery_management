@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
 import { RefreshCw, Save, Trash2, Eye, MoreVertical, Plus, X, Search } from "lucide-react";
@@ -76,7 +77,6 @@ export default function BillingPage() {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("Loading...");
   const [openActionId, setOpenActionId] = useState<number | null>(null);
-  const [dropdownDirection, setDropdownDirection] = useState<"up" | "down">("down");
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [confirmState, setConfirmState] = useState<{
@@ -470,12 +470,15 @@ export default function BillingPage() {
                           setOpenActionId(null);
                         } else {
                           const rect = e.currentTarget.getBoundingClientRect();
-                          const spaceBelow = window.innerHeight - rect.bottom;
-                          const direction = spaceBelow < 200 ? "up" : "down";
-                          setDropdownDirection(direction);
+                          const dropdownWidth = 160;
                           
-                          const top = direction === "down" ? rect.bottom + 4 : rect.top - 4;
-                          const left = rect.right - 160;
+                          // Position dropdown aligned with button top
+                          let top = rect.top;
+                          let left = rect.right - dropdownWidth;
+                          
+                          // Keep dropdown within viewport horizontally
+                          if (left < 10) left = 10;
+                          if (left + dropdownWidth > window.innerWidth) left = window.innerWidth - dropdownWidth - 10;
                           
                           setDropdownPosition({ top, left });
                           setOpenActionId(row.id);
@@ -487,19 +490,19 @@ export default function BillingPage() {
                       <MoreVertical size={16} />
                     </button>
                     
-                    {openActionId === row.id && (
+                    {openActionId === row.id && typeof document !== 'undefined' && createPortal(
                       <>
                         <div 
                           className="actions-dropdown-overlay" 
                           onClick={(e) => { e.stopPropagation(); setOpenActionId(null); }} 
                         />
                         <div 
-                          className={`actions-dropdown-menu direction-${dropdownDirection}`}
+                          className="actions-dropdown-menu direction-down"
                           style={{
                             position: 'fixed',
-                            top: dropdownDirection === "down" ? dropdownPosition.top : 'auto',
-                            bottom: dropdownDirection === "up" ? window.innerHeight - dropdownPosition.top : 'auto',
-                            left: dropdownPosition.left,
+                            top: dropdownPosition.top + 'px',
+                            left: dropdownPosition.left + 'px',
+                            zIndex: 10001,
                           }}
                         >
                           <Link 
@@ -542,7 +545,8 @@ export default function BillingPage() {
                             Delete
                           </button>
                         </div>
-                      </>
+                      </>,
+                      document.body
                     )}
                   </div>
                 </td>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Edit2, Plus, Power, PowerOff, RefreshCw, Tags, Trash2, ListTree, MoreVertical, ChevronDown, X, Search } from "lucide-react";
 import { FormModal } from "@/components/form-modal";
@@ -49,7 +50,6 @@ export default function AdminCategoriesPage() {
   const [editing, setEditing] = useState<Category | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [openActionId, setOpenActionId] = useState<number | null>(null);
-  const [dropdownDirection, setDropdownDirection] = useState<"up" | "down">("down");
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [confirmState, setConfirmState] = useState<{
     isOpen: boolean;
@@ -438,12 +438,15 @@ export default function AdminCategoriesPage() {
                             setOpenActionId(null);
                           } else {
                             const rect = e.currentTarget.getBoundingClientRect();
-                            const spaceBelow = window.innerHeight - rect.bottom;
-                            const direction = spaceBelow < 200 ? "up" : "down";
-                            setDropdownDirection(direction);
+                            const dropdownWidth = 160;
                             
-                            const top = direction === "down" ? rect.bottom + 4 : rect.top - 4;
-                            const left = rect.right - 160;
+                            // Position dropdown aligned with button top
+                            let top = rect.top;
+                            let left = rect.right - dropdownWidth;
+                            
+                            // Keep dropdown within viewport horizontally
+                            if (left < 10) left = 10;
+                            if (left + dropdownWidth > window.innerWidth) left = window.innerWidth - dropdownWidth - 10;
                             
                             setDropdownPosition({ top, left });
                             setOpenActionId(c.id);
@@ -455,19 +458,19 @@ export default function AdminCategoriesPage() {
                         <MoreVertical size={16} />
                       </button>
                       
-                      {openActionId === c.id && (
+                      {openActionId === c.id && typeof document !== 'undefined' && createPortal(
                         <>
                           <div 
                             className="actions-dropdown-overlay" 
                             onClick={(e) => { e.stopPropagation(); setOpenActionId(null); }} 
                           />
                           <div 
-                            className={`actions-dropdown-menu direction-${dropdownDirection}`}
+                            className="actions-dropdown-menu direction-down"
                             style={{
                               position: 'fixed',
-                              top: dropdownDirection === "down" ? dropdownPosition.top : 'auto',
-                              bottom: dropdownDirection === "up" ? window.innerHeight - dropdownPosition.top : 'auto',
-                              left: dropdownPosition.left,
+                              top: dropdownPosition.top + 'px',
+                              left: dropdownPosition.left + 'px',
+                              zIndex: 10001,
                             }}
                           >
                             <button 
@@ -477,7 +480,7 @@ export default function AdminCategoriesPage() {
                               disabled={busy}
                             >
                               <ListTree size={16} color="#3b82f6" style={{ marginRight: 8 }} />
-                              Subcategories
+                              Subs
                             </button>
                             <button 
                               className="button secondary actions-dropdown-item" 
@@ -501,7 +504,8 @@ export default function AdminCategoriesPage() {
                               Delete
                             </button>
                           </div>
-                        </>
+                        </>,
+                        document.body
                       )}
                     </div>
                   </td>

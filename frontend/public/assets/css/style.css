@@ -115,7 +115,7 @@ Version: 1.0.0
   --main-container: 1320px;
   --container-gutters: 30px;
   --section-space: 100px;
-  --section-space-mobile: 80px;
+  --section-space-mobile: 20px;
   --section-title-space: 60px;
   --ripple-ani-duration: 5s;
 }
@@ -6267,7 +6267,7 @@ a.text-theme:hover,
 
 @media (max-width: 991px) {
   .breadcumb-wrapper {
-    padding: 55px 0;
+    padding: 23px 0;
   }
 }
 
@@ -15306,7 +15306,12 @@ blockquote.vs-quote .quote-author {
  .breadcumb-title {
   font-size:32px;
  }
- 
+ .contact-box__title{
+  font-size: 1.5rem;
+ }
+ .call-card__icon{
+      --icon-size:50px;
+ }
 .counter-media__title {
   font-size: 40px;
   margin: -0.25em 0 0px 0;

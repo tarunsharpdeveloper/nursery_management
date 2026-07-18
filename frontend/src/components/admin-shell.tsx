@@ -34,6 +34,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   // "open" = full sidebar with labels, "collapsed" = icon-only, "closed" = fully hidden (mobile)
   const [sidebarState, setSidebarState] = useState<"open" | "collapsed" | "closed">("open");
   const [isMobile, setIsMobile] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   useEffect(() => {
     function checkMobile() {
@@ -80,6 +81,21 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       setSidebarState("closed");
     }
   }, [pathname, isMobile]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.admin-user-profile')) {
+        setUserDropdownOpen(false);
+      }
+    }
+    
+    if (userDropdownOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [userDropdownOpen]);
 
   const toggleSidebar = useCallback(() => {
     if (isMobile) {
@@ -146,7 +162,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <Menu size={22} />
             </button>
           </div>
-          <div className="admin-user-profile nav-dropdown" style={{ cursor: "pointer" }}>
+          <div className="admin-user-profile nav-dropdown" 
+               style={{ cursor: "pointer", position: "relative" }}
+               onClick={(e) => {
+                 e.stopPropagation();
+                 setUserDropdownOpen(!userDropdownOpen);
+               }}
+          >
             <style>{`
               .admin-dropdown-panel {
                 background: #1d3424 !important;
@@ -159,12 +181,24 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 background-color: rgba(255, 255, 255, 0.14) !important;
                 color: white !important;
               }
+              @media (min-width: 769px) {
+                .admin-user-profile:hover .admin-dropdown-panel {
+                  display: block !important;
+                }
+              }
             `}</style>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <UserCircle size={22} />
               <span className="username">{user.name}</span>
             </div>
-            <div className="dropdown-panel admin-dropdown-panel" style={{ right: "-12px", left: "auto", minWidth: "150px" }}>
+            <div className="dropdown-panel admin-dropdown-panel" 
+                 style={{ 
+                   right: "-12px", 
+                   left: "auto", 
+                   minWidth: "150px",
+                   display: userDropdownOpen ? "block" : "none"
+                 }}
+            >
               <Link href="/admin/profile" className="dropdown-item admin-dropdown-item" style={{ display: "flex", alignItems: "center", gap: "8px" }}><User size={16} /> Profile</Link>
               <button onClick={logout} className="dropdown-item admin-dropdown-item" style={{ width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}><LogOut size={16} /> Logout</button>
             </div>

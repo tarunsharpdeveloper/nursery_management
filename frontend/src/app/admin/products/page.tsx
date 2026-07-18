@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useMemo, DragEvent } from "react";
+import { createPortal } from "react-dom";
 import { apiRequest } from "@/lib/api";
 import { Edit2, Plus, Power, PowerOff, RefreshCw, Box, Trash2, Eye, X, UploadCloud, MoreVertical, ChevronDown, Search } from "lucide-react";
 import { FormModal } from "@/components/form-modal";
@@ -101,7 +102,6 @@ export default function AdminProductsPage() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [openActionId, setOpenActionId] = useState<number | null>(null);
-  const [dropdownDirection, setDropdownDirection] = useState<"up" | "down">("down");
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [confirmState, setConfirmState] = useState<{
@@ -907,7 +907,7 @@ export default function AdminProductsPage() {
                       {isActive(p) ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                  <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
                     <div className="actions-dropdown-wrapper">
                       <button 
                         className="button secondary" 
@@ -918,13 +918,15 @@ export default function AdminProductsPage() {
                             setOpenActionId(null);
                           } else {
                             const rect = e.currentTarget.getBoundingClientRect();
-                            const spaceBelow = window.innerHeight - rect.bottom;
-                            const direction = spaceBelow < 200 ? "up" : "down";
-                            setDropdownDirection(direction);
+                            const dropdownWidth = 160;
                             
-                            // Calculate fixed position
-                            const top = direction === "down" ? rect.bottom + 4 : rect.top - 4;
-                            const left = rect.right - 160; // 160px is min-width of dropdown
+                            // Position dropdown aligned with button top
+                            let top = rect.top;
+                            let left = rect.right - dropdownWidth;
+                            
+                            // Keep dropdown within viewport horizontally
+                            if (left < 10) left = 10;
+                            if (left + dropdownWidth > window.innerWidth) left = window.innerWidth - dropdownWidth - 10;
                             
                             setDropdownPosition({ top, left });
                             setOpenActionId(p.id);
@@ -936,19 +938,19 @@ export default function AdminProductsPage() {
                         <MoreVertical size={16} />
                       </button>
                       
-                      {openActionId === p.id && (
+                      {openActionId === p.id && typeof document !== 'undefined' && createPortal(
                         <>
                           <div 
                             className="actions-dropdown-overlay" 
                             onClick={(e) => { e.stopPropagation(); setOpenActionId(null); }} 
                           />
                           <div 
-                            className={`actions-dropdown-menu direction-${dropdownDirection}`}
+                            className="actions-dropdown-menu direction-down"
                             style={{
                               position: 'fixed',
-                              top: dropdownDirection === "down" ? dropdownPosition.top : 'auto',
-                              bottom: dropdownDirection === "up" ? window.innerHeight - dropdownPosition.top : 'auto',
-                              left: dropdownPosition.left,
+                              top: dropdownPosition.top + 'px',
+                              left: dropdownPosition.left + 'px',
+                              zIndex: 10001,
                             }}
                           >
                             <Link 
@@ -987,7 +989,8 @@ export default function AdminProductsPage() {
                               Delete
                             </button>
                           </div>
-                        </>
+                        </>,
+                        document.body
                       )}
                     </div>
                   </td>

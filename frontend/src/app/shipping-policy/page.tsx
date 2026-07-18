@@ -5,7 +5,7 @@ export default function ShippingPolicyPage() {
     <div className="main-content">
       {/* Page Header */}
       <div className="breadcumb-wrapper" style={{ 
-        backgroundImage: "url('https://t3.ftcdn.net/jpg/04/36/00/20/360_F_436002013_xpV04ylL6uUOcNeGsPzBIQEIRkIFQlQD.jpg')",
+        backgroundImage: "url('https://images.unsplash.com/photo-1493673272479-a20888bcee10?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZGFyayUyMHBsYW50fGVufDB8fDB8fHww')",
         backgroundSize: "cover",
         backgroundPosition: "center"
       }}>
@@ -116,41 +116,87 @@ export default function ShippingPolicyPage() {
                   </p>
                   
                   <div style={{ marginTop: "20px" }}>
-                    <table style={{ 
-                      width: "100%", 
-                      borderCollapse: "collapse",
-                      fontSize: "16px"
-                    }}>
-                      <thead>
-                        <tr style={{ background: "var(--brand)", color: "#fff" }}>
-                          <th style={{ padding: "15px", textAlign: "left", borderBottom: "2px solid #ddd" }}>Location</th>
-                          <th style={{ padding: "15px", textAlign: "left", borderBottom: "2px solid #ddd" }}>Standard Shipping</th>
-                          <th style={{ padding: "15px", textAlign: "left", borderBottom: "2px solid #ddd" }}>Express Shipping</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr style={{ background: "#f9f9f9" }}>
-                          <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>Madhya Pradesh (Local)</td>
-                          <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>2-4 business days</td>
-                          <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>1-2 business days</td>
-                        </tr>
-                        <tr>
-                          <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>Metro Cities</td>
-                          <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>3-5 business days</td>
-                          <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>2-3 business days</td>
-                        </tr>
-                        <tr style={{ background: "#f9f9f9" }}>
-                          <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>Other Cities</td>
-                          <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>5-7 business days</td>
-                          <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>3-4 business days</td>
-                        </tr>
-                        <tr>
-                          <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>Remote Areas</td>
-                          <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>7-10 business days</td>
-                          <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>5-7 business days</td>
-                        </tr>
-                      </tbody>
-                    </table>
+                    <div
+  style={{
+    width: "100%",
+    overflowX: "auto",
+    WebkitOverflowScrolling: "touch",
+    borderRadius: "8px",
+  }}
+>
+  <table
+    style={{
+      width: "100%",
+      minWidth: "700px", // Prevents columns from squishing
+      borderCollapse: "collapse",
+      fontSize: "16px",
+    }}
+  >
+    <thead>
+      <tr style={{ background: "var(--brand)", color: "#fff" }}>
+        <th style={{ padding: "15px", textAlign: "left", borderBottom: "2px solid #ddd", whiteSpace: "nowrap" }}>
+          Location
+        </th>
+        <th style={{ padding: "15px", textAlign: "left", borderBottom: "2px solid #ddd", whiteSpace: "nowrap" }}>
+          Standard Shipping
+        </th>
+        <th style={{ padding: "15px", textAlign: "left", borderBottom: "2px solid #ddd", whiteSpace: "nowrap" }}>
+          Express Shipping
+        </th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr style={{ background: "#f9f9f9" }}>
+        <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>
+          Madhya Pradesh (Local)
+        </td>
+        <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>
+          2-4 business days
+        </td>
+        <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>
+          1-2 business days
+        </td>
+      </tr>
+
+      <tr>
+        <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>
+          Metro Cities
+        </td>
+        <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>
+          3-5 business days
+        </td>
+        <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>
+          2-3 business days
+        </td>
+      </tr>
+
+      <tr style={{ background: "#f9f9f9" }}>
+        <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>
+          Other Cities
+        </td>
+        <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>
+          5-7 business days
+        </td>
+        <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>
+          3-4 business days
+        </td>
+      </tr>
+
+      <tr>
+        <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>
+          Remote Areas
+        </td>
+        <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>
+          7-10 business days
+        </td>
+        <td style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>
+          5-7 business days
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
                   </div>
                   <p style={{ fontSize: "14px", lineHeight: "1.6", color: "#999", marginTop: "15px", fontStyle: "italic" }}>
                     * Delivery times are estimates and may vary due to weather conditions, courier delays, or unforeseen circumstances.

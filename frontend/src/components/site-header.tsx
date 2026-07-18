@@ -34,7 +34,7 @@ export function SiteHeader() {
           </div>
           <div className="social-links">
             <a href="#" aria-label="Facebook"><Facebook size={14} /></a>
-            <a href="#" aria-label="Instagram"><Instagram size={14} /></a>
+            <a href="https://www.instagram.com/saniyahightechnursery/" aria-label="Instagram"><Instagram size={14} /></a>
           </div>
         </div>
       </div>
@@ -252,7 +252,7 @@ export function SiteHeader() {
               boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
               padding: "6px"
             }}
-          >
+           >
             <input 
               type="text" 
               placeholder="Search for plants, seeds, fertilizers..." 

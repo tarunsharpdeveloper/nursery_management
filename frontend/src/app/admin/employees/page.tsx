@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { AdminShell } from "@/components/admin-shell";
 import { AdminModule } from "@/components/admin-module";
-import { Edit2, Power, PowerOff, Trash2, Calendar, MoreVertical } from "lucide-react";
+import { Edit2, Power, PowerOff, Trash2, ClipboardCheck, MoreVertical } from "lucide-react";
 import { ConfirmModal } from "@/components/confirm-modal";
 import { apiRequest } from "@/lib/api";
 import { useRouter } from "next/navigation";
@@ -23,7 +24,6 @@ export default function EmployeesPage() {
   const [busy, setBusy] = useState(false);
   const router = useRouter();
   const [openActionId, setOpenActionId] = useState<number | null>(null);
-  const [dropdownDirection, setDropdownDirection] = useState<"up" | "down">("down");
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [confirmState, setConfirmState] = useState<{
     isOpen: boolean;
@@ -200,12 +200,15 @@ export default function EmployeesPage() {
                   setOpenActionId(null);
                 } else {
                   const rect = e.currentTarget.getBoundingClientRect();
-                  const spaceBelow = window.innerHeight - rect.bottom;
-                  const direction = spaceBelow < 200 ? "up" : "down";
-                  setDropdownDirection(direction);
+                  const dropdownWidth = 160;
                   
-                  const top = direction === "down" ? rect.bottom + 4 : rect.top - 4;
-                  const left = rect.right - 160;
+                  // Position dropdown aligned with button top
+                  let top = rect.top;
+                  let left = rect.right - dropdownWidth;
+                  
+                  // Keep dropdown within viewport horizontally
+                  if (left < 10) left = 10;
+                  if (left + dropdownWidth > window.innerWidth) left = window.innerWidth - dropdownWidth - 10;
                   
                   setDropdownPosition({ top, left });
                   setOpenActionId(row.id);
@@ -217,19 +220,19 @@ export default function EmployeesPage() {
               <MoreVertical size={16} />
             </button>
             
-            {openActionId === row.id && (
+            {openActionId === row.id && typeof document !== 'undefined' && createPortal(
               <>
                 <div 
                   className="actions-dropdown-overlay" 
                   onClick={(e) => { e.stopPropagation(); setOpenActionId(null); }} 
                 />
                 <div 
-                  className={`actions-dropdown-menu direction-${dropdownDirection}`}
+                  className="actions-dropdown-menu direction-down"
                   style={{
                     position: 'fixed',
-                    top: dropdownDirection === "down" ? dropdownPosition.top : 'auto',
-                    bottom: dropdownDirection === "up" ? window.innerHeight - dropdownPosition.top : 'auto',
-                    left: dropdownPosition.left,
+                    top: dropdownPosition.top + 'px',
+                    left: dropdownPosition.left + 'px',
+                    zIndex: 10001,
                   }}
                 >
                   <button 
@@ -238,8 +241,8 @@ export default function EmployeesPage() {
                     onClick={() => { setOpenActionId(null); router.push(`/admin/attendance-details?id=${row.id}`); }} 
                     disabled={busy}
                   >
-                    <Calendar size={16} color="#3b82f6" style={{ marginRight: 8 }} />
-                    Attendance
+                    <ClipboardCheck size={16} color="#3b82f6" style={{ marginRight: 8 }} />
+                    Check In
                   </button>
                   <button 
                     className="button secondary actions-dropdown-item" 
@@ -269,7 +272,8 @@ export default function EmployeesPage() {
                     Delete
                   </button>
                 </div>
-              </>
+              </>,
+              document.body
             )}
           </div>
         )}

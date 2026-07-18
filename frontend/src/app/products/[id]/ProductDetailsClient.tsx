@@ -496,7 +496,38 @@ export default function ProductDetailsClient({
                 <div className="actions">
                   <div className="quantity">
                     <label htmlFor="qty-field" className="screen-reader-text">Quantity:</label>
-                    <div className="quantity__field quantity-container">
+                    <div className="quantity__field quantity-container" style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      background: '#f8fdf5', 
+                      borderRadius: '30px', 
+                      padding: '4px',
+                      border: '1px solid #c3e6cb',
+                      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+                    }}>
+                      <button
+                        type="button"
+                        className="quantity-minus qty-btn"
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        style={{ 
+                          width: '32px',
+                          height: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: 'none', 
+                          background: '#ffffff', 
+                          cursor: 'pointer', 
+                          borderRadius: '50%', 
+                          fontSize: '14px',
+                          color: '#2d5016',
+                          boxShadow: '0 2px 5px rgba(0,0,0,0.08)',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <i className="fal fa-minus"></i>
+                      </button>
                       <input
                         type="number"
                         id="qty-field"
@@ -510,27 +541,43 @@ export default function ProductDetailsClient({
                           )
                         }
                         title="Qty"
+                        style={{ 
+                          width: '46px', 
+                          border: 'none', 
+                          background: 'transparent',
+                          textAlign: 'center',
+                          fontWeight: '700',
+                          fontSize: '16px',
+                          color: '#2d5016',
+                          padding: '0'
+                        }}
                       />
-                      <div className="quantity__buttons">
-                        <button
-                          type="button"
-                          className="quantity-plus qty-btn"
-                          onClick={() =>
-                            setQuantity((q) => Math.min(displayStock || 99, q + 1))
-                          }
-                        >
-                          <i className="fas fa-caret-up"></i>
-                        </button>
-                        <button
-                          type="button"
-                          className="quantity-minus qty-btn"
-                          onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                        >
-                          <i className="fas fa-caret-down"></i>
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        className="quantity-plus qty-btn"
+                        onClick={() =>
+                          setQuantity((q) => Math.min(displayStock || 99, q + 1))
+                        }
+                        style={{ 
+                          width: '32px',
+                          height: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: 'none', 
+                          background: '#ffffff', 
+                          cursor: 'pointer', 
+                          borderRadius: '50%', 
+                          fontSize: '14px',
+                          color: '#2d5016',
+                          boxShadow: '0 2px 5px rgba(0,0,0,0.08)',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <i className="fal fa-plus"></i>
+                      </button>
                     </div>
-                    <span style={{ color: "var(--muted)", fontSize: "14px" }}>
+                    <span style={{ color: "var(--muted)", fontSize: "14px", marginLeft: '12px' }}>
                       {displayStock} in stock
                     </span>
                   </div>

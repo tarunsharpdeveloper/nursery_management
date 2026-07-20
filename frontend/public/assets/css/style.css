@@ -8120,8 +8120,8 @@ blockquote.vs-quote .quote-author {
 
 @media (max-width: 767px) {
   .hero-img .circle {
-    width: 376px;
-    height: 392px;
+    width: 265px;
+    height: 265px;
   }
 }
 
@@ -12946,7 +12946,7 @@ blockquote.vs-quote .quote-author {
   display: flex;
   position: absolute;
   right: 0.4rem;
-  bottom: 22px;
+  bottom: 28px;
   align-items: center;
 }
 

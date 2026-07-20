@@ -569,7 +569,7 @@ export default function HomePage() {
           <div className="row justify-content-center">
             <div className="col-auto">
               <div className="d-inline-flex pt-30">
-                <Link href="/products" className="vs-btn style2">View All Products</Link>
+                <Link href="/products" className="vs-btn style2">View More Products</Link>
               </div>
             </div>
           </div>

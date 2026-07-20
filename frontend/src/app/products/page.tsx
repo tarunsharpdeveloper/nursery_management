@@ -67,6 +67,8 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState("featured");
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     function handleResize() {
@@ -151,6 +153,7 @@ export default function ProductsPage() {
 
   const selectCategory = (category: string | null) => {
     setSelectedCategory(category);
+    setCurrentPage(1);
     const nextUrl = category ? `/products?category=${encodeURIComponent(category)}` : "/products";
     window.history.pushState(null, "", nextUrl);
     document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" });
@@ -158,6 +161,7 @@ export default function ProductsPage() {
 
   const selectType = (type: ProductType | "all") => {
     setSelectedType(type);
+    setCurrentPage(1);
     document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -181,6 +185,17 @@ export default function ProductsPage() {
       return a.name.localeCompare(b.name);
     });
   }, [products, query, selectedCategory, selectedType, sortBy]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
     <main>
@@ -318,7 +333,7 @@ export default function ProductsPage() {
                 <div className="row gap-4 align-items-center justify-content-between">
                   <div className="col-md-auto flex-grow-1">
                     <p className="woocommerce-result-count">
-                      Showing {filteredProducts.length} of {products.length} results
+                      Showing {startIndex + 1}-{Math.min(endIndex, filteredProducts.length)} of {filteredProducts.length} results
                     </p>
                   </div>
                   <div className="col-md-auto d-flex align-items-center gap-3" style={{ position: 'relative', zIndex: 10 }}>
@@ -381,125 +396,189 @@ export default function ProductsPage() {
                   <i className="fas fa-spinner fa-spin" style={{ fontSize: "32px", color: "var(--brand)", marginBottom: "15px" }}></i>
                   <p style={{ color: "var(--muted)" }}>Loading live catalog...</p>
                 </div>
-              ) : filteredProducts.length ? (
-                viewMode === "list" ? (
-                  /* ── List View (product-style7) ── */
-                  <div className="row">
-                    {filteredProducts.map((product) => (
-                      <div className="col-12 mb-30" key={product.id}>
-                        <div className="vs-product product-style1 modern-card" style={{ display: "flex", alignItems: "stretch", height: "240px", flexDirection: "row", textAlign: "left" }}>
-                          <div className="product-img" style={{ position: "relative", width: "240px", height: "100%", flexShrink: 0, padding: "20px", background: "#f8fcf6", borderRight: "1px solid rgba(0,0,0,0.02)", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                            <Link href={`/products/${product.id}`} style={{ width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                className="img-fluid"
-                                style={{ 
-                                  height: "180px", 
-                                  width: "auto",
-                                  objectFit: "contain"
-                                }}
-                              />
-                            </Link>
-                            {product.stock <= 0 && <span className="product-tag2" style={{ position: "absolute", top: "15px", left: "15px", fontSize: "12px", fontWeight: 600, padding: "4px 14px", borderRadius: "20px", background: "var(--danger)", color: "#fff", zIndex: 2, border: "1px solid rgba(255,255,255,0.5)" }}>Out of Stock</span>}
-                            {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ position: "absolute", top: "15px", left: "15px", fontSize: "12px", fontWeight: 600, padding: "4px 14px", borderRadius: "20px", background: "var(--accent)", color: "#fff", zIndex: 2, border: "1px solid rgba(255,255,255,0.5)", whiteSpace: "nowrap" }}>Limited Stock</span>}
-                          </div>
-                          <div className="product-content" style={{ flex: 1, padding: "25px 30px", display: "flex", flexDirection: "column", justifyContent: "flex-start", position: "relative", height: "100%" }}>
-                            <div className="star-rating" style={{ marginBottom: "5px" }}>
-                              <span style={{ width: "100%" }}>Rated 5.0 out of 5</span>
+              ) : paginatedProducts.length ? (
+                <>
+                  {viewMode === "list" ? (
+                    /* ── List View (product-style7) ── */
+                    <div className="row">
+                      {paginatedProducts.map((product) => (
+                        <div className="col-12 mb-30" key={product.id}>
+                          <div className="vs-product product-style1 modern-card" style={{ display: "flex", alignItems: "stretch", height: "240px", flexDirection: "row", textAlign: "left" }}>
+                            <div className="product-img" style={{ position: "relative", width: "240px", height: "100%", flexShrink: 0, padding: "20px", background: "#f8fcf6", borderRight: "1px solid rgba(0,0,0,0.02)", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                              <Link href={`/products/${product.id}`} style={{ width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                <img
+                                  src={product.image}
+                                  alt={product.name}
+                                  className="img-fluid"
+                                  style={{ 
+                                    height: "180px", 
+                                    width: "auto",
+                                    objectFit: "contain"
+                                  }}
+                                />
+                              </Link>
+                              {product.stock <= 0 && <span className="product-tag2" style={{ position: "absolute", top: "15px", left: "15px", fontSize: "12px", fontWeight: 600, padding: "4px 14px", borderRadius: "20px", background: "var(--danger)", color: "#fff", zIndex: 2, border: "1px solid rgba(255,255,255,0.5)" }}>Out of Stock</span>}
+                              {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ position: "absolute", top: "15px", left: "15px", fontSize: "12px", fontWeight: 600, padding: "4px 14px", borderRadius: "20px", background: "var(--accent)", color: "#fff", zIndex: 2, border: "1px solid rgba(255,255,255,0.5)", whiteSpace: "nowrap" }}>Limited Stock</span>}
                             </div>
-                            <h3 className="product-title" style={{ marginBottom: "8px", fontSize: "1.2rem" }}>
-                              <Link href={`/products/${product.id}`}>{product.name}</Link>
-                            </h3>
-                            <p style={{ fontSize: "13px", color: "#777777", margin: "0 0 12px 0", lineHeight: "1.5", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                              {product.description || "No description available."}
-                            </p>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                              <span className="product-cate" style={{ margin: 0, fontSize: "10px", fontWeight: 700 }}>
-                                SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{product.category}</span>
+                            <div className="product-content" style={{ flex: 1, padding: "25px 30px", display: "flex", flexDirection: "column", justifyContent: "flex-start", position: "relative", height: "100%" }}>
+                              <div className="star-rating" style={{ marginBottom: "5px" }}>
+                                <span style={{ width: "100%" }}>Rated 5.0 out of 5</span>
+                              </div>
+                              <h3 className="product-title" style={{ marginBottom: "8px", fontSize: "1.2rem" }}>
+                                <Link href={`/products/${product.id}`}>{product.name}</Link>
+                              </h3>
+                              <p style={{ fontSize: "13px", color: "#777777", margin: "0 0 12px 0", lineHeight: "1.5", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                                {product.description || "No description available."}
+                              </p>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                <span className="product-cate" style={{ margin: 0, fontSize: "10px", fontWeight: 700 }}>
+                                  SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{product.category}</span>
+                                </span>
+                              </div>
+                              
+                              <span className="product-price" style={{ fontSize: "22px", color: "var(--title-color)", fontWeight: "800", display: "flex", alignItems: "center", gap: "10px", position: "absolute", bottom: "22px", left: "30px" }}>
+                                Rs. {product.price}
+                                <span style={{ fontSize: "12px", fontWeight: "normal", color: "var(--muted)", padding: "3px 8px", background: "#f4f4f4", borderRadius: "8px" }}>
+                                  {product.stock} in stock
+                                </span>
                               </span>
-                            </div>
-                            
-                            <span className="product-price" style={{ fontSize: "22px", color: "var(--title-color)", fontWeight: "800", display: "flex", alignItems: "center", gap: "10px", position: "absolute", bottom: "22px", left: "30px" }}>
-                              Rs. {product.price}
-                              <span style={{ fontSize: "12px", fontWeight: "normal", color: "var(--muted)", padding: "3px 8px", background: "#f4f4f4", borderRadius: "8px" }}>
-                                {product.stock} in stock
-                              </span>
-                            </span>
-                            
-                            <div className="product-actions" style={{ right: "30px", bottom: "16px", position: "absolute" }}>
-                              <button type="button" className="vs-btn" onClick={() => addToCart(product, 1)}>
-                                Add to Cart
-                              </button>
-                              <button type="button" className="cart-btn" onClick={() => addToCart(product, 1)} aria-label={`Add ${product.name} to cart`}>
-                                <i className="fas fa-shopping-basket"></i>
-                              </button>
+                              
+                              <div className="product-actions" style={{ right: "30px", bottom: "16px", position: "absolute" }}>
+                                <button type="button" className="vs-btn" onClick={() => addToCart(product, 1)}>
+                                  Add to Cart
+                                </button>
+                                <button type="button" className="cart-btn" onClick={() => addToCart(product, 1)} aria-label={`Add ${product.name} to cart`}>
+                                  <i className="fas fa-shopping-basket"></i>
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  /* ── Grid View (product-style1 from homepage) ── */
-                  <div className="row">
-                    {filteredProducts.map((product) => (
-                      <div className="col-xl-6 col-lg-6 col-md-6 mb-30" key={product.id}>
-                        <div className="vs-product product-style1 modern-card">
-                          <div className="product-img">
-                            <Link href={`/products/${product.id}`}>
-                              <img src={product.image} alt={product.name} className="img w-100" style={{ height: "230px", objectFit: "contain", padding: "10px" }} />
-                            </Link>
-                            {product.stock <= 0 && <span className="product-tag2" style={{ background: "var(--danger)" }}>Out of Stock</span>}
-                            {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ background: "var(--accent)" }}>Limited Stock</span>}
-                          </div>
-                          <div className="product-content" style={{ paddingBottom: "40px" }}>
-                            <div className="star-rating">
-                              <span style={{ width: "100%" }}>Rated 5.0 out of 5</span>
+                      ))}
+                    </div>
+                  ) : (
+                    /* ── Grid View (product-style1 from homepage) ── */
+                    <div className="row">
+                      {paginatedProducts.map((product) => (
+                        <div className="col-xl-6 col-lg-6 col-md-6 mb-30" key={product.id}>
+                          <div className="vs-product product-style1 modern-card">
+                            <div className="product-img">
+                              <Link href={`/products/${product.id}`}>
+                                <img src={product.image} alt={product.name} className="img w-100" style={{ height: "230px", objectFit: "contain", padding: "10px" }} />
+                              </Link>
+                              {product.stock <= 0 && <span className="product-tag2" style={{ background: "var(--danger)" }}>Out of Stock</span>}
+                              {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ background: "var(--accent)" }}>Limited Stock</span>}
                             </div>
-                            <h3 className="product-title" style={{
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              marginBottom: "6px"
-                            }}>
-                              <Link href={`/products/${product.id}`}>{product.name}</Link>
-                            </h3>
-                            <p style={{
-                              fontSize: "13px",
-                              color: "#777777",
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              marginBottom: "12px",
-                              lineHeight: "1.4"
-                            }}>
-                              {product.description || "No description available."}
-                            </p>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                              <span className="product-cate" style={{ margin: 0, fontSize: "11px", fontWeight: 700 }}>
-                                SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{product.category}</span>
-                              </span>
-                              <span className="product-price">Rs. {product.price}</span>
-                            </div>
-                            <div className="product-actions">
-                              <button type="button" className="vs-btn" onClick={() => addToCart(product, 1)}>
-                                Add to Cart
-                              </button>
-                              <button type="button" className="cart-btn" onClick={() => addToCart(product, 1)} aria-label={`Add ${product.name} to cart`}>
-                                <i className="fas fa-shopping-basket"></i>
-                              </button>
+                            <div className="product-content" style={{ paddingBottom: "40px" }}>
+                              <div className="star-rating">
+                                <span style={{ width: "100%" }}>Rated 5.0 out of 5</span>
+                              </div>
+                              <h3 className="product-title" style={{
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                marginBottom: "6px"
+                              }}>
+                                <Link href={`/products/${product.id}`}>{product.name}</Link>
+                              </h3>
+                              <p style={{
+                                fontSize: "13px",
+                                color: "#777777",
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                marginBottom: "12px",
+                                lineHeight: "1.4"
+                              }}>
+                                {product.description || "No description available."}
+                              </p>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                <span className="product-cate" style={{ margin: 0, fontSize: "11px", fontWeight: 700 }}>
+                                  SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{product.category}</span>
+                                </span>
+                                <span className="product-price">Rs. {product.price}</span>
+                              </div>
+                              <div className="product-actions">
+                                <button type="button" className="vs-btn" onClick={() => addToCart(product, 1)}>
+                                  Add to Cart
+                                </button>
+                                <button type="button" className="cart-btn" onClick={() => addToCart(product, 1)} aria-label={`Add ${product.name} to cart`}>
+                                  <i className="fas fa-shopping-basket"></i>
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px", marginTop: "40px", flexWrap: "wrap" }}>
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        style={{
+                          padding: "8px 14px",
+                          borderRadius: "8px",
+                          border: "1px solid var(--brand)",
+                          background: currentPage === 1 ? "#e0e0e0" : "white",
+                          color: currentPage === 1 ? "#999" : "var(--brand)",
+                          cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                          fontWeight: 600,
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        <i className="fas fa-chevron-left"></i> Previous
+                      </button>
+
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "8px",
+                            border: "1px solid var(--brand)",
+                            background: currentPage === page ? "var(--brand)" : "white",
+                            color: currentPage === page ? "white" : "var(--brand)",
+                            cursor: "pointer",
+                            fontWeight: 600,
+                            transition: "all 0.2s ease",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}
+                        >
+                          {page}
+                        </button>
+                      ))}
+
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        style={{
+                          padding: "8px 14px",
+                          borderRadius: "8px",
+                          border: "1px solid var(--brand)",
+                          background: currentPage === totalPages ? "#e0e0e0" : "white",
+                          color: currentPage === totalPages ? "#999" : "var(--brand)",
+                          cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                          fontWeight: 600,
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        Next <i className="fas fa-chevron-right"></i>
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 /* Empty state */
                 <div className="empty-shop" style={{ textAlign: "center", padding: "80px 20px", background: "white", borderRadius: "30px", border: "1px solid var(--vs-border-color3)" }}>

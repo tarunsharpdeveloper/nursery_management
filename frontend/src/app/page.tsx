@@ -5,6 +5,7 @@ import Link from "next/link";
 import { X, ShoppingCart } from "lucide-react";
 import { apiRequest, getMediaUrl } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
+import { ProductSlider } from "@/components/ProductSlider";
 import type { Product } from "@/lib/types";
 
 interface BackendProduct {
@@ -559,63 +560,12 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          <div className="row justify-content-center">
-            {products.slice(0, 8).map((prod) => (
-              <div className="col-lg-4 col-md-6 mb-4" key={prod.id}>
-                <div className="vs-product product-style1 modern-card">
-                  <div className="product-img">
-                    <Link href={`/products/${prod.id}`}>
-                      <img src={prod.image} alt={prod.name} className="img w-100" style={{ height: "230px", objectFit: "contain", padding: "10px" }} />
-                    </Link>
-                    {prod.stock <= 0 && <span className="product-tag2" style={{ background: "var(--danger)" }}>Out of Stock</span>}
-                    {prod.stock > 0 && prod.stock < 100 && <span className="product-tag2" style={{ background: "var(--accent)" }}>Limited Stock</span>}
-                  </div>
-                  <div className="product-content" style={{ paddingBottom: "40px" }}>
-                    <div className="star-rating">
-                      <span style={{ width: "100%" }}>Rated 5.0 out of 5</span>
-                    </div>
-                    <h3 className="product-title" style={{
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      marginBottom: "6px"
-                    }}>
-                      <Link href={`/products/${prod.id}`}>{prod.name}</Link>
-                    </h3>
-                    <p style={{
-                      fontSize: "13px",
-                      color: "#777777",
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      marginBottom: "12px",
-                      lineHeight: "1.4"
-                    }}>
-                      {prod.description || "No description available."}
-                    </p>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                      <span className="product-cate" style={{ margin: 0, fontSize: "11px", fontWeight: 700 }}>
-                        SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{prod.category}</span>
-                      </span>
-                      <span className="product-price">Rs. {prod.price}</span>
-                    </div>
-                    <div className="product-actions">
-                      <button type="button" className="vs-btn" onClick={() => handleAddToCart(prod)}>
-                        Add to Cart
-                      </button>
-                      <button type="button" className="cart-btn" onClick={() => handleAddToCart(prod)} aria-label={`Add ${prod.name} to cart`} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                        <i className="fas fa-shopping-basket"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+          
+          {/* Product Slider with 3 items on desktop */}
+          <div style={{ marginTop: "30px" }}>
+            <ProductSlider products={products} itemsPerView={3} />
           </div>
+
           <div className="row justify-content-center">
             <div className="col-auto">
               <div className="d-inline-flex pt-30">

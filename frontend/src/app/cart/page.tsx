@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { getMediaUrl } from "@/lib/api";
+import "@/styles/mobile-cart.css";
 
 const DEFAULT_IMG =
   "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=900&q=80";
@@ -208,148 +209,159 @@ export default function CartPage() {
                   </table>
                 </div>
 
-                {/* Mobile/Tablet Card View */}
+                {/* Mobile/Tablet Card View - Beautiful Design */}
                 <div className="cart-mobile-cards">
-                  {cartItems.map((item) => {
-                    const cartKey = item.cartKey || String(item.id);
+  {cartItems.map((item) => {
+    const cartKey = item.cartKey || String(item.id);
+    const itemTotal = item.selling_price * item.quantity;
 
-                    return (
-                      <div className="cart-card" key={cartKey}>
-                        {/* Top Section: Image and Header */}
-                        <div className="cart-card-top">
-                          <div className="cart-card-image-container">
-                            <Link className="cart-card-image-link" href={`/products/${item.id}`}>
-                              <img
-                                width={120}
-                                height={160}
-                                src={getMediaUrl(item.photo_url) || DEFAULT_IMG}
-                                alt={item.name}
-                                style={{ objectFit: "contain", borderRadius: "12px", width: "100%", height: "160px", padding: "8px" }}
-                              />
-                            </Link>
-                          </div>
+    return (
+      <div className="mobile-cart-card" key={cartKey}>
+        {/* Remove Button */}
+        <button
+          className="mobile-cart-remove-btn"
+          onClick={() => removeFromCart(cartKey)}
+          title="Remove"
+        >
+          <i className="fal fa-trash-alt"></i>
+        </button>
 
-                          {/* Header with Title and Delete */}
-                          <div className="cart-card-header">
-                            <Link href={`/products/${item.id}`} style={{ textDecoration: "none", flex: 1 }}>
-                              <h3 className="cart-card-title">{item.name}</h3>
-                            </Link>
-                            <button
-                              className="cart-card-remove"
-                              type="button"
-                              onClick={() => removeFromCart(cartKey)}
-                              aria-label={`Remove ${item.name}`}
-                              title="Remove from cart"
-                            >
-                              <i className="fal fa-trash-alt"></i>
-                            </button>
-                          </div>
-                        </div>
+        {/* Hot Deal Badge */}
+        <div className="hot-deal">
+          🔥 Hot Deal
+        </div>
 
-                        {/* Category */}
-                        <p className="cart-card-category">{item.category}</p>
+        {/* Product Section */}
+        <div className="mobile-cart-grid">
 
-                        {/* Price Row */}
-                        <div className="cart-card-price-row">
-                          <span className="cart-card-label">Price</span>
-                          <span className="cart-card-price">
-                            Rs. {item.selling_price.toFixed(2)}
-                          </span>
-                        </div>
+          {/* Image */}
+          <div className="mobile-cart-product-image">
+            <Link href={`/products/${item.id}`}>
+              <img
+                src={getMediaUrl(item.photo_url) || DEFAULT_IMG}
+                alt={item.name}
+              />
+            </Link>
+          </div>
 
-                        {/* Quantity Row - Horizontal */}
-                        <div className="cart-card-qty-row">
-                          <span className="cart-card-label">Qty</span>
-                          <div className="quantity__field quantity-container-mobile" style={{ 
-                            display: 'inline-flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'center',
-                            background: 'linear-gradient(135deg, #f8fdf5 0%, #f0fae8 100%)', 
-                            borderRadius: '24px', 
-                            padding: '3px 6px',
-                            border: '1.5px solid #dfe9d1',
-                            boxShadow: '0 3px 8px rgba(45,80,22,0.08), inset 0 1px 3px rgba(255,255,255,0.6)'
-                          }}>
-                            <button
-                              type="button"
-                              className="qty-btn-mobile"
-                              onClick={() => updateQuantity(cartKey, item.quantity - 1)}
-                              style={{ 
-                                width: '26px',
-                                height: '26px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                border: 'none', 
-                                background: '#ffffff', 
-                                cursor: 'pointer', 
-                                borderRadius: '50%', 
-                                fontSize: '11px',
-                                color: '#2d5016',
-                                boxShadow: '0 2px 5px rgba(45,80,22,0.12), inset 0 1px 2px rgba(255,255,255,0.8)',
-                                transition: 'all 0.2s ease'
-                              }}
-                            >
-                              <i className="fal fa-minus"></i>
-                            </button>
-                            <input
-                              type="number"
-                              id={`quantity-mobile-${cartKey}`}
-                              className="qty-input-mobile"
-                              step="1"
-                              min="1"
-                              max={item.available_quantity || 99}
-                              name="quantity"
-                              value={item.quantity}
-                              onChange={(e) => updateQuantity(cartKey, Number(e.target.value))}
-                              title="Qty"
-                              style={{ 
-                                width: '36px', 
-                                border: 'none', 
-                                background: 'transparent',
-                                textAlign: 'center',
-                                fontWeight: '700',
-                                fontSize: '13px',
-                                color: '#2d5016',
-                                padding: '0'
-                              }}
-                            />
-                            <button
-                              type="button"
-                              className="qty-btn-mobile"
-                              onClick={() => updateQuantity(cartKey, item.quantity + 1)}
-                              style={{ 
-                                width: '26px',
-                                height: '26px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                border: 'none', 
-                                background: '#ffffff', 
-                                cursor: 'pointer', 
-                                borderRadius: '50%', 
-                                fontSize: '11px',
-                                color: '#2d5016',
-                                boxShadow: '0 2px 5px rgba(45,80,22,0.12), inset 0 1px 2px rgba(255,255,255,0.8)',
-                                transition: 'all 0.2s ease'
-                              }}
-                            >
-                              <i className="fal fa-plus"></i>
-                            </button>
-                          </div>
-                        </div>
+          {/* Details */}
+          <div className="mobile-cart-details">
 
-                        {/* Subtotal */}
-                        <div className="cart-card-subtotal">
-                          <span className="cart-card-label">Subtotal</span>
-                          <span className="cart-card-total">
-                            Rs. {(item.selling_price * item.quantity).toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+            <Link href={`/products/${item.id}`}>
+              <h4 className="mobile-cart-title">
+                {item.name}
+              </h4>
+            </Link>
+
+            <p className="mobile-cart-category">
+              {item.category}
+            </p>
+
+            {/* Rating */}
+            <div className="mobile-cart-rating">
+              <span className="mobile-cart-stars">
+                ★★★★★
+              </span>
+
+              <span className="mobile-cart-reviews">
+                (120)
+              </span>
+            </div>
+
+            {/* Price */}
+            <div className="mobile-cart-price">
+
+              <span className="current-price">
+                Rs. {item.selling_price.toFixed(2)}
+              </span>
+
+              {/* Optional */}
+
+              <span className="old-price">
+                Rs. {(item.selling_price * 1.25).toFixed(2)}
+              </span>
+
+              <span className="discount">
+                20% OFF
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* Divider */}
+
+        <div className="mobile-divider"></div>
+
+        {/* Footer */}
+
+        <div className="mobile-cart-footer">
+
+          {/* Quantity */}
+
+          <div className="mobile-qty">
+
+            <span className="qty-label">
+              Qty
+            </span>
+
+            <div className="qty-box">
+
+              <button
+                type="button"
+                onClick={() =>
+                  updateQuantity(
+                    cartKey,
+                    Math.max(1, item.quantity - 1)
+                  )
+                }
+              >
+                −
+              </button>
+
+              <span>
+                {item.quantity}
+              </span>
+
+              <button
+                type="button"
+                onClick={() =>
+                  updateQuantity(
+                    cartKey,
+                    item.quantity + 1
+                  )
+                }
+              >
+                +
+              </button>
+
+            </div>
+
+          </div>
+
+          {/* Total */}
+
+          <div className="mobile-subtotal" >
+
+            <small>
+              Subtotal
+            </small>
+
+            <strong>
+              Rs. {itemTotal.toFixed(2)}
+            </strong>
+
+          </div>
+
+        </div>
+
+      </div>
+    );
+  })}
+</div>
+
               </form>
 
               <div className="cart-footer d-flex flex-wrap gap-4 align-items-center justify-content-center justify-content-md-between">
@@ -357,139 +369,180 @@ export default function CartPage() {
                 <Link href="/products" className="vs-btn style2">Continue Shopping</Link>
               </div>
 
-              <div className="cart-summary-section">
-                {/* Coupon Column */}
-                <div className="cart-summary-coupon">
-                  <div className="vs-cart-coupon">
-                    <h2 className="h4 summary-title">APPLY COUPON</h2>
-                    <input type="text" className="form-control" placeholder="Coupon Code..." />
-                    <button type="button" className="vs-btn w-100">Apply Coupon</button>
-                  </div>
-                </div>
+              <div className="cart-summary-totals">
 
-                {/* Cart Totals Column */}
-                <div className="cart-summary-totals">
-                  <div style={{
-                    background: "linear-gradient(145deg, #f6fdf0 0%, #eaf5d9 100%)",
-                    borderRadius: "24px",
-                    padding: "32px",
-                    border: "2px solid #cfe9a4",
-                    boxShadow: "0 8px 32px rgba(140,198,63,0.10)",
-                    textAlign:'center'
-                  }}>
-                    {/* Title */}
-                    <h2 style={{
-                      fontSize: "18px",
-                      fontWeight: 800,
-                      color: "#1a1a1a",
-                      marginBottom: "24px",
-                      textTransform: "uppercase",
-                      letterSpacing: "1.5px",
-                      paddingBottom: "12px",
-                      borderBottom: "2px solid #cfe9a4"
-                    }}>
-                      Cart Totals
-                    </h2>
+    <div className="cart-summary-card">
 
-                    {/* Sub Total */}
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "14px 16px",
-                      background: "rgba(255,255,255,0.7)",
-                      borderRadius: "12px",
-                      marginBottom: "10px"
-                    }}>
-                      <span style={{ fontSize: "15px", fontWeight: 600, color: "#555" }}>Sub Total</span>
-                      <span style={{ fontSize: "16px", fontWeight: 700, color: "#1a1a1a" }}>
-                        Rs.&nbsp;{subtotal.toFixed(2)}
-                      </span>
-                    </div>
 
-                    {/* Delivery */}
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "14px 16px",
-                      background: "rgba(255,255,255,0.7)",
-                      borderRadius: "12px",
-                      marginBottom: "20px"
-                    }}>
-                      <span style={{ fontSize: "15px", fontWeight: 600, color: "#555" }}>
-                        <i className="fas fa-truck" style={{ marginRight: "8px", color: "#8cc63f" }}></i>
-                        Delivery
-                      </span>
-                      <span>
-                        {shipping === 0 ? (
-                          <span style={{
-                            background: "#8cc63f",
-                            color: "white",
-                            borderRadius: "20px",
-                            padding: "4px 14px",
-                            fontSize: "13px",
-                            fontWeight: 700
-                          }}>FREE</span>
-                        ) : (
-                          <span style={{ fontSize: "16px", fontWeight: 700, color: "#1a1a1a" }}>
-                            Rs.&nbsp;{shipping.toFixed(2)}
-                          </span>
-                        )}
-                      </span>
-                    </div>
+        {/* Title */}
+        <h2 className="cart-summary-title">
+            Cart Totals
+        </h2>
 
-                    {/* Order Total Banner */}
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "18px 20px",
-                      background: "linear-gradient(135deg, #8cc63f 0%, #5d9c1a 100%)",
-                      borderRadius: "16px",
-                      boxShadow: "0 6px 20px rgba(140,198,63,0.35)",
-                      marginBottom: "24px"
-                    }}>
-                      <span style={{ fontSize: "0.9rem", fontWeight: 800, color: "white", textTransform: "uppercase", letterSpacing: "1px" }}>
-                        Order Total
-                      </span>
-                      <span style={{ fontSize: "0.95rem", fontWeight: 800, color: "white" }}>
-                        Rs.&nbsp;{total.toFixed(2)}
-                      </span>
-                    </div>
 
-                    {/* Checkout Button */}
-                    <Link
-                      href="/checkout"
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        gap: "10px",
-                        background: "linear-gradient(135deg, #2d6a3f 0%, #1b4228 100%)",
-                        color: "white",
-                        padding: "16px 24px",
-                        borderRadius: "50px",
-                        fontWeight: 700,
-                        fontSize: "14px",
-                        textTransform: "uppercase",
-                        letterSpacing: "1.5px",
-                        textDecoration: "none",
-                        boxShadow: "0 4px 16px rgba(45,106,63,0.35)",
-                        transition: "transform 0.2s ease, box-shadow 0.2s ease"
-                      }}
-                    >
-                      <i className="fas fa-lock"></i>
-                      Proceed to Secure Checkout
-                    </Link>
 
-                    <p style={{ textAlign: "center", fontSize: "12px", color: "#888", marginTop: "14px", marginBottom: 0 }}>
-                      <i className="fas fa-shield-alt" style={{ marginRight: "5px", color: "#8cc63f" }}></i>
-                      Secure &amp; Encrypted Checkout
-                    </p>
-                  </div>
-                </div>
-              </div>
+        {/* Sub Total */}
+        <div className="summary-row">
+
+            <span>
+                Sub Total
+            </span>
+
+
+            <strong>
+                Rs.&nbsp;{subtotal.toFixed(2)}
+            </strong>
+
+        </div>
+
+
+
+
+        {/* Delivery */}
+        <div className="summary-row">
+
+            <span className="delivery-text">
+
+                <i className="fas fa-truck"></i>
+
+                Delivery
+
+            </span>
+
+
+            {shipping === 0 ? (
+
+                <span className="free-badge">
+                    FREE
+                </span>
+
+            ) : (
+
+                <strong>
+                    Rs.&nbsp;{shipping.toFixed(2)}
+                </strong>
+
+            )}
+
+        </div>
+
+
+
+
+
+        {/* Coupon Section */}
+        <div className="coupon-box">
+
+
+            <div className="coupon-header">
+
+                <span>
+
+                    <i className="fas fa-ticket-alt"></i>
+
+                    Apply Coupon
+
+                </span>
+
+            </div>
+
+
+
+            <div className="coupon-input-wrapper">
+
+
+                <input
+
+                    type="text"
+
+                    placeholder="Enter coupon code"
+
+                />
+
+
+
+                <button
+
+                    type="button"
+
+                >
+
+                    Apply
+
+                </button>
+
+
+
+            </div>
+
+
+        </div>
+
+
+
+
+
+        {/* Order Total */}
+        <div className="order-total">
+
+
+            <span>
+                Order Total
+            </span>
+
+
+
+            <strong>
+                Rs.&nbsp;{total.toFixed(2)}
+            </strong>
+
+
+        </div>
+
+
+
+
+
+        {/* Checkout Button */}
+        <Link
+
+            href="/checkout"
+
+            className="checkout-btn"
+
+        >
+
+            <i className="fas fa-lock"></i>
+
+
+            Proceed to Secure Checkout
+
+
+        </Link>
+
+
+
+
+
+        {/* Security Text */}
+        <p className="secure-text">
+
+
+            <i className="fas fa-shield-alt"></i>
+
+
+            Secure &amp; Encrypted Checkout
+
+
+        </p>
+
+
+
+    </div>
+
+
+</div>
+
             </>
           )}
         </div>
@@ -716,6 +769,7 @@ export default function CartPage() {
           }
         }
 
+        /* ===== IMPROVED MOBILE CART CARDS ===== */
         .quantity-container-mobile {
           gap: 3px;
         }
@@ -729,11 +783,12 @@ export default function CartPage() {
           -moz-appearance: textfield;
         }
 
+        /* Enhanced hover effect for quantity buttons */
         .qty-btn-mobile:hover {
-          background: linear-gradient(135deg, #2d5016 0%, #1b4228 100%) !important;
+          background: linear-gradient(135deg, #2d6a3f 0%, #1b4228 100%) !important;
           color: white !important;
           transform: scale(1.12);
-          box-shadow: 0 4px 10px rgba(45,80,22,0.25) !important;
+          box-shadow: 0 4px 10px rgba(45, 106, 63, 0.3) !important;
         }
 
         .qty-btn-mobile:active {
@@ -743,13 +798,13 @@ export default function CartPage() {
         /* Mobile specific - smaller buttons */
         @media (max-width: 991px) {
           .qty-btn-mobile {
-            width: 22px !important;
-            height: 22px !important;
-            font-size: 9px !important;
+            width: 24px !important;
+            height: 24px !important;
+            font-size: 10px !important;
           }
 
           .qty-input-mobile {
-            width: 32px !important;
+            width: 34px !important;
             font-size: 12px !important;
           }
 
@@ -760,6 +815,24 @@ export default function CartPage() {
 
         @media (max-width: 767px) {
           .qty-btn-mobile {
+            width: 22px !important;
+            height: 22px !important;
+            font-size: 9px !important;
+          }
+
+          .qty-input-mobile {
+            width: 30px !important;
+            font-size: 11px !important;
+          }
+
+          .quantity-container-mobile {
+            padding: 2px 3px !important;
+            border-radius: 20px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .qty-btn-mobile {
             width: 20px !important;
             height: 20px !important;
             font-size: 8px !important;
@@ -767,12 +840,11 @@ export default function CartPage() {
 
           .qty-input-mobile {
             width: 28px !important;
-            font-size: 11px !important;
+            font-size: 10px !important;
           }
 
           .quantity-container-mobile {
-            padding: 2px 3px !important;
-            border-radius: 20px !important;
+            padding: 2px 2px !important;
           }
         }
 
@@ -797,21 +869,322 @@ export default function CartPage() {
           background: rgba(180, 35, 24, 0.08);
         }
 
+        /* ===== BEAUTIFUL MOBILE CARD LAYOUT ===== */
+        .cart-card {
+          background: linear-gradient(135deg, #ffffff 0%, #fafbf8 100%);
+          border: 1.5px solid #e5ead9;
+          border-radius: 16px;
+          padding: 14px;
+          margin-bottom: 14px;
+          box-shadow: 0 3px 12px rgba(45, 106, 63, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          display: grid;
+          gap: 12px;
+        }
+
+        .cart-card:hover {
+          box-shadow: 0 8px 24px rgba(45, 106, 63, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+          transform: translateY(-2px);
+          border-color: #d8e4c8;
+        }
+
+        /* Card Top Section - Image & Header */
+        .cart-card-top {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          align-items: stretch;
+          position: relative;
+        }
+
+        /* Image Container */
+        .cart-card-image-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 12px;
+          overflow: hidden;
+          background: linear-gradient(135deg, #f5f8f2 0%, #eff6e6 100%);
+          border: 1px solid #e5ead9;
+          min-height: 160px;
+          position: relative;
+        }
+
+        .cart-card-image-link {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          height: 100%;
+        }
+
+        .cart-card-image-link img {
+          max-width: 100%;
+          max-height: 160px;
+          width: auto;
+          height: auto;
+          object-fit: contain;
+        }
+
+        /* Header with Title and Delete Button */
+        .cart-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 10px;
+          margin-top: 2px;
+        }
+
+        .cart-card-title {
+          font-size: 16px;
+          font-weight: 800;
+          color: #1a1a1a;
+          margin: 0;
+          line-height: 1.3;
+          flex: 1;
+          word-break: break-word;
+        }
+
+        /* Category Badge */
+        .cart-card-category {
+          font-size: 13px;
+          color: #888;
+          margin: 0;
+          font-weight: 600;
+          text-transform: capitalize;
+          letter-spacing: 0.3px;
+        }
+
+        /* Price Row */
+        .cart-card-price-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 0;
+          border-top: 1px solid #f0f0f0;
+          border-bottom: 1px solid #f0f0f0;
+        }
+
+        .cart-card-label {
+          font-weight: 700;
+          color: #999;
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .cart-card-price {
+          font-weight: 800;
+          color: #2d6a3f;
+          font-size: 15px;
+        }
+
+        /* Quantity Row */
+        .cart-card-qty-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 0;
+        }
+
+        /* Subtotal Section */
+        .cart-card-subtotal {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px;
+          background: linear-gradient(135deg, #f8fdf5 0%, #f0fae8 100%);
+          border-radius: 12px;
+          border: 1px solid #e8ede3;
+          margin-top: 4px;
+        }
+
+        .cart-card-total {
+          font-weight: 850;
+          color: #2d6a3f;
+          font-size: 16px;
+        }
+
         .cart-table-wrapper {
           display: block;
           overflow-x: auto;
           border-radius: 12px;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         }
 
         .cart_table {
           background: white;
         }
 
-        /* Cart Summary Section - Responsive Layout */
+        /* ===== RESPONSIVE BREAKPOINTS ===== */
+
+        /* Tablet (768px - 991px) - Card View */
+        @media (min-width: 768px) and (max-width: 991px) {
+          .cart-table-wrapper {
+            display: none;
+          }
+
+          .cart-mobile-cards {
+            display: block;
+          }
+
+          .cart-card {
+            grid-template-columns: 1fr;
+            padding: 16px;
+            gap: 14px;
+          }
+
+          .cart-card-title {
+            font-size: 15px;
+          }
+
+          .cart-card-price {
+            font-size: 14px;
+          }
+
+          .cart-card-total {
+            font-size: 15px;
+          }
+
+          .cart-card-image-container {
+            min-height: 150px;
+          }
+        }
+
+        /* Mobile (max 767px) - Optimized Card View */
+        @media (max-width: 767px) {
+          .cart-table-wrapper {
+            display: none;
+          }
+
+          .cart-mobile-cards {
+            display: block;
+          }
+
+          .cart-card {
+            padding: 14px;
+            margin-bottom: 12px;
+            gap: 10px;
+            border-radius: 14px;
+          }
+
+          .cart-card:hover {
+            transform: translateY(-1px);
+          }
+
+          .cart-card-image-container {
+            min-height: 150px;
+            border-radius: 10px;
+          }
+
+          .cart-card-header {
+            gap: 8px;
+            margin-top: 2px;
+          }
+
+          .cart-card-title {
+            font-size: 14px;
+            font-weight: 800;
+          }
+
+          .cart-card-category {
+            font-size: 12px;
+            margin: 2px 0 0 0;
+          }
+
+          .cart-card-price-row,
+          .cart-card-qty-row {
+            padding: 10px 0;
+          }
+
+          .cart-card-label {
+            font-size: 11px;
+            letter-spacing: 0.4px;
+          }
+
+          .cart-card-price {
+            font-size: 13px;
+          }
+
+          .cart-card-total {
+            font-size: 14px;
+          }
+
+          .cart-card-subtotal {
+            padding: 10px;
+            margin-top: 2px;
+          }
+
+          /* Smaller remove button on mobile */
+          .cart-card-remove {
+            font-size: 14px;
+            padding: 2px 6px;
+          }
+        }
+
+        /* Small Mobile (max 480px) */
+        @media (max-width: 480px) {
+          .cart-card {
+            padding: 12px;
+            margin-bottom: 10px;
+            gap: 9px;
+          }
+
+          .cart-card-image-container {
+            min-height: 140px;
+          }
+
+          .cart-card-top {
+            gap: 8px;
+          }
+
+          .cart-card-title {
+            font-size: 13px;
+          }
+
+          .cart-card-category {
+            font-size: 11px;
+          }
+
+          .cart-card-label {
+            font-size: 10px;
+          }
+
+          .cart-card-price {
+            font-size: 12px;
+          }
+
+          .cart-card-total {
+            font-size: 13px;
+          }
+
+          .cart-card-price-row,
+          .cart-card-qty-row {
+            padding: 9px 0;
+          }
+
+          .cart-card-subtotal {
+            padding: 9px;
+          }
+        }
+
+        /* Desktop (992px+) - Table View */
+        @media (min-width: 992px) {
+          .cart-table-wrapper {
+            display: block;
+          }
+
+          .cart-mobile-cards {
+            display: none;
+          }
+        }
+
+        /* ===== CART SUMMARY SECTION ===== */
         .cart-summary-section {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: 1fr 1.4fr;
           gap: 28px;
           margin-top: 40px;
         }
@@ -829,7 +1202,8 @@ export default function CartPage() {
           border: 1.5px solid #e8ede3;
           border-radius: 16px;
           padding: 24px;
-          box-shadow: 0 4px 15px rgba(45, 80, 22, 0.08);
+          box-shadow: 0 4px 15px rgba(45, 106, 63, 0.08);
+          transition: all 0.2s ease;
         }
 
         .vs-cart-coupon .summary-title {
@@ -851,13 +1225,19 @@ export default function CartPage() {
         }
 
         .vs-cart-coupon .form-control:focus {
-          border-color: #2d5016;
-          box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+          border-color: #2d6a3f;
+          box-shadow: 0 0 0 3px rgba(45, 106, 63, 0.1);
           outline: none;
         }
 
-        /* Cart Totals Section - Responsive Font Sizes */
-        @media (max-width: 991px) {
+        /* Responsive Summary - Tablet */
+        @media (min-width: 768px) and (max-width: 991px) {
+          .cart-summary-section {
+            grid-template-columns: 1fr;
+            gap: 24px;
+            margin-top: 28px;
+          }
+
           .vs-cart-coupon .summary-title {
             font-size: 14px;
             margin-bottom: 14px;
@@ -870,7 +1250,14 @@ export default function CartPage() {
           }
         }
 
+        /* Responsive Summary - Mobile */
         @media (max-width: 767px) {
+          .cart-summary-section {
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-top: 24px;
+          }
+
           .vs-cart-coupon {
             padding: 18px;
           }
@@ -893,88 +1280,30 @@ export default function CartPage() {
           }
         }
 
-        /* Desktop - Show table, hide cards */
-        @media (min-width: 992px) {
-          .cart-table-wrapper {
-            display: block;
-          }
-          .cart-mobile-cards {
-            display: none;
-          }
+        @media (max-width: 480px) {
           .cart-summary-section {
-            grid-template-columns: 1fr 1.4fr;
-            gap: 28px;
-            margin-top: 40px;
-          }
-        }
-
-        /* Tablet and Mobile - Show cards, hide table */
-        @media (max-width: 991px) {
-          .cart-table-wrapper {
-            display: none;
-          }
-          .cart-mobile-cards {
-            display: block;
-          }
-          .cart-summary-section {
-            grid-template-columns: 1fr;
-            gap: 24px;
-            margin-top: 28px;
-          }
-        }
-
-        @media (max-width: 767px) {
-          .cart_table td[data-title="Name"] {
-            padding-left: 15px !important;
-            text-align: center !important;
-          }
-          .cart_table td[data-title="Name"]::before {
-            display: none !important;
-          }
-          .cart_table td[data-title="Name"] > div {
-            justify-content: center !important;
-          }
-
-          .cart-card {
-            padding: 14px;
-            margin-bottom: 14px;
-          }
-
-          .cart-card-title {
-            font-size: 15px;
-          }
-
-          .cart-card-label {
-            font-size: 11px;
-          }
-
-          .cart-card-price {
-            font-size: 14px;
-          }
-
-          .cart-card-total {
-            font-size: 15px;
-          }
-
-          .cart-summary-section {
-            grid-template-columns: 1fr;
-            gap: 20px;
-            margin-top: 24px;
+            gap: 16px;
+            margin-top: 20px;
           }
 
           .vs-cart-coupon {
-            padding: 20px;
+            padding: 14px;
           }
-        }
 
-        /* Large Desktop */
-        @media (min-width: 1400px) {
-          .cart-table-wrapper {
-            display: block;
+          .vs-cart-coupon .summary-title {
+            font-size: 12px;
+            margin-bottom: 10px;
           }
-          .cart-summary-section {
-            grid-template-columns: 1fr 1.4fr;
-            gap: 32px;
+
+          .vs-cart-coupon .form-control {
+            font-size: 11px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+          }
+
+          .vs-cart-coupon .vs-btn {
+            font-size: 11px;
+            padding: 10px 14px;
           }
         }
 

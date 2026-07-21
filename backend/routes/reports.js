@@ -2,13 +2,44 @@ const { pool } = require("../db");
 
 async function getLedger(_req, res, { sendJson }) {
   const [rows] = await pool.query(
-    `SELECT c.name AS customer,
+    `SELECT c.id AS customer_id,
+            c.name AS customer,
             SUM(l.debit_amount) AS total_purchase,
             SUM(l.credit_amount) AS amount_paid,
             SUM(l.debit_amount - l.credit_amount) AS outstanding_amount
        FROM customer_ledger l
        JOIN customers c ON c.id = l.customer_id
       GROUP BY c.id, c.name`
+  );
+
+  sendJson(res, 200, rows);
+}
+
+async function getCustomerLedgerDetails(req, res, { sendJson }) {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const customerId = url.searchParams.get("customerId");
+
+  if (!customerId) {
+    sendJson(res, 400, { message: "customerId is required" });
+    return;
+  }
+
+  const [rows] = await pool.query(
+    `SELECT l.id,
+            l.transaction_date,
+            l.transaction_type,
+            l.debit_amount,
+            l.credit_amount,
+            l.reference_type,
+            l.reference_id,
+            l.remarks,
+            l.created_at,
+            c.name AS customer_name
+       FROM customer_ledger l
+       JOIN customers c ON c.id = l.customer_id
+      WHERE l.customer_id = :customerId
+      ORDER BY l.transaction_date DESC, l.created_at DESC`,
+    { customerId }
   );
 
   sendJson(res, 200, rows);
@@ -113,4 +144,4 @@ async function getReport(req, res, { sendJson }) {
   sendJson(res, 200, rows);
 }
 
-module.exports = { getLedger, getReport };
+module.exports = { getLedger, getCustomerLedgerDetails, getReport };

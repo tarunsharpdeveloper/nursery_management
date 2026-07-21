@@ -361,13 +361,41 @@ async function getBill(req, res, { readJson, sendJson }) {
 
 async function listBookings(_req, res, { sendJson }) {
   const [rows] = await pool.query(
-    `SELECT a.id, a.booking_number, c.name AS customer, c.phone, p.name AS product,
-            a.quantity, a.advance_amount, a.total_bill_amount, a.balance_payable,
+    `SELECT a.id, a.booking_number, c.name AS customer, c.phone,
+            CASE 
+              WHEN a.product_id IS NOT NULL THEN p.name
+              ELSE (
+                SELECT GROUP_CONCAT(
+                  CONCAT(p2.name, 
+                    CASE 
+                      WHEN pv.unit_value IS NOT NULL 
+                      THEN CONCAT(' (', pv.unit_value, ' ', pv.unit, ')') 
+                      ELSE '' 
+                    END
+                  ) 
+                  SEPARATOR ', '
+                )
+                FROM advance_booking_items bi
+                LEFT JOIN products p2 ON p2.id = bi.product_id
+                LEFT JOIN product_variants pv ON pv.id = bi.variant_id
+                WHERE bi.booking_id = a.id
+                LIMIT 5
+              )
+            END AS product,
+            CASE 
+              WHEN a.quantity IS NOT NULL THEN a.quantity
+              ELSE (
+                SELECT SUM(bi.quantity)
+                FROM advance_booking_items bi
+                WHERE bi.booking_id = a.id
+              )
+            END AS quantity,
+            a.advance_amount, a.total_bill_amount, a.balance_payable,
             a.delivery_date, a.status
        FROM advance_bookings a
        JOIN customers c ON c.id = a.customer_id
-       JOIN products p ON p.id = a.product_id
-      ORDER BY a.delivery_date`
+       LEFT JOIN products p ON p.id = a.product_id
+      ORDER BY a.id DESC`
   );
   sendJson(res, 200, rows);
 }
@@ -641,10 +669,42 @@ const modelsConfig = {
     allowedFilters: ["bill_type", "payment_type"]
   },
   advance_bookings: {
-    baseSelect: "SELECT a.id, a.booking_number, c.name AS customer, c.phone, p.name AS product, a.quantity, a.advance_amount, a.total_bill_amount, a.balance_payable, a.delivery_date, a.status FROM advance_bookings a JOIN customers c ON c.id = a.customer_id JOIN products p ON p.id = a.product_id",
+    baseSelect: `SELECT a.id, a.booking_number, c.name AS customer, c.phone,
+      CASE 
+        WHEN a.product_id IS NOT NULL THEN p.name
+        ELSE (
+          SELECT GROUP_CONCAT(
+            CONCAT(p2.name, 
+              CASE 
+                WHEN pv.unit_value IS NOT NULL 
+                THEN CONCAT(' (', pv.unit_value, ' ', pv.unit, ')') 
+                ELSE '' 
+              END
+            ) 
+            SEPARATOR ', '
+          )
+          FROM advance_booking_items bi
+          LEFT JOIN products p2 ON p2.id = bi.product_id
+          LEFT JOIN product_variants pv ON pv.id = bi.variant_id
+          WHERE bi.booking_id = a.id
+          LIMIT 5
+        )
+      END AS product,
+      CASE 
+        WHEN a.quantity IS NOT NULL THEN a.quantity
+        ELSE (
+          SELECT SUM(bi.quantity)
+          FROM advance_booking_items bi
+          WHERE bi.booking_id = a.id
+        )
+      END AS quantity,
+      a.advance_amount, a.total_bill_amount, a.balance_payable, a.delivery_date, a.status
+    FROM advance_bookings a
+    JOIN customers c ON c.id = a.customer_id
+    LEFT JOIN products p ON p.id = a.product_id`,
     baseWhere: "WHERE 1=1",
-    searchFields: ["a.booking_number", "c.name", "c.phone", "p.name"],
-    orderBy: "ORDER BY a.delivery_date",
+    searchFields: ["a.booking_number", "c.name", "c.phone"],
+    orderBy: "ORDER BY a.id DESC",
     allowedFilters: ["status"]
   },
   dispatch: {

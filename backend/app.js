@@ -12,7 +12,7 @@ const { createDispatch } = require("./routes/dispatch");
 const { initiatePayment, paymentWebhook } = require("./routes/payments");
 const { createEmployee, saveAttendance, saveBulkAttendance, editEmployee, toggleEmployee, deleteEmployee } = require("./routes/attendance");
 const { calculateWages } = require("./routes/wages");
-const { getLedger, getReport } = require("./routes/reports");
+const { getLedger, getCustomerLedgerDetails, getReport } = require("./routes/reports");
 const { getReviews, submitReview, getReviewStats } = require("./routes/reviews");
 const { initiateNDPSPayment, handleNDPSResponse, checkPaymentStatus, requeryTransactionStatus, handleNDPSPopupResponse } = require("./routes/ndps-payments");
 const { ensureAdminSchema } = require("./migrate");
@@ -122,6 +122,7 @@ const routes = [
   ["GET", "/api/wages/summary", "wages:read", listWageSummary],
   ["POST", "/api/wages/calculate", "wages:read", calculateWages],
   ["GET", "/api/customer-ledger", "ledger:read", getLedger],
+  ["GET", "/api/customer-ledger/details", "ledger:read", getCustomerLedgerDetails],
   ["GET", "/api/reports", "reports:read", getReport],
   ["GET", "/api/reviews/:productId", null, getReviews],
   ["POST", "/api/reviews", null, submitReview],

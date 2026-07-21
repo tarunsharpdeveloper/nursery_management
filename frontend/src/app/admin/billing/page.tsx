@@ -115,7 +115,18 @@ export default function BillingPage() {
     customerPhone: "",
     billType: "cash_sale",
     paymentType: "cash",
-    transactionId: "",
+    transactionId: ""
+  });
+
+  const [billItems, setBillItems] = useState<Array<{
+    productId: number;
+    variantId: number | null;
+    quantity: number;
+    unitPrice: number;
+    lineTotal: number;
+  }>>([]);
+
+  const [currentItem, setCurrentItem] = useState({
     productId: null as number | null,
     variantId: null as number | null,
     quantity: "",
@@ -154,7 +165,7 @@ export default function BillingPage() {
   const customerOptions = useMemo(() => customers.map(c => ({ value: c.id, label: c.name, customer: c })), [customers]);
   const productOptions = useMemo(() => products.map(p => ({ value: p.id, label: p.name, product: p })), [products]);
 
-  const selectedProduct = useMemo(() => products.find(p => p.id === form.productId), [products, form.productId]);
+  const selectedProduct = useMemo(() => products.find(p => p.id === currentItem.productId), [products, currentItem.productId]);
   const variantOptions = useMemo(() => {
     if (!selectedProduct || !selectedProduct.variants) return [];
     return selectedProduct.variants.map(v => ({ value: v.id, label: `${v.unit_value} ${v.unit} - ₹${v.selling_price}`, variant: v }));
@@ -162,36 +173,72 @@ export default function BillingPage() {
 
   useEffect(() => {
     if (!selectedProduct) {
-      setForm(f => ({ ...f, unitPrice: "" }));
+      setCurrentItem(c => ({ ...c, unitPrice: "" }));
       return;
     }
 
     let price = selectedProduct.selling_price;
-    if (form.variantId) {
-      const variant = selectedProduct.variants.find(v => v.id === form.variantId);
+    if (currentItem.variantId) {
+      const variant = selectedProduct.variants.find(v => v.id === currentItem.variantId);
       if (variant) price = variant.selling_price;
     }
 
-    setForm(f => ({ ...f, unitPrice: String(price) }));
-  }, [form.productId, form.variantId, selectedProduct]);
+    setCurrentItem(c => ({ ...c, unitPrice: String(price) }));
+  }, [currentItem.productId, currentItem.variantId, selectedProduct]);
 
-  const totalAmount = (Number(form.quantity) || 0) * (Number(form.unitPrice) || 0);
+  const totalAmount = billItems.reduce((sum, item) => sum + item.lineTotal, 0);
+
+  const addItemToBill = () => {
+    if (!currentItem.productId || !currentItem.quantity || Number(currentItem.quantity) <= 0) {
+      setStatus("Please select product and enter quantity");
+      return;
+    }
+
+    const quantity = Number(currentItem.quantity);
+    const unitPrice = Number(currentItem.unitPrice) || 0;
+
+    setBillItems(prev => [
+      ...prev,
+      {
+        productId: currentItem.productId!,
+        variantId: currentItem.variantId,
+        quantity,
+        unitPrice,
+        lineTotal: quantity * unitPrice
+      }
+    ]);
+
+    setCurrentItem({
+      productId: null,
+      variantId: null,
+      quantity: "",
+      unitPrice: ""
+    });
+  };
+
+  const removeItem = (index: number) => {
+    setBillItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const getProductName = (productId: number, variantId: number | null) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return "Unknown Product";
+    
+    if (variantId) {
+      const variant = product.variants?.find((v: any) => v.id === variantId);
+      if (variant) return `${product.name} (${variant.unit_value} ${variant.unit})`;
+    }
+    
+    return product.name;
+  };
 
   async function submitForm() {
     if (!form.customerName) {
       setStatus("Validation Error: Please select or create a Customer Name.");
       return;
     }
-    if (!form.productId) {
-      setStatus("Validation Error: Please select a Product.");
-      return;
-    }
-    if (!form.quantity) {
-      setStatus("Validation Error: Please enter a Quantity.");
-      return;
-    }
-    if (!form.unitPrice) {
-      setStatus("Validation Error: Unit Price cannot be empty.");
+    if (billItems.length === 0) {
+      setStatus("Validation Error: Please add at least one product to the bill.");
       return;
     }
 
@@ -205,12 +252,7 @@ export default function BillingPage() {
           billType: form.billType,
           paymentType: form.paymentType,
           transactionId: form.paymentType === "upi" ? form.transactionId : undefined,
-          items: [{
-            productId: form.productId,
-            variantId: form.variantId || undefined,
-            quantity: Number(form.quantity),
-            unitPrice: Number(form.unitPrice)
-          }]
+          items: billItems
         })
       });
       setStatus("Bill generated successfully");
@@ -220,7 +262,10 @@ export default function BillingPage() {
         customerPhone: "",
         billType: "cash_sale",
         paymentType: "cash",
-        transactionId: "",
+        transactionId: ""
+      });
+      setBillItems([]);
+      setCurrentItem({
         productId: null,
         variantId: null,
         quantity: "",
@@ -330,7 +375,7 @@ export default function BillingPage() {
 
           <hr style={{ margin: "20px 0", borderTop: "1px solid #e4e4e7", borderBottom: "none", borderLeft: "none", borderRight: "none" }} />
 
-          <h5 style={{ margin: "0 0 16px 0", fontSize: "1rem" }}>Bill Item</h5>
+          <h5 style={{ margin: "0 0 16px 0", fontSize: "1rem" }}>Add Products</h5>
           <div className="form-grid">
             <label className="field">
               <span>Product</span>
@@ -341,8 +386,8 @@ export default function BillingPage() {
                 styles={selectStyles}
                 menuPortalTarget={typeof document !== "undefined" ? document.body : null}
                 menuPosition="fixed"
-                value={productOptions.find(o => o.value === form.productId) || null}
-                onChange={(option: any) => setForm(f => ({ ...f, productId: option ? option.value : null, variantId: null }))}
+                value={productOptions.find(o => o.value === currentItem.productId) || null}
+                onChange={(option: any) => setCurrentItem(c => ({ ...c, productId: option ? option.value : null, variantId: null }))}
               />
             </label>
 
@@ -356,8 +401,8 @@ export default function BillingPage() {
                   styles={selectStyles}
                   menuPortalTarget={typeof document !== "undefined" ? document.body : null}
                   menuPosition="fixed"
-                  value={variantOptions.find(o => o.value === form.variantId) || null}
-                  onChange={(option: any) => setForm(f => ({ ...f, variantId: option ? option.value : null }))}
+                  value={variantOptions.find(o => o.value === currentItem.variantId) || null}
+                  onChange={(option: any) => setCurrentItem(c => ({ ...c, variantId: option ? option.value : null }))}
                 />
               </label>
             )}
@@ -368,8 +413,8 @@ export default function BillingPage() {
                 type="number"
                 min="1"
                 placeholder="Qty"
-                value={form.quantity}
-                onChange={(e) => setForm(f => ({ ...f, quantity: e.target.value }))}
+                value={currentItem.quantity}
+                onChange={(e) => setCurrentItem(c => ({ ...c, quantity: e.target.value }))}
               />
             </label>
 
@@ -380,16 +425,72 @@ export default function BillingPage() {
                 min="0"
                 step="0.01"
                 placeholder="Auto-calculated"
-                value={form.unitPrice}
-                onChange={(e) => setForm(f => ({ ...f, unitPrice: e.target.value }))}
+                value={currentItem.unitPrice}
+                onChange={(e) => setCurrentItem(c => ({ ...c, unitPrice: e.target.value }))}
               />
             </label>
           </div>
 
-          <div style={{ marginTop: 16, padding: "12px 16px", background: "#f4f4f5", borderRadius: 6, display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid #e4e4e7" }}>
-            <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "#52525b" }}>Total Amount:</span>
-            <span style={{ fontSize: "1rem", fontWeight: "bold", color: "#16a34a" }}>₹{totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "12px" }}>
+            <button className="button" type="button" onClick={addItemToBill} disabled={busy}>
+              <Plus size={16} style={{ marginRight: 6 }} />
+              Add to Bill
+            </button>
           </div>
+
+          {/* Bill Items Table */}
+          {billItems.length > 0 && (
+            <>
+              <hr style={{ margin: "20px 0", borderTop: "1px solid #e4e4e7", borderBottom: "none", borderLeft: "none", borderRight: "none" }} />
+              <h5 style={{ margin: "0 0 12px 0", fontSize: "1rem" }}>Bill Items</h5>
+              <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "16px" }}>
+                <thead>
+                  <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
+                    <th style={{ padding: "10px", textAlign: "left", fontSize: "13px", fontWeight: 600 }}>Product</th>
+                    <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: 600 }}>Qty</th>
+                    <th style={{ padding: "10px", textAlign: "right", fontSize: "13px", fontWeight: 600 }}>Price</th>
+                    <th style={{ padding: "10px", textAlign: "right", fontSize: "13px", fontWeight: 600 }}>Total</th>
+                    <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: 600 }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {billItems.map((item, index) => (
+                    <tr key={index} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                      <td style={{ padding: "10px" }}>{getProductName(item.productId, item.variantId)}</td>
+                      <td style={{ padding: "10px", textAlign: "center" }}>{item.quantity}</td>
+                      <td style={{ padding: "10px", textAlign: "right" }}>₹{item.unitPrice.toFixed(2)}</td>
+                      <td style={{ padding: "10px", textAlign: "right", fontWeight: 600 }}>₹{item.lineTotal.toFixed(2)}</td>
+                      <td style={{ padding: "10px", textAlign: "center" }}>
+                        <button
+                          type="button"
+                          onClick={() => removeItem(index)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            color: "#ef4444",
+                            cursor: "pointer",
+                            padding: "4px",
+                            display: "inline-flex"
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr style={{ background: "#f8fafc", fontWeight: 600 }}>
+                    <td colSpan={3} style={{ padding: "12px", textAlign: "right" }}>TOTAL:</td>
+                    <td style={{ padding: "12px", textAlign: "right", fontSize: "16px", color: "#2f6b3f" }}>
+                      ₹{totalAmount.toFixed(2)}
+                    </td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </>
+          )}
         </form>
       </FormModal>
 

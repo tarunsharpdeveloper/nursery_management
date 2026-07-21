@@ -131,7 +131,7 @@ export default function ProductDetailsClient({
   useEffect(() => {
     async function load() {
       try {
-        const data = await apiRequest<BackendProduct[]>("/api/products");
+        const data = await apiRequest<BackendProduct[]>("/api/products?limit=7");
         setAllProducts(data);
         const found = data.find((p) => p.id === Number(id));
         if (found) {
@@ -231,7 +231,7 @@ export default function ProductDetailsClient({
   // ── Related products (exclude current, show up to 8 for slider) ──────────────────
   const relatedBackend = allProducts
     .filter((p) => p.id !== Number(id) && p.is_active)
-    .slice(0, 8);
+    .slice(0, 6);
   
   // Transform to Product format for slider
   const relatedProducts = relatedBackend.map((rp) => {

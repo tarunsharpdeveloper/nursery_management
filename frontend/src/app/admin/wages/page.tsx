@@ -13,6 +13,7 @@ export default function WagesPage() {
           { key: "gender", label: "Gender" },
           { key: "days_worked", label: "Days Worked" },
           { key: "absent_days", label: "Absent" },
+          { key: "deduction_amount", label: "Deducted" },
           { key: "payable_amount", label: "Payable Amount" }
         ]}
         searchPlaceholder="Search employees..."

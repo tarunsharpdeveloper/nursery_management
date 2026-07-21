@@ -56,6 +56,10 @@ export default function EmployeesPage() {
     fields.push({ name: "dailyWage", label: "Daily Wage", type: "number", valueType: "number", required: true });
   }
 
+  if (values.id) {
+    fields.push({ name: "wageDeduction", label: "Wage Deduction", type: "number", valueType: "number", placeholder: "0" });
+  }
+
   function validateForm(vals: Record<string, string | number>) {
     const errors: Record<string, string> = {};
     if (!vals.name) errors.name = "Name is required";
@@ -132,7 +136,8 @@ export default function EmployeesPage() {
       joiningDate: row.joining_date ? new Date(row.joining_date).toISOString().slice(0, 10) : "",
       employeeType: row.employee_type,
       monthlySalary: row.monthly_salary || "",
-      dailyWage: row.daily_wage || ""
+      dailyWage: row.daily_wage || "",
+      wageDeduction: row.wage_deduction || ""
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -164,7 +169,8 @@ export default function EmployeesPage() {
         transformSubmit={(v) => ({
           ...v,
           monthlySalary: v.monthlySalary ? Number(v.monthlySalary) : undefined,
-          dailyWage: v.dailyWage ? Number(v.dailyWage) : undefined
+          dailyWage: v.dailyWage ? Number(v.dailyWage) : undefined,
+          wageDeduction: v.wageDeduction ? Number(v.wageDeduction) : 0
         })}
         fields={fields}
         columns={[
@@ -175,6 +181,7 @@ export default function EmployeesPage() {
           { key: "employee_type", label: "Type" },
           { key: "monthly_salary", label: "Salary" },
           { key: "daily_wage", label: "Wage" },
+          { key: "wage_deduction", label: "Deduction" },
           { key: "is_active", label: "Status" }
         ]}
         renderCell={(row, column, reload) => {

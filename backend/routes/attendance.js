@@ -8,7 +8,8 @@ const employeeSchema = z.object({
   joiningDate: z.string().min(10),
   employeeType: z.enum(["monthly_salary", "daily_wage"]),
   monthlySalary: z.number().min(0).optional(),
-  dailyWage: z.number().min(0).optional()
+  dailyWage: z.number().min(0).optional(),
+  wageDeduction: z.number().min(0).optional()
 });
 
 const attendanceSchema = z.object({
@@ -22,12 +23,13 @@ async function createEmployee(req, res, { readJson, sendJson }) {
   const payload = employeeSchema.parse(await readJson(req));
   const [result] = await pool.query(
     `INSERT INTO employees
-      (name, mobile, gender, joining_date, employee_type, monthly_salary, daily_wage)
-     VALUES (:name, :mobile, :gender, :joiningDate, :employeeType, :monthlySalary, :dailyWage)`,
+      (name, mobile, gender, joining_date, employee_type, monthly_salary, daily_wage, wage_deduction)
+     VALUES (:name, :mobile, :gender, :joiningDate, :employeeType, :monthlySalary, :dailyWage, :wageDeduction)`,
     {
       ...payload,
       monthlySalary: payload.monthlySalary || null,
-      dailyWage: payload.dailyWage || null
+      dailyWage: payload.dailyWage || null,
+      wageDeduction: payload.wageDeduction || 0
     }
   );
 
@@ -83,7 +85,8 @@ const editEmployeeSchema = z.object({
   joiningDate: z.string().min(10),
   employeeType: z.enum(["monthly_salary", "daily_wage"]),
   monthlySalary: z.number().min(0).optional(),
-  dailyWage: z.number().min(0).optional()
+  dailyWage: z.number().min(0).optional(),
+  wageDeduction: z.number().min(0).optional()
 });
 
 async function editEmployee(req, res, { readJson, sendJson }) {
@@ -96,12 +99,14 @@ async function editEmployee(req, res, { readJson, sendJson }) {
             joining_date = :joiningDate,
             employee_type = :employeeType,
             monthly_salary = :monthlySalary,
-            daily_wage = :dailyWage
+            daily_wage = :dailyWage,
+            wage_deduction = :wageDeduction
       WHERE id = :id`,
     {
       ...payload,
       monthlySalary: payload.monthlySalary || null,
-      dailyWage: payload.dailyWage || null
+      dailyWage: payload.dailyWage || null,
+      wageDeduction: payload.wageDeduction || 0
     }
   );
 

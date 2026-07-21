@@ -136,7 +136,7 @@ export default function HomePage() {
   useEffect(() => {
     async function loadProducts() {
       try {
-        const data = await apiRequest<BackendProduct[]>("/api/products");
+        const data = await apiRequest<BackendProduct[]>("/api/products?limit=6");
         const transformedProducts: Product[] = data.map((product) => {
           // Resolve best image: first from media_urls JSON array, then photo_url, then fallback
           const FALLBACK_IMG = "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg";

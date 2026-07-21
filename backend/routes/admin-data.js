@@ -496,7 +496,7 @@ async function updateDispatchStatus(req, res, { readJson, sendJson }) {
 
 async function listEmployees(_req, res, { sendJson }) {
   const [rows] = await pool.query(
-    `SELECT id, name, mobile, gender, joining_date, employee_type, monthly_salary, daily_wage, is_active
+    `SELECT id, name, mobile, gender, joining_date, employee_type, monthly_salary, daily_wage, wage_deduction, is_active
        FROM employees
       WHERE is_deleted = 0
       ORDER BY name`
@@ -613,7 +613,7 @@ async function listWageSummary(req, res, { sendJson }) {
   }
 
   const [rows] = await pool.query(
-    `SELECT e.id, e.name, e.employee_type, e.gender, e.monthly_salary, e.daily_wage,
+    `SELECT e.id, e.name, e.employee_type, e.gender, e.monthly_salary, e.daily_wage, e.wage_deduction,
             SUM(CASE WHEN a.status = 'present' THEN 1 WHEN a.status = 'half_day' THEN 0.5 WHEN a.status = 'sunday_off' AND e.employee_type = 'monthly_salary' THEN 1 ELSE 0 END) AS days_worked,
             SUM(CASE WHEN a.status = 'absent' THEN 1 ELSE 0 END) AS absent_days
        FROM employees e
@@ -630,17 +630,18 @@ async function listWageSummary(req, res, { sendJson }) {
     const absentDays = Number(row.absent_days || 0);
     const salary = Number(row.monthly_salary || 0);
     const dailyWage = Number(row.daily_wage || 0);
-    const payable = row.employee_type === "monthly_salary"
-      ? Math.max(salary - ((salary / 30) * absentDays), 0)
-      : dailyWage * daysWorked;
+    const baseAmount = row.employee_type === "monthly_salary" ? salary : dailyWage * daysWorked;
+    const attendanceDeduction = row.employee_type === "monthly_salary" ? (salary / 30) * absentDays : 0;
+    const deductionAmount = attendanceDeduction + Number(row.wage_deduction || 0);
+    const payable = Math.max(baseAmount - deductionAmount, 0);
 
-    return { ...row, days_worked: daysWorked, absent_days: absentDays, payable_amount: payable };
+    return { ...row, days_worked: daysWorked, absent_days: absentDays, deduction_amount: deductionAmount, payable_amount: payable };
   }));
 }
 
 const modelsConfig = {
   employees: {
-    baseSelect: "SELECT id, name, mobile, gender, joining_date, employee_type, monthly_salary, daily_wage, is_active FROM employees",
+    baseSelect: "SELECT id, name, mobile, gender, joining_date, employee_type, monthly_salary, daily_wage, wage_deduction, is_active FROM employees",
     baseWhere: "WHERE is_deleted = 0",
     searchFields: ["name", "mobile", "employee_type"],
     orderBy: "ORDER BY name",

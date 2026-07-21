@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AdminModule } from "@/components/admin-module";
 import { apiRequest } from "@/lib/api";
 import { Plus, Trash2, X } from "lucide-react";
+import { useToast } from "@/context/ToastContext";
 
 interface BookingItem {
   productId: number;
@@ -14,6 +15,7 @@ interface BookingItem {
 }
 
 export default function AdvanceBookingsPage() {
+  const { showToast } = useToast();
   const [customers, setCustomers] = useState<{ id: number; name: string; phone: string }[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [values, setValues] = useState<Record<string, any>>({
@@ -38,11 +40,17 @@ export default function AdvanceBookingsPage() {
   useEffect(() => {
     apiRequest<{ id: number; name: string; phone: string }[]>("/api/customers")
       .then((data) => setCustomers(data))
-      .catch(console.error);
+      .catch((error) => {
+        console.error(error);
+        showToast("Could not load customers.", "error");
+      });
     apiRequest<any[]>("/api/products")
       .then((data) => setProducts(data))
-      .catch(console.error);
-  }, []);
+      .catch((error) => {
+        console.error(error);
+        showToast("Could not load products.", "error");
+      });
+  }, [showToast]);
 
   // Calculate totals whenever booking items change
   useEffect(() => {
@@ -60,14 +68,17 @@ export default function AdvanceBookingsPage() {
 
   const addItemToBooking = () => {
     if (!currentItem.productId || currentItem.quantity <= 0) {
-      alert("Please select a product and enter quantity");
+      showToast("Please select a product and enter quantity.", "warning");
       return;
     }
 
     let unitPrice = 0;
     const product = products.find(p => p.id === currentItem.productId);
     
-    if (!product) return;
+    if (!product) {
+      showToast("The selected product is unavailable. Please choose another product.", "warning");
+      return;
+    }
 
     if (hasVariants && currentItem.variantId) {
       const variant = variants.find((v: any) => v.id === currentItem.variantId);
@@ -75,7 +86,7 @@ export default function AdvanceBookingsPage() {
     } else if (!hasVariants) {
       unitPrice = Number(product.selling_price) || 0;
     } else {
-      alert("Please select a variant");
+      showToast("Please select a variant.", "warning");
       return;
     }
 
@@ -117,17 +128,17 @@ export default function AdvanceBookingsPage() {
 
   const handleSubmit = async () => {
     if (!values.customerId) {
-      alert("Please select a customer");
+      showToast("Please select a customer.", "warning");
       return;
     }
 
     if (bookingItems.length === 0) {
-      alert("Please add at least one product to the booking");
+      showToast("Please add at least one product to the booking.", "warning");
       return;
     }
 
     if (!values.deliveryDate) {
-      alert("Please select a delivery date");
+      showToast("Please select a delivery date.", "warning");
       return;
     }
 
@@ -161,8 +172,9 @@ export default function AdvanceBookingsPage() {
       // Trigger a re-render by using a key change or state update
       // Force the AdminModule to reload its data
       setRefreshKey(prev => prev + 1);
+      showToast("Advance booking created successfully.", "success");
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to create booking");
+      showToast(error instanceof Error ? error.message : "Failed to create booking.", "error");
     }
   };
 

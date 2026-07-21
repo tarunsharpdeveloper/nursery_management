@@ -239,6 +239,7 @@ async function ensureAdminSchema() {
   await pool.query("ALTER TABLE attendance MODIFY status ENUM('present', 'absent', 'half_day', 'leave', 'sunday_off') NOT NULL");
   
   await addColumn("employees", "is_deleted", "TINYINT(1) NOT NULL DEFAULT 0");
+  await addColumn("employees", "wage_deduction", "DECIMAL(10,2) NOT NULL DEFAULT 0");
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS wage_calculations (

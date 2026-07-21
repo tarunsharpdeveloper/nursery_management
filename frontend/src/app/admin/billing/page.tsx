@@ -443,52 +443,100 @@ export default function BillingPage() {
             <>
               <hr style={{ margin: "20px 0", borderTop: "1px solid #e4e4e7", borderBottom: "none", borderLeft: "none", borderRight: "none" }} />
               <h5 style={{ margin: "0 0 12px 0", fontSize: "1rem" }}>Bill Items</h5>
-              <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "16px" }}>
-                <thead>
-                  <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
-                    <th style={{ padding: "10px", textAlign: "left", fontSize: "13px", fontWeight: 600 }}>Product</th>
-                    <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: 600 }}>Qty</th>
-                    <th style={{ padding: "10px", textAlign: "right", fontSize: "13px", fontWeight: 600 }}>Price</th>
-                    <th style={{ padding: "10px", textAlign: "right", fontSize: "13px", fontWeight: 600 }}>Total</th>
-                    <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: 600 }}>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {billItems.map((item, index) => (
-                    <tr key={index} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                      <td style={{ padding: "10px" }}>{getProductName(item.productId, item.variantId)}</td>
-                      <td style={{ padding: "10px", textAlign: "center" }}>{item.quantity}</td>
-                      <td style={{ padding: "10px", textAlign: "right" }}>₹{item.unitPrice.toFixed(2)}</td>
-                      <td style={{ padding: "10px", textAlign: "right", fontWeight: 600 }}>₹{item.lineTotal.toFixed(2)}</td>
-                      <td style={{ padding: "10px", textAlign: "center" }}>
-                        <button
-                          type="button"
-                          onClick={() => removeItem(index)}
-                          style={{
-                            background: "none",
-                            border: "none",
-                            color: "#ef4444",
-                            cursor: "pointer",
-                            padding: "4px",
-                            display: "inline-flex"
-                          }}
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr style={{ background: "#f8fafc", fontWeight: 600 }}>
-                    <td colSpan={3} style={{ padding: "12px", textAlign: "right" }}>TOTAL:</td>
-                    <td style={{ padding: "12px", textAlign: "right", fontSize: "16px", color: "#2f6b3f" }}>
-                      ₹{totalAmount.toFixed(2)}
-                    </td>
-                    <td></td>
-                  </tr>
-                </tfoot>
-              </table>
+              <div
+  style={{
+    width: "100%",
+    overflowX: "auto",
+    WebkitOverflowScrolling: "touch",
+    borderRadius: "12px"
+  }}
+>
+  <table
+    style={{
+      width: "100%",
+      minWidth: "750px", // Forces horizontal scroll on smaller screens
+      borderCollapse: "collapse",
+      marginBottom: "16px"
+    }}
+  >
+    <thead>
+      <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
+        <th style={{ padding: "10px", textAlign: "left", fontSize: "13px", fontWeight: 600 }}>Product</th>
+        <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: 600 }}>Qty</th>
+        <th style={{ padding: "10px", textAlign: "right", fontSize: "13px", fontWeight: 600 }}>Price</th>
+        <th style={{ padding: "10px", textAlign: "right", fontSize: "13px", fontWeight: 600 }}>Total</th>
+        <th style={{ padding: "10px", textAlign: "center", fontSize: "13px", fontWeight: 600 }}>Action</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {billItems.map((item, index) => (
+        <tr key={index} style={{ borderBottom: "1px solid #f1f5f9" }}>
+          <td style={{ padding: "10px" }}>
+            {getProductName(item.productId, item.variantId)}
+          </td>
+
+          <td style={{ padding: "10px", textAlign: "center" }}>
+            {item.quantity}
+          </td>
+
+          <td style={{ padding: "10px", textAlign: "right" }}>
+            ₹{item.unitPrice.toFixed(2)}
+          </td>
+
+          <td
+            style={{
+              padding: "10px",
+              textAlign: "right",
+              fontWeight: 600
+            }}
+          >
+            ₹{item.lineTotal.toFixed(2)}
+          </td>
+
+          <td style={{ padding: "10px", textAlign: "center" }}>
+            <button
+              type="button"
+              onClick={() => removeItem(index)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#ef4444",
+                cursor: "pointer",
+                padding: "4px",
+                display: "inline-flex"
+              }}
+            >
+              <Trash2 size={16} />
+            </button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+
+    <tfoot>
+      <tr style={{ background: "#f8fafc", fontWeight: 600 }}>
+        <td colSpan={3} style={{ padding: "12px", textAlign: "right" }}>
+          TOTAL:
+        </td>
+
+        <td
+          style={{
+            padding: "12px",
+            textAlign: "right",
+            fontSize: "16px",
+            color: "#2f6b3f"
+          }}
+        >
+          ₹{totalAmount.toFixed(2)}
+        </td>
+
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
             </>
           )}
         </form>

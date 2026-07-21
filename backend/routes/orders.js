@@ -200,11 +200,22 @@ async function listCustomerOrders(req, res, { sendJson }) {
     `SELECT o.id, o.order_number, o.status, o.payment_status, o.total_amount, o.created_at,
             c.name AS customer_name, c.phone, c.email,
             p.name AS product_name, p.product_type, p.photo_url, p.media_urls, p.available_quantity,
-            oi.quantity, oi.unit_price, oi.line_total
+            oi.quantity, oi.unit_price, oi.line_total,
+            d.bus_number, d.driver_name, d.driver_mobile, d.bus_photo_url, d.dispatch_type, d.dispatch_date, d.dispatch_status
        FROM orders o
        JOIN customers c ON c.id = o.customer_id
        JOIN order_items oi ON oi.order_id = o.id
        JOIN products p ON p.id = oi.product_id
+       LEFT JOIN (
+         SELECT d1.order_id, d1.bus_number, d1.driver_name, d1.driver_mobile, d1.bus_photo_url,
+                d1.dispatch_type, d1.dispatch_date, d1.status AS dispatch_status
+         FROM dispatches d1
+         INNER JOIN (
+           SELECT order_id, MAX(id) AS latest_id
+           FROM dispatches
+           GROUP BY order_id
+         ) latest ON latest.order_id = d1.order_id AND latest.latest_id = d1.id
+       ) d ON d.order_id = o.id
       WHERE ${clauses.join(" AND ")}
       ORDER BY o.created_at DESC, o.id DESC`,
     params
@@ -223,6 +234,15 @@ async function listCustomerOrders(req, res, { sendJson }) {
         customer_name: row.customer_name,
         phone: row.phone,
         email: row.email,
+        dispatch: row.bus_number || row.driver_name || row.driver_mobile || row.bus_photo_url ? {
+          bus_number: row.bus_number,
+          driver_name: row.driver_name,
+          driver_mobile: row.driver_mobile,
+          bus_photo_url: row.bus_photo_url,
+          dispatch_type: row.dispatch_type,
+          dispatch_date: row.dispatch_date,
+          dispatch_status: row.dispatch_status
+        } : null,
         items: []
       };
       acc.push(order);

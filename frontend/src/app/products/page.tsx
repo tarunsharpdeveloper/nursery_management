@@ -60,7 +60,8 @@ const fallbackProducts: Product[] = [
 
 export default function ProductsPage() {
   const { addToCart } = useCart();
-  const [products, setProducts] = useState<Product[]>(fallbackProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>(fallbackProducts);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<ProductType | "all">("all");
   const [query, setQuery] = useState("");
@@ -68,7 +69,9 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [totalPages, setTotalPages] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const itemsPerPage = 3;
 
   useEffect(() => {
     function handleResize() {
@@ -84,8 +87,15 @@ export default function ProductsPage() {
   useEffect(() => {
     async function loadProducts() {
       try {
-        const data = await apiRequest<BackendProduct[]>("/api/products");
-        const transformedProducts: Product[] = data.map((product) => {
+        // Load first page with pagination
+        const response = await apiRequest<{
+          data: BackendProduct[];
+          totalRecords: number;
+          totalPages: number;
+          currentPage: number;
+        }>("/api/products?page=1&limit=3");
+        
+        const transformedProducts: Product[] = response.data.map((product) => {
           // Resolve best image: first from media_urls JSON array, then photo_url, then fallback
           const FALLBACK_IMG = "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg";
           let resolvedImage = product.photo_url || FALLBACK_IMG;
@@ -113,11 +123,14 @@ export default function ProductsPage() {
           };
         });
 
-        if (transformedProducts.length) {
-          setProducts(transformedProducts);
-        }
+        setProducts(transformedProducts);
+        setAllProducts(transformedProducts);
+        setTotalPages(response.totalPages);
+        setCurrentPage(response.currentPage);
       } catch (error) {
         console.error("Failed to load products:", error);
+        setProducts(fallbackProducts);
+        setAllProducts(fallbackProducts);
       } finally {
         setLoading(false);
       }
@@ -127,8 +140,8 @@ export default function ProductsPage() {
   }, []);
 
   const categories = useMemo(() => {
-    return [...new Set(products.map((product) => product.category))].sort();
-  }, [products]);
+    return [...new Set(allProducts.map((product) => product.category))].sort();
+  }, [allProducts]);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -167,7 +180,7 @@ export default function ProductsPage() {
 
   const filteredProducts = useMemo(() => {
     const search = query.trim().toLowerCase();
-    const filtered = products.filter((product) => {
+    const filtered = allProducts.filter((product) => {
       const matchesCategory = selectedCategory
         ? product.category.toLowerCase() === selectedCategory.toLowerCase()
         : true;
@@ -184,13 +197,61 @@ export default function ProductsPage() {
       if (sortBy === "stock") return b.stock - a.stock;
       return a.name.localeCompare(b.name);
     });
-  }, [products, query, selectedCategory, selectedType, sortBy]);
+  }, [allProducts, query, selectedCategory, selectedType, sortBy]);
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+  // Display products from API (paginated)
+  const displayedProducts = products;
+
+  // Load more function
+  const loadMoreProducts = async () => {
+    if (loadingMore || currentPage >= totalPages) return;
+
+    setLoadingMore(true);
+    try {
+      const nextPage = currentPage + 1;
+      const response = await apiRequest<{
+        data: BackendProduct[];
+        totalRecords: number;
+        totalPages: number;
+        currentPage: number;
+      }>(`/api/products?page=${nextPage}&limit=3`);
+      
+      const transformedProducts: Product[] = response.data.map((product) => {
+        const FALLBACK_IMG = "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg";
+        let resolvedImage = product.photo_url || FALLBACK_IMG;
+        if (product.media_urls) {
+          try {
+            const parsed = JSON.parse(product.media_urls);
+            if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]) {
+              resolvedImage = parsed[0];
+            }
+          } catch {
+            if (product.media_urls) resolvedImage = product.media_urls;
+          }
+        }
+        return {
+          id: product.id,
+          name: product.name,
+          type: product.product_type,
+          category: product.category,
+          description: product.description,
+          price: Number(product.selling_price),
+          stock: Math.max(0, Number(product.available_quantity)),
+          sold: 0,
+          image: getMediaUrl(resolvedImage),
+          active: Boolean(product.is_active)
+        };
+      });
+
+      setProducts([...products, ...transformedProducts]);
+      setAllProducts([...allProducts, ...transformedProducts]);
+      setCurrentPage(response.currentPage);
+    } catch (error) {
+      console.error("Failed to load more products:", error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -253,7 +314,7 @@ export default function ProductsPage() {
                           className="cat-item__number"
                           style={selectedCategory === null ? { backgroundColor: "var(--theme-color2)", color: "var(--title-color)" } : {}}
                         >
-                          {products.length}
+                          {allProducts.length}
                         </span>
                       </a>
                     </li>
@@ -271,7 +332,7 @@ export default function ProductsPage() {
                               className="cat-item__number"
                               style={isActive ? { backgroundColor: "var(--theme-color2)", color: "var(--title-color)" } : {}}
                             >
-                              {products.filter((p) => p.category === category).length}
+                              {allProducts.filter((p) => p.category === category).length}
                             </span>
                           </a>
                         </li>
@@ -333,7 +394,7 @@ export default function ProductsPage() {
                 <div className="row gap-4 align-items-center justify-content-between">
                   <div className="col-md-auto flex-grow-1">
                     <p className="woocommerce-result-count">
-                      Showing {startIndex + 1}-{Math.min(endIndex, filteredProducts.length)} of {filteredProducts.length} results
+                      Showing {displayedProducts.length} of {allProducts.length} products
                     </p>
                   </div>
                   <div className="col-md-auto d-flex align-items-center gap-3" style={{ position: 'relative', zIndex: 10 }}>
@@ -396,12 +457,12 @@ export default function ProductsPage() {
                   <i className="fas fa-spinner fa-spin" style={{ fontSize: "32px", color: "var(--brand)", marginBottom: "15px" }}></i>
                   <p style={{ color: "var(--muted)" }}>Loading live catalog...</p>
                 </div>
-              ) : paginatedProducts.length ? (
+              ) : displayedProducts.length ? (
                 <>
                   {viewMode === "list" ? (
                     /* ── List View (product-style7) ── */
                     <div className="row">
-                      {paginatedProducts.map((product) => (
+                      {displayedProducts.map((product) => (
                         <div className="col-12 mb-30" key={product.id}>
                           <div className="vs-product product-style1 modern-card" style={{ display: "flex", alignItems: "stretch", height: "240px", flexDirection: "row", textAlign: "left" }}>
                             <div className="product-img" style={{ position: "relative", width: "240px", height: "100%", flexShrink: 0, padding: "20px", background: "#f8fcf6", borderRight: "1px solid rgba(0,0,0,0.02)", display: "flex", justifyContent: "center", alignItems: "center" }}>
@@ -459,7 +520,7 @@ export default function ProductsPage() {
                   ) : (
                     /* ── Grid View (product-style1 from homepage) ── */
                     <div className="row">
-                      {paginatedProducts.map((product) => (
+                      {displayedProducts.map((product) => (
                         <div className="col-xl-6 col-lg-6 col-md-6 mb-30" key={product.id}>
                           <div className="vs-product product-style1 modern-card">
                             <div className="product-img">
@@ -517,64 +578,34 @@ export default function ProductsPage() {
                     </div>
                   )}
 
-                  {/* Pagination Controls */}
-                  {totalPages > 1 && (
-                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px", marginTop: "40px", flexWrap: "wrap" }}>
+                  {/* Load More Button */}
+                  {currentPage < totalPages && (
+                    <div style={{ display: "flex", justifyContent: "center", marginTop: "40px" }}>
                       <button
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
+                        onClick={loadMoreProducts}
+                        disabled={loadingMore}
+                        className="vs-btn"
                         style={{
-                          padding: "8px 14px",
-                          borderRadius: "8px",
-                          border: "1px solid var(--brand)",
-                          background: currentPage === 1 ? "#e0e0e0" : "white",
-                          color: currentPage === 1 ? "#999" : "var(--brand)",
-                          cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                          padding: "14px 40px",
+                          fontSize: "16px",
                           fontWeight: 600,
-                          transition: "all 0.2s ease"
+                          borderRadius: "10px",
+                          minWidth: "200px",
+                          opacity: loadingMore ? 0.7 : 1,
+                          cursor: loadingMore ? "not-allowed" : "pointer"
                         }}
                       >
-                        <i className="fas fa-chevron-left"></i> Previous
-                      </button>
-
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                        <button
-                          key={page}
-                          onClick={() => handlePageChange(page)}
-                          style={{
-                            width: "40px",
-                            height: "40px",
-                            borderRadius: "8px",
-                            border: "1px solid var(--brand)",
-                            background: currentPage === page ? "var(--brand)" : "white",
-                            color: currentPage === page ? "white" : "var(--brand)",
-                            cursor: "pointer",
-                            fontWeight: 600,
-                            transition: "all 0.2s ease",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                          }}
-                        >
-                          {page}
-                        </button>
-                      ))}
-
-                      <button
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        style={{
-                          padding: "8px 14px",
-                          borderRadius: "8px",
-                          border: "1px solid var(--brand)",
-                          background: currentPage === totalPages ? "#e0e0e0" : "white",
-                          color: currentPage === totalPages ? "#999" : "var(--brand)",
-                          cursor: currentPage === totalPages ? "not-allowed" : "pointer",
-                          fontWeight: 600,
-                          transition: "all 0.2s ease"
-                        }}
-                      >
-                        Next <i className="fas fa-chevron-right"></i>
+                        {loadingMore ? (
+                          <>
+                            <i className="fas fa-spinner fa-spin" style={{ marginRight: "8px" }}></i>
+                            Loading...
+                          </>
+                        ) : (
+                          <>
+                            Load More Products
+                            <i className="fas fa-arrow-down" style={{ marginLeft: "8px" }}></i>
+                          </>
+                        )}
                       </button>
                     </div>
                   )}

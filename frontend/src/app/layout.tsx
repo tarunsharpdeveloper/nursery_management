@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Jost, Epilogue } from "next/font/google";
 import { ChevronDown, Facebook, Instagram, Leaf, Search, ShoppingCart, User } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
+import FloatingCart from "@/components/floating-cart";
 import { Footer } from "@/components/footer";
 import { ToastProvider } from "@/context/ToastContext";
 import { CartProvider } from "@/context/CartContext";
@@ -68,6 +69,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
             <CartProvider>
               <div className="site-shell">
                 <SiteHeader />
+                <FloatingCart />
                 {children}
                 <Footer />
                 <ScrollToTop />

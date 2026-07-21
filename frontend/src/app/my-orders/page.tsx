@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CalendarDays, PackageCheck, Search, Truck } from "lucide-react";
+import { CalendarDays, Eye, PackageCheck, Search, Truck, User, Phone } from "lucide-react";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { apiRequest, getMediaUrl } from "@/lib/api";
+import { FormModal } from "@/components/form-modal";
 
 type CustomerOrder = {
   id: number;
@@ -17,6 +18,15 @@ type CustomerOrder = {
   customer_name: string;
   phone: string;
   email: string;
+  dispatch: {
+    bus_number: string | null;
+    driver_name: string | null;
+    driver_mobile: string | null;
+    bus_photo_url: string | null;
+    dispatch_type: string | null;
+    dispatch_date: string | null;
+    dispatch_status: string | null;
+  } | null;
   items: {
     product_name: string;
     product_type: string;
@@ -36,6 +46,7 @@ export default function MyOrdersPage() {
   const [phone, setPhone] = useState("");
   const [orderNumber, setOrderNumber] = useState("");
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
+  const [selectedDispatchOrder, setSelectedDispatchOrder] = useState<CustomerOrder | null>(null);
   const [status, setStatus] = useState("Enter your email, phone, or order number to track products.");
   const [busy, setBusy] = useState(false);
 
@@ -130,62 +141,22 @@ export default function MyOrdersPage() {
               {orders.map((order) => (
                 <article className="order-card" key={order.id}>
                   {/* Payment Status Banner */}
-                  {order.payment_status === "paid" && (
-                    <div style={{
-                      backgroundColor: "#d4edda",
-                      borderLeft: "4px solid #28a745",
-                      padding: "12px 20px",
-                      marginBottom: "20px",
-                      borderRadius: "4px"
-                    }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "20px" }}>✓</span>
-                        <div>
-                          <strong style={{ color: "#155724", fontSize: "14px" }}>Payment Successful</strong>
-                          <p style={{ color: "#155724", fontSize: "12px", margin: "2px 0 0 0" }}>
-                            Your payment has been received and confirmed
-                          </p>
-                        </div>
+                  {order.payment_status && (
+                    <div className={`order-notice ${order.payment_status === "paid" ? "success" : order.payment_status === "failed" ? "error" : "warning"}`}>
+                      <div className="order-notice-icon">
+                        {order.payment_status === "paid" && "✓"}
+                        {order.payment_status === "failed" && "✕"}
+                        {order.payment_status === "pending" && "⏱"}
                       </div>
-                    </div>
-                  )}
-                  
-                  {order.payment_status === "failed" && (
-                    <div style={{
-                      backgroundColor: "#f8d7da",
-                      borderLeft: "4px solid #dc3545",
-                      padding: "12px 20px",
-                      marginBottom: "20px",
-                      borderRadius: "4px"
-                    }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "20px" }}>✕</span>
-                        <div>
-                          <strong style={{ color: "#721c24", fontSize: "14px" }}>Payment Failed</strong>
-                          <p style={{ color: "#721c24", fontSize: "12px", margin: "2px 0 0 0" }}>
-                            Payment was not successful. Please try again or contact support.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {order.payment_status === "pending" && (
-                    <div style={{
-                      backgroundColor: "#fff3cd",
-                      borderLeft: "4px solid #ffc107",
-                      padding: "12px 20px",
-                      marginBottom: "20px",
-                      borderRadius: "4px"
-                    }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "20px" }}>⏱</span>
-                        <div>
-                          <strong style={{ color: "#856404", fontSize: "14px" }}>Payment Pending</strong>
-                          <p style={{ color: "#856404", fontSize: "12px", margin: "2px 0 0 0" }}>
-                            Waiting for payment confirmation
-                          </p>
-                        </div>
+                      <div>
+                        <strong>{order.payment_status === "paid" ? "Payment Successful" : order.payment_status === "failed" ? "Payment Failed" : "Payment Pending"}</strong>
+                        <p>
+                          {order.payment_status === "paid"
+                            ? "Your payment has been received and confirmed."
+                            : order.payment_status === "failed"
+                            ? "Payment was not successful. Please try again or contact support."
+                            : "Waiting for payment confirmation."}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -239,6 +210,18 @@ export default function MyOrdersPage() {
                         {order.payment_status === "pending" && <span>⏱</span>}
                         {order.payment_status}
                       </span>
+                      {(order.dispatch && (order.dispatch.bus_number || order.dispatch.driver_name || order.dispatch.driver_mobile || order.dispatch.bus_photo_url)) && (
+                        <div className="order-dispatch-toggle-wrapper">
+                          <button
+                            type="button"
+                            className="order-dispatch-toggle"
+                            onClick={() => setSelectedDispatchOrder(order)}
+                            title="View bus dispatch details"
+                          >
+                            <Eye size={18} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -311,6 +294,45 @@ export default function MyOrdersPage() {
           )}
         </div>
       </section>
+
+      <FormModal
+        isOpen={Boolean(selectedDispatchOrder)}
+        onClose={() => setSelectedDispatchOrder(null)}
+        title="Bus Dispatch Details"
+      >
+        {selectedDispatchOrder?.dispatch ? (
+          <div className="dispatch-details-modal">
+            <div className="dispatch-details-meta">
+              {selectedDispatchOrder.dispatch.bus_number && (
+                <div className="dispatch-row"><Truck size={16} className="dispatch-icon" /> <strong>Bus Number:</strong> <span className="dispatch-value">{selectedDispatchOrder.dispatch.bus_number}</span></div>
+              )}
+              {selectedDispatchOrder.dispatch.driver_name && (
+                <div className="dispatch-row"><User size={16} className="dispatch-icon" /> <strong>Driver Name:</strong> <span className="dispatch-value">{selectedDispatchOrder.dispatch.driver_name}</span></div>
+              )}
+              {selectedDispatchOrder.dispatch.driver_mobile && (
+                <div className="dispatch-row"><Phone size={16} className="dispatch-icon" /> <strong>Driver Mobile:</strong> <span className="dispatch-value">{selectedDispatchOrder.dispatch.driver_mobile}</span></div>
+              )}
+              {selectedDispatchOrder.dispatch.dispatch_date && (
+                <div className="dispatch-row"><CalendarDays size={16} className="dispatch-icon" /> <strong>Dispatch Date:</strong> <span className="dispatch-value">{new Date(selectedDispatchOrder.dispatch.dispatch_date).toLocaleDateString("en-IN")}</span></div>
+              )}
+            </div>
+
+            {selectedDispatchOrder.dispatch.bus_photo_url && (
+              <div className="dispatch-details-image">
+                <img
+                  src={getMediaUrl(selectedDispatchOrder.dispatch.bus_photo_url)}
+                  alt="Bus photo"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        ) : (
+          <p>No dispatch details are available.</p>
+        )}
+      </FormModal>
     </main>
   );
 }

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { apiRequest, getMediaUrl } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 import { ProductSlider } from "@/components/ProductSlider";
+import { ProductReviewSummary } from "@/components/ProductReviewSummary";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface BackendProduct {
@@ -462,7 +463,7 @@ export default function ProductDetailsClient({
                   <span className="product-instock">
                     {displayStock > 0 ? "Available" : "Out of Stock"}
                   </span>
-                  <StarRating rating={5} />
+                  <ProductReviewSummary productId={Number(id)} />
                   <span className="product-rating__total">(Verified)</span>
                 </div>
 

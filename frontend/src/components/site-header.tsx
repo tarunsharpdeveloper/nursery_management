@@ -104,7 +104,7 @@ export function SiteHeader() {
 
             <Link href="/cart" className="nav-icon-btn nav-cart-btn" title="Shopping Cart">
               <ShoppingCart size={18} />
-              <span className="cart-badge">{cartCount}</span>
+              {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
             </Link>
 
             {/* Hamburger Menu Button (Mobile Only) */}

@@ -4579,6 +4579,19 @@ tbody tr:hover {
   font-weight: 700;
 }
 
+.product-review-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.product-review-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .product-about .product-title {
   font-size: 38px;
   margin-bottom: 25px;
@@ -5546,7 +5559,7 @@ font-size: 1.4rem;}
   min-width: 20px;
   height: 20px;
   border-radius: 10px;
-  background: #ff6b35;
+  background:var(--accent);
   display: inline-flex;
   align-items: center;
   justify-content: center;

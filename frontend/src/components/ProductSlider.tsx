@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { useCart } from "@/context/CartContext";
+import { ProductReviewSummary } from "@/components/ProductReviewSummary";
 
 interface ProductSliderProps {
   products: Product[];
@@ -140,9 +141,7 @@ export function ProductSlider({ products, itemsPerView = 5 }: ProductSliderProps
                     )}
                   </div>
                   <div className="product-content" style={{ paddingBottom: "40px" }}>
-                    <div className="star-rating">
-                      <span style={{ width: "100%" }}>Rated 5.0 out of 5</span>
-                    </div>
+                    <ProductReviewSummary productId={prod.id} />
                     <h3
                       className="product-title"
                       style={{

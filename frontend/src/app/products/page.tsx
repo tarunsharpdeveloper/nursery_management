@@ -5,6 +5,7 @@ import Link from "next/link";
 import { apiRequest, getMediaUrl } from "@/lib/api";
 import type { Product, ProductType } from "@/lib/types";
 import { useCart } from "@/context/CartContext";
+import { ProductReviewSummary } from "@/components/ProductReviewSummary";
 
 interface BackendProduct {
   id: number;
@@ -482,9 +483,7 @@ export default function ProductsPage() {
                               {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ position: "absolute", top: "15px", left: "15px", fontSize: "12px", fontWeight: 600, padding: "4px 14px", borderRadius: "20px", background: "var(--accent)", color: "#fff", zIndex: 2, border: "1px solid rgba(255,255,255,0.5)", whiteSpace: "nowrap" }}>Limited Stock</span>}
                             </div>
                             <div className="product-content" style={{ flex: 1, padding: "25px 30px", display: "flex", flexDirection: "column", justifyContent: "flex-start", position: "relative", height: "100%" }}>
-                              <div className="star-rating" style={{ marginBottom: "5px" }}>
-                                <span style={{ width: "100%" }}>Rated 5.0 out of 5</span>
-                              </div>
+                              <ProductReviewSummary productId={product.id} />
                               <h3 className="product-title" style={{ marginBottom: "8px", fontSize: "1.2rem" }}>
                                 <Link href={`/products/${product.id}`}>{product.name}</Link>
                               </h3>
@@ -531,9 +530,7 @@ export default function ProductsPage() {
                               {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ background: "var(--accent)" }}>Limited Stock</span>}
                             </div>
                             <div className="product-content" style={{ paddingBottom: "40px" }}>
-                              <div className="star-rating">
-                                <span style={{ width: "100%" }}>Rated 5.0 out of 5</span>
-                              </div>
+                              <ProductReviewSummary productId={product.id} />
                               <h3 className="product-title" style={{
                                 display: "-webkit-box",
                                 WebkitLineClamp: 2,

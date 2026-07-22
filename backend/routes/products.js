@@ -4,7 +4,7 @@ const { pool } = require("../db");
 async function listProducts(req, res, { sendJson }) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const page = parseInt(url.searchParams.get("page") || "1", 10);
-  const limit = parseInt(url.searchParams.get("limit") || "3", 10);
+  const limit = parseInt(url.searchParams.get("limit") || "100", 10); // Changed from 3 to 100 for admin forms
   const search = url.searchParams.get("search") || "";
   const filterKey = url.searchParams.get("filterKey");
   const filterValue = url.searchParams.get("filterValue");

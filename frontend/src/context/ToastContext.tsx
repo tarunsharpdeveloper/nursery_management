@@ -70,14 +70,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               gap: "12px",
               minWidth: "300px",
               animation: "slideInRight 0.3s ease-out, fadeOut 0.3s ease-out " + ((toast.duration || 3000) - 300) + "ms forwards",
-              cursor: "pointer",
               position: "relative",
               overflow: "hidden",
+              pointerEvents: "auto"
             }}
-            onClick={() => removeToast(toast.id)}
           >
             {/* Progress bar */}
-            <div style={{
+            <div className="toast-progress-bar" style={{
               position: "absolute",
               bottom: 0,
               left: 0,
@@ -89,7 +88,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 "#17a2b8",
               animation: `shrink ${toast.duration || 3000}ms linear forwards`,
               width: "100%",
-              opacity: 0.3
+              opacity: 0.3,
+              zIndex: 1
             }} />
             
             {/* Icon */}
@@ -105,7 +105,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              flexShrink: 0
+              flexShrink: 0,
+              position: "relative",
+              zIndex: 2
             }}>
               {toast.type === "success" && (
                 <i className="fal fa-check" style={{ fontSize: "20px", color: "#ffffff" }}></i>
@@ -122,13 +124,19 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* Message */}
-            <div style={{ flex: 1, fontSize: "14px", fontWeight: "600" }}>
+            <div style={{ flex: 1, fontSize: "14px", fontWeight: "600", position: "relative", zIndex: 2 }}>
               {toast.message}
             </div>
 
             {/* Close button */}
             <button
               onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                removeToast(toast.id);
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 removeToast(toast.id);
               }}
@@ -149,10 +157,18 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 justifyContent: "center",
                 fontSize: "20px",
                 flexShrink: 0,
-                transition: "background 0.2s"
+                transition: "background 0.2s",
+                position: "relative",
+                zIndex: 10,
+                WebkitTapHighlightColor: "transparent",
+                touchAction: "manipulation",
+                userSelect: "none",
+                WebkitUserSelect: "none"
               }}
               onMouseEnter={(e) => e.currentTarget.style.background = "rgba(0, 0, 0, 0.1)"}
               onMouseLeave={(e) => e.currentTarget.style.background = "rgba(0, 0, 0, 0.05)"}
+              aria-label="Close notification"
+              type="button"
             >
               ×
             </button>
@@ -203,27 +219,38 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           .toast-item {
             min-width: 0 !important;
             width: 100% !important;
-            padding: 12px 16px !important;
+            padding: 12px 14px !important;
             font-size: 13px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
           }
 
-          .toast-item > div:first-child {
-            width: 32px !important;
-            height: 32px !important;
+          /* Hide progress bar on mobile to prevent glitch */
+          .toast-progress-bar {
+            display: none !important;
           }
 
-          .toast-item > div:first-child i {
-            font-size: 16px !important;
+          .toast-item > div:first-of-type {
+            width: 36px !important;
+            height: 36px !important;
           }
 
-          .toast-item > div:nth-child(2) {
+          .toast-item > div:first-of-type i {
+            font-size: 18px !important;
+          }
+
+          .toast-item > div:nth-of-type(2) {
             font-size: 13px !important;
+            font-weight: 600 !important;
           }
 
           .toast-item button {
-            width: 26px !important;
-            height: 26px !important;
-            font-size: 18px !important;
+            width: 36px !important;
+            height: 36px !important;
+            font-size: 20px !important;
+            min-width: 36px !important;
+            min-height: 36px !important;
+            padding: 0 !important;
+            margin-left: 8px !important;
           }
         }
 

@@ -48,10 +48,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         flexDirection: "column",
         gap: "10px",
         maxWidth: "400px"
-      }}>
+      }}
+      className="toast-container"
+      >
         {toasts.map((toast) => (
           <div
             key={toast.id}
+            className="toast-item"
             style={{
               background: "#ffffff",
               color: 
@@ -70,12 +73,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               cursor: "pointer",
               position: "relative",
               overflow: "hidden",
-              // border: `2px solid ${
-              //   toast.type === "success" ? "#2d5016" :
-              //   toast.type === "error" ? "#dc3545" :
-              //   toast.type === "warning" ? "#ffc107" :
-              //   "#17a2b8"
-              // }`
             }}
             onClick={() => removeToast(toast.id)}
           >
@@ -191,6 +188,56 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           }
           to {
             width: 0%;
+          }
+        }
+
+        /* Mobile and Tablet Responsive Styles for Toast */
+        @media (max-width: 768px) {
+          .toast-container {
+            top: 10px !important;
+            right: 10px !important;
+            left: auto !important;
+            max-width: calc(100% - 20px) !important;
+          }
+
+          .toast-item {
+            min-width: 0 !important;
+            width: 100% !important;
+            padding: 12px 16px !important;
+            font-size: 13px !important;
+          }
+
+          .toast-item > div:first-child {
+            width: 32px !important;
+            height: 32px !important;
+          }
+
+          .toast-item > div:first-child i {
+            font-size: 16px !important;
+          }
+
+          .toast-item > div:nth-child(2) {
+            font-size: 13px !important;
+          }
+
+          .toast-item button {
+            width: 26px !important;
+            height: 26px !important;
+            font-size: 18px !important;
+          }
+        }
+
+        /* Tablet specific adjustments */
+        @media (min-width: 769px) and (max-width: 1024px) {
+          .toast-container {
+            max-width: 350px !important;
+            top: 15px !important;
+            right: 15px !important;
+          }
+
+          .toast-item {
+            min-width: 280px !important;
+            padding: 14px 18px !important;
           }
         }
       `}</style>

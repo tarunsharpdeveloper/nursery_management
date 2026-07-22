@@ -481,6 +481,8 @@ export default function CartPage() {
 
 
 
+        {/* Horizontal wrapper for Order Total & Checkout */}
+        <div className="order-checkout-wrapper">
 
         {/* Order Total */}
         <div className="order-total">
@@ -519,6 +521,8 @@ export default function CartPage() {
 
 
         </Link>
+
+        </div>
 
 
 

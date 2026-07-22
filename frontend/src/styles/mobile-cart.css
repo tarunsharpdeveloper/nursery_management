@@ -1055,6 +1055,14 @@
 
 
 
+/* HORIZONTAL LAYOUT WRAPPER FOR ORDER TOTAL & CHECKOUT */
+.order-checkout-wrapper{
+    display:flex;
+    gap:15px;
+    align-items:stretch;
+    margin:20px 0 0 0;
+}
+
 /* ORDER TOTAL */
 
 
@@ -1064,7 +1072,8 @@
     display:flex;
 
 
-    justify-content:space-between;
+
+    justify-content:center;
 
 
     align-items:center;
@@ -1073,10 +1082,10 @@
     padding:clamp(14px,2vw,20px);
 
 
-    margin:20px 0;
+    flex:1;
 
 
-    border-radius:18px;
+    border-radius:50px;
 
 
     background:
@@ -1088,11 +1097,9 @@
     );
 
 
-    box-shadow:
+    box-shadow: 0 8px 22px rgba(140,198,63,.35);
 
-    0 8px 22px rgba(140,198,63,.35);
-
-
+gap: 0.6rem;
 }
 
 
@@ -1103,7 +1110,7 @@
     color:white;
 
 
-    font-size:clamp(12px,1.5vw,15px);
+    font-size:0.9rem;
 
 
     font-weight:800;
@@ -1125,7 +1132,7 @@
     color:white;
 
 
-    font-size:clamp(17px,2.5vw,24px);
+    font-size:0.97rem;
 
 
     font-weight:900;
@@ -1141,7 +1148,7 @@
 .checkout-btn{
 
 
-    width:100%;
+    flex:1;
 
 
     display:flex;
@@ -1258,6 +1265,12 @@
 
 }
 
+/* Stack vertically on tablet and below */
+.order-checkout-wrapper{
+    flex-direction:column;
+    gap:12px;
+}
+
 
 }
 
@@ -1298,6 +1311,12 @@
 
     letter-spacing:.5px;
 
+}
+
+/* Ensure stacking on mobile */
+.order-checkout-wrapper{
+    flex-direction:column;
+    gap:10px;
 }
 
 

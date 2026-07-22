@@ -94,7 +94,7 @@ export default function ProductsPage() {
           totalRecords: number;
           totalPages: number;
           currentPage: number;
-        }>("/api/products?page=1&limit=3");
+        }>("/api/products?page=1&limit=6");
         
         const transformedProducts: Product[] = response.data.map((product) => {
           // Resolve best image: first from media_urls JSON array, then photo_url, then fallback

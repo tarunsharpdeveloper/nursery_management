@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { useCart } from "@/context/CartContext";
+import { useFavorites } from "@/context/FavoritesContext";
 import { ProductReviewSummary } from "@/components/ProductReviewSummary";
 
 interface ProductSliderProps {
@@ -14,6 +15,7 @@ interface ProductSliderProps {
 
 export function ProductSlider({ products, itemsPerView = 5 }: ProductSliderProps) {
   const { addToCart } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsToShow, setItemsToShow] = useState(itemsPerView);
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -24,7 +26,7 @@ export function ProductSlider({ products, itemsPerView = 5 }: ProductSliderProps
   useEffect(() => {
     const updateItemsPerView = () => {
       if (window.innerWidth < 700) {
-        setItemsToShow(1);
+        setItemsToShow(2);
       } else if (window.innerWidth < 992) {
         setItemsToShow(2);
       } else if (window.innerWidth < 1200) {
@@ -121,6 +123,14 @@ export function ProductSlider({ products, itemsPerView = 5 }: ProductSliderProps
               >
                 <div className="vs-product product-style1 modern-card">
                   <div className="product-img">
+                    {/* <button
+                      type="button"
+                      className="card-favorite-btn"
+                      aria-label={isFavorite(prod.id) ? "Remove from Favorites" : "Add to Favorites"}
+                      onClick={(e) => toggleFavorite(prod, e)}
+                    >
+                      <i className={isFavorite(prod.id) ? "fas fa-heart" : "far fa-heart"} style={{ color: isFavorite(prod.id) ? "#dc2626" : "#666666" }}></i>
+                    </button> */}
                     <Link href={`/products/${prod.id}`}>
                       <img
                         src={prod.image}
@@ -141,7 +151,7 @@ export function ProductSlider({ products, itemsPerView = 5 }: ProductSliderProps
                     )}
                   </div>
                   <div className="product-content" style={{ paddingBottom: "40px" }}>
-                    <ProductReviewSummary productId={prod.id} />
+                    <ProductReviewSummary productId={prod.id} rating={prod.average_rating} totalReviews={prod.total_reviews} />
                     <h3
                       className="product-title"
                       style={{

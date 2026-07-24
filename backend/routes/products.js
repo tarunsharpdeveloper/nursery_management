@@ -4,8 +4,11 @@ const { pool } = require("../db");
 async function listProducts(req, res, { sendJson }) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const page = parseInt(url.searchParams.get("page") || "1", 10);
-  const limit = parseInt(url.searchParams.get("limit") || "100", 10); // Changed from 3 to 100 for admin forms
+  const limit = parseInt(url.searchParams.get("limit") || "100", 10); // Default 100 if unspecified
   const search = url.searchParams.get("search") || "";
+  const category = url.searchParams.get("category") || "";
+  const type = url.searchParams.get("type") || url.searchParams.get("product_type") || "";
+  const sort = url.searchParams.get("sort") || url.searchParams.get("sortBy") || "";
   const filterKey = url.searchParams.get("filterKey");
   const filterValue = url.searchParams.get("filterValue");
 
@@ -13,8 +16,20 @@ async function listProducts(req, res, { sendJson }) {
   const params = {};
 
   if (search) {
-    whereClause += " AND (p.name LIKE :search OR p.description LIKE :search)";
+    whereClause += " AND (p.name LIKE :search OR p.description LIKE :search OR c.name LIKE :search OR p_cat.name LIKE :search)";
     params.search = `%${search}%`;
+  }
+
+  if (category) {
+    whereClause += " AND (LOWER(c.name) = LOWER(:category) OR c.id = :categoryId OR LOWER(p_cat.name) = LOWER(:category) OR p_cat.id = :categoryId)";
+    params.category = category;
+    params.categoryId = isNaN(Number(category)) ? -1 : Number(category);
+  }
+
+  if (type && type !== "all") {
+    const cleanType = type.trim().toLowerCase();
+    whereClause += " AND (LOWER(p.product_type) LIKE :typePattern OR LOWER(c.category_type) LIKE :typePattern OR LOWER(c.name) LIKE :typePattern OR LOWER(p_cat.name) LIKE :typePattern)";
+    params.typePattern = `%${cleanType}%`;
   }
 
   if (filterKey === "stock_status" && filterValue) {
@@ -28,8 +43,25 @@ async function listProducts(req, res, { sendJson }) {
     params.isActive = filterValue === "active" ? 1 : 0;
   }
 
+  let orderClause = "ORDER BY p.created_at DESC";
+  if (sort === "price-low") {
+    orderClause = "ORDER BY p.selling_price ASC";
+  } else if (sort === "price-high") {
+    orderClause = "ORDER BY p.selling_price DESC";
+  } else if (sort === "stock") {
+    orderClause = "ORDER BY p.available_quantity DESC";
+  } else if (sort === "name") {
+    orderClause = "ORDER BY p.name ASC";
+  } else if (sort === "rating") {
+    orderClause = "ORDER BY average_rating DESC";
+  }
+
   const [[{ total }]] = await pool.query(
-    `SELECT COUNT(*) AS total FROM products p ${whereClause}`,
+    `SELECT COUNT(*) AS total 
+       FROM products p 
+       JOIN categories c ON c.id = p.category_id 
+       LEFT JOIN categories p_cat ON p_cat.id = c.parent_id
+       ${whereClause}`,
     params
   );
 
@@ -42,16 +74,31 @@ async function listProducts(req, res, { sendJson }) {
             p.selling_price, p.actual_price, p.available_quantity,
             p.unit, p.photo_url, p.media_urls, p.is_active, 
             p.created_at, p.updated_at,
-            c.name AS category
+            c.name AS category,
+            COALESCE(r.total_reviews, 0) AS total_reviews,
+            COALESCE(r.average_rating, 0) AS average_rating
        FROM products p
        JOIN categories c ON c.id = p.category_id
+       LEFT JOIN categories p_cat ON p_cat.id = c.parent_id
+       LEFT JOIN (
+         SELECT product_id,
+                COUNT(*) AS total_reviews,
+                ROUND(AVG(rating), 1) AS average_rating
+           FROM reviews
+          WHERE is_approved = 1
+          GROUP BY product_id
+       ) r ON r.product_id = p.id
        ${whereClause}
-       ORDER BY p.created_at DESC
+       ${orderClause}
        LIMIT :limit OFFSET :offset`,
     params
   );
 
-  let formattedRows = products;
+  let formattedRows = products.map(p => ({
+    ...p,
+    total_reviews: Number(p.total_reviews || 0),
+    average_rating: Number(p.average_rating || 0)
+  }));
 
   if (products.length > 0) {
     const productIds = products.map(p => p.id);
@@ -62,7 +109,7 @@ async function listProducts(req, res, { sendJson }) {
       [productIds]
     );
 
-    formattedRows = products.map(p => {
+    formattedRows = formattedRows.map(p => {
       const pVariants = variants.filter(v => v.product_id === p.id);
       return {
         ...p,
@@ -71,12 +118,14 @@ async function listProducts(req, res, { sendJson }) {
     });
   }
 
-  if (url.searchParams.has("page")) {
+  if (url.searchParams.has("page") || url.searchParams.has("limit")) {
+    const totalPages = Math.ceil(total / limit) || 1;
     sendJson(res, 200, {
       data: formattedRows,
       totalRecords: total,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page
+      totalPages: totalPages,
+      currentPage: page,
+      hasMore: page < totalPages
     });
   } else {
     sendJson(res, 200, formattedRows);
@@ -95,9 +144,19 @@ async function getProduct(req, res, { readJson, sendJson }) {
             p.selling_price, p.actual_price, p.available_quantity,
             p.unit, p.photo_url, p.media_urls, p.is_active, 
             p.created_at, p.updated_at,
-            c.name AS category
+            c.name AS category,
+            COALESCE(r.total_reviews, 0) AS total_reviews,
+            COALESCE(r.average_rating, 0) AS average_rating
        FROM products p
        JOIN categories c ON c.id = p.category_id
+       LEFT JOIN (
+         SELECT product_id,
+                COUNT(*) AS total_reviews,
+                ROUND(AVG(rating), 1) AS average_rating
+           FROM reviews
+          WHERE is_approved = 1
+          GROUP BY product_id
+       ) r ON r.product_id = p.id
        WHERE p.id = ? AND p.is_deleted = 0`,
     [payload.productId]
   );
@@ -106,7 +165,11 @@ async function getProduct(req, res, { readJson, sendJson }) {
     throw new Error("Product not found");
   }
 
-  const p = rows[0];
+  const p = {
+    ...rows[0],
+    total_reviews: Number(rows[0].total_reviews || 0),
+    average_rating: Number(rows[0].average_rating || 0)
+  };
 
   const [variants] = await pool.query(
     `SELECT id, product_id, unit, unit_value, actual_price, selling_price, available_quantity 
@@ -147,12 +210,19 @@ async function createProduct(req, res, { readJson, sendJson }) {
   try {
     await connection.beginTransaction();
 
+    const [[catRow]] = await connection.query(
+      `SELECT category_type FROM categories WHERE id = :categoryId`,
+      { categoryId: payload.categoryId }
+    );
+    const resolvedProductType = catRow?.category_type || 'plant';
+
     const [result] = await connection.query(
       `INSERT INTO products
         (category_id, product_type, name, description, selling_price, actual_price, available_quantity, unit, media_urls)
-       VALUES (:categoryId, 'plant', :name, :description, :sellingPrice, :actualPrice, :availableQuantity, :unit, :mediaUrls)`,
+       VALUES (:categoryId, :productType, :name, :description, :sellingPrice, :actualPrice, :availableQuantity, :unit, :mediaUrls)`,
       {
         categoryId: payload.categoryId,
+        productType: resolvedProductType,
         name: payload.name,
         description: payload.description,
         sellingPrice: payload.sellingPrice,

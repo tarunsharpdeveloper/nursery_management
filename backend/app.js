@@ -14,6 +14,7 @@ const { createEmployee, saveAttendance, saveBulkAttendance, editEmployee, toggle
 const { calculateWages } = require("./routes/wages");
 const { getLedger, getCustomerLedgerDetails, getReport } = require("./routes/reports");
 const { getReviews, submitReview, getReviewStats } = require("./routes/reviews");
+const { getFavorites, toggleFavorite } = require("./routes/favorites");
 const { initiateNDPSPayment, handleNDPSResponse, checkPaymentStatus, requeryTransactionStatus, handleNDPSPopupResponse } = require("./routes/ndps-payments");
 const { ensureAdminSchema } = require("./migrate");
 const { authenticate, hasPermission } = require("./auth");
@@ -63,9 +64,10 @@ const routes = [
   ["POST", "/api/auth/forgot-password", null, forgotPassword],
   ["POST", "/api/auth/reset-password", null, resetPassword],
   ["POST", "/api/auth/verify-reset-token", null, verifyResetToken],
-  ["GET", "/api/auth/me", "dashboard:read", me],
-  ["PATCH", "/api/auth/profile", "dashboard:read", updateProfile],
-  ["PATCH", "/api/auth/password", "dashboard:read", updatePassword],
+  ["GET", "/api/auth/me", null, me],
+  ["PATCH", "/api/auth/profile", null, updateProfile],
+  ["PATCH", "/api/auth/password", null, updatePassword],
+  ["PATCH", "/api/auth/update-password", null, updatePassword],
   ["GET", "/api/dashboard", "dashboard:read", getDashboard],
   ["GET", "/api/users", "users:read", listUsers],
   ["POST", "/api/users", "users:write", createUser],
@@ -90,7 +92,7 @@ const routes = [
   ["POST", "/api/products/delete", "products:write", deleteProduct],
   ["GET", "/api/inventory", "inventory:read", listInventory],
   ["GET", "/api/orders", "orders:read", listOrders],
-  ["POST", "/api/orders/get", "orders:read", getOrder],
+  ["POST", "/api/orders/get", null, getOrder],
   ["POST", "/api/orders/delete", "orders:write", deleteOrder],
   ["POST", "/api/orders", null, createOrder],
   ["GET", "/api/customer-orders", null, listCustomerOrders],
@@ -127,6 +129,8 @@ const routes = [
   ["GET", "/api/reviews/:productId", null, getReviews],
   ["POST", "/api/reviews", null, submitReview],
   ["GET", "/api/reviews/stats/:productId", null, getReviewStats],
+  ["GET", "/api/favorites", null, getFavorites],
+  ["POST", "/api/favorites/toggle", null, toggleFavorite],
   ["POST", "/api/ndps/initiate", null, initiateNDPSPayment],
   ["POST", "/api/ndps/response", null, handleNDPSResponse],
   ["POST", "/Response", null, handleNDPSPopupResponse],

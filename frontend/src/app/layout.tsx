@@ -10,6 +10,7 @@ import { Footer } from "@/components/footer";
 import { ToastProvider } from "@/context/ToastContext";
 import { CartProvider } from "@/context/CartContext";
 import { CustomerAuthProvider } from "@/context/CustomerAuthContext";
+import { FavoritesProvider } from "@/context/FavoritesContext";
 import ScrollToTop from "@/components/ScrollToTop";
 import "./globals.css";
 
@@ -66,15 +67,17 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       <body suppressHydrationWarning>
         <CustomerAuthProvider>
           <ToastProvider>
-            <CartProvider>
-              <div className="site-shell">
-                <SiteHeader />
-                <FloatingCart />
-                {children}
-                <Footer />
-                <ScrollToTop />
-              </div>
-            </CartProvider>
+            <FavoritesProvider>
+              <CartProvider>
+                <div className="site-shell">
+                  <SiteHeader />
+                  <FloatingCart />
+                  {children}
+                  <Footer />
+                  <ScrollToTop />
+                </div>
+              </CartProvider>
+            </FavoritesProvider>
           </ToastProvider>
         </CustomerAuthProvider>
       </body>

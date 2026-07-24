@@ -19,6 +19,8 @@ interface BackendProduct {
   media_urls: string | null;
   is_active: boolean;
   category: string;
+  average_rating?: number;
+  total_reviews?: number;
 }
 
 const fallbackProducts: Product[] = [
@@ -136,7 +138,8 @@ export default function HomePage() {
   useEffect(() => {
     async function loadProducts() {
       try {
-        const data = await apiRequest<BackendProduct[]>("/api/products?limit=6");
+        const res = await apiRequest<BackendProduct[] | { data: BackendProduct[] }>("/api/products?page=1&limit=6");
+        const data = Array.isArray(res) ? res : (res.data || []);
         const transformedProducts: Product[] = data.map((product) => {
           // Resolve best image: first from media_urls JSON array, then photo_url, then fallback
           const FALLBACK_IMG = "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg";
@@ -162,7 +165,9 @@ export default function HomePage() {
             stock: Math.max(0, Number(product.available_quantity)),
             sold: 0,
             image: getMediaUrl(resolvedImage),
-            active: Boolean(product.is_active)
+            active: Boolean(product.is_active),
+            average_rating: product.average_rating || 0,
+            total_reviews: product.total_reviews || 0
           };
         });
 
@@ -207,9 +212,59 @@ export default function HomePage() {
     return categoryArt[categoryName] || "/assets/img/cate/c-1-1.png";
   };
 
-  const categories = useMemo(() => {
-    return [...new Set(products.map((product) => product.category))].sort();
-  }, [products]);
+  const categoryList = useMemo(() => {
+    const categoryMap = new Map<string, { name: string; count: number; image: string }>();
+
+    // 1. Add from dbCategories: Only include categories that have direct products
+    // OR have products and no child subcategories (leaf categories).
+    // Exclude parent container categories that have 0 direct products and have subcategories.
+    dbCategories.forEach((c) => {
+      const directCount = Number(c.direct_product_count || 0);
+      const totalCount = Number(c.product_count || 0);
+      const childCount = Number(c.child_count || 0);
+
+      const isLeafOrDirect = directCount > 0 || (totalCount > 0 && childCount === 0);
+
+      if (isLeafOrDirect && c.is_active !== false) {
+        const cleanName = c.name.trim();
+        const key = cleanName.toLowerCase();
+        const pCount = directCount > 0 ? directCount : totalCount;
+        let imageUrl = getCategoryImageUrl(cleanName);
+
+        categoryMap.set(key, {
+          name: cleanName,
+          count: pCount,
+          image: imageUrl
+        });
+      }
+    });
+
+    // 2. Include categories directly attached to loaded active products
+    products.forEach((p) => {
+      if (!p.category) return;
+      const cleanName = p.category.trim();
+      const key = cleanName.toLowerCase();
+
+      // Check if this category is a parent category in dbCategories with children and 0 direct products
+      const dbMatch = dbCategories.find((c) => c.name.trim().toLowerCase() === key);
+      const isParentContainer = dbMatch && Number(dbMatch.child_count || 0) > 0 && Number(dbMatch.direct_product_count || 0) === 0;
+
+      if (!isParentContainer && !categoryMap.has(key)) {
+        const matchingProds = products.filter((prod) => prod.category.trim().toLowerCase() === key);
+        let imageUrl = getCategoryImageUrl(cleanName);
+        if ((!imageUrl || imageUrl.includes("c-1-1.png")) && p.image) {
+          imageUrl = p.image;
+        }
+        categoryMap.set(key, {
+          name: cleanName,
+          count: matchingProds.length,
+          image: imageUrl
+        });
+      }
+    });
+
+    return Array.from(categoryMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [products, dbCategories]);
 
   const handleAddToCart = (product: Product) => {
     addToCart(
@@ -306,10 +361,10 @@ export default function HomePage() {
             </div>
           </div>
           <div className="row g-4 justify-content-center" style={{ marginTop: "30px" }}>
-            {categories.map((category, idx) => (
-              <div className="col-lg-3 col-md-4 col-sm-6" key={category}>
+            {categoryList.map((cat) => (
+              <div className="col-lg-3 col-md-4 col-sm-6 col-6" key={cat.name}>
                 <Link 
-                  href={`/products?category=${encodeURIComponent(category)}`}
+                  href={`/products?category=${encodeURIComponent(cat.name)}`}
                   style={{ textDecoration: "none" }}
                 >
                   <div 
@@ -353,8 +408,8 @@ export default function HomePage() {
                       borderRadius: "20px 20px 0 0"
                     }}>
                       <img 
-                        src={getCategoryImageUrl(category)} 
-                        alt={category}
+                        src={cat.image} 
+                        alt={cat.name}
                         className="category-img"
                         style={{
                           width: "100%",
@@ -387,32 +442,33 @@ export default function HomePage() {
                         right: "16px",
                         background: "linear-gradient(135deg, var(--brand) 0%, #4a7c2e 100%)",
                         color: "#fff",
-                        padding: "8px 16px",
+                        padding: "6px 14px",
                         borderRadius: "25px",
                         fontSize: "12px",
                         fontWeight: "700",
                         boxShadow: "0 4px 12px rgba(45, 80, 22, 0.4)",
                         zIndex: 2
                       }}>
-                        {products.filter((product) => product.category === category).length} Items
+                        {cat.count} {cat.count === 1 ? "Item" : "Items"}
                       </div>
                     </div>
 
                     {/* Content Section */}
                     <div style={{
-                      padding: "24px 20px",
+                      padding: "20px 16px",
                       background: "linear-gradient(180deg, #ffffff 0%, #fafbfa 100%)"
                     }}>
                       <h3 style={{
-                        fontSize: "20px",
+                        fontSize: "18px",
                         fontWeight: "800",
                         color: "#2d5016",
                         marginBottom: "8px",
                         textAlign: "center",
                         lineHeight: "1.3",
-                        letterSpacing: "-0.5px"
+                        letterSpacing: "-0.5px",
+                        textTransform: "capitalize"
                       }}>
-                        {category}
+                        {cat.name}
                       </h3>
                       
                       <div style={{
@@ -420,15 +476,15 @@ export default function HomePage() {
                         alignItems: "center",
                         justifyContent: "center",
                         gap: "8px",
-                        marginTop: "12px"
+                        marginTop: "8px"
                       }}>
                         <div style={{
-                          width: "40px",
+                          width: "30px",
                           height: "2px",
                           background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)"
                         }}></div>
                         <span style={{
-                          fontSize: "13px",
+                          fontSize: "12px",
                           color: "#6b8e23",
                           fontWeight: "600",
                           textTransform: "uppercase",
@@ -437,7 +493,7 @@ export default function HomePage() {
                           Explore
                         </span>
                         <div style={{
-                          width: "40px",
+                          width: "30px",
                           height: "2px",
                           background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)"
                         }}></div>

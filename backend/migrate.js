@@ -118,6 +118,39 @@ async function ensureAdminSchema() {
       FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
     )
   `);
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS favorites (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        product_id INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY user_product_unique (user_id, product_id),
+        KEY idx_fav_user (user_id),
+        KEY idx_fav_product (product_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+  } catch (e) {
+    console.error("Favorites table migration note:", e.message);
+  }
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS reviews (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        product_id INT NOT NULL,
+        customer_name VARCHAR(120),
+        customer_email VARCHAR(160),
+        rating INT NOT NULL DEFAULT 5,
+        review_text TEXT,
+        is_approved TINYINT(1) NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_review_prod (product_id),
+        CONSTRAINT fk_review_prod FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+  } catch (e) {
+    console.error("Reviews table migration note:", e.message);
+  }
   await pool.query(`
     CREATE TABLE IF NOT EXISTS production_entries (
       id INT AUTO_INCREMENT PRIMARY KEY,

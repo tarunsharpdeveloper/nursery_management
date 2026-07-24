@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { apiRequest, getMediaUrl } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
+import { useCustomerAuth } from "@/context/CustomerAuthContext";
+import { useFavorites } from "@/context/FavoritesContext";
 import { ProductSlider } from "@/components/ProductSlider";
 import { ProductReviewSummary } from "@/components/ProductReviewSummary";
 
@@ -23,6 +25,8 @@ interface BackendProduct {
   media_urls: string | null;
   is_active: boolean;
   category: string;
+  average_rating?: number;
+  total_reviews?: number;
   variants: Array<{
     id: number;
     unit: string | null;
@@ -89,6 +93,8 @@ export default function ProductDetailsClient({
 }) {
   const router = useRouter();
   const { addToCart } = useCart();
+  const { user } = useCustomerAuth();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   const [product, setProduct] = useState<BackendProduct | null>(null);
   const [allProducts, setAllProducts] = useState<BackendProduct[]>([]);
@@ -132,9 +138,10 @@ export default function ProductDetailsClient({
   useEffect(() => {
     async function load() {
       try {
-        const data = await apiRequest<BackendProduct[]>("/api/products?limit=7");
-        setAllProducts(data);
-        const found = data.find((p) => p.id === Number(id));
+        const res = await apiRequest<BackendProduct[] | { data: BackendProduct[] }>("/api/products");
+        const list = Array.isArray(res) ? res : (res?.data || []);
+        setAllProducts(list);
+        const found = list.find((p) => p.id === Number(id));
         if (found) {
           setProduct(found);
         } else {
@@ -230,7 +237,7 @@ export default function ProductDetailsClient({
   };
 
   // ── Related products (exclude current, show up to 8 for slider) ──────────────────
-  const relatedBackend = allProducts
+  const relatedBackend = (Array.isArray(allProducts) ? allProducts : [])
     .filter((p) => p.id !== Number(id) && p.is_active)
     .slice(0, 6);
   
@@ -416,16 +423,16 @@ export default function ProductDetailsClient({
                 {/* Product Info Below Image */}
                 <div className="product-info-cards">
                   <div className="product-info-card sku-card">
-                    <span className="product-info-label">SKU Code</span>
-                    <span className="product-info-value">PROD-{String(product.id).padStart(4, "0")}</span>
+                    <span className="product-info-label">SKU CODE</span>
+                    <span className="product-info-value" style={{ textTransform: "none" }}>PROD-{String(product.id).padStart(4, "0")}</span>
                   </div>
                   <div className="product-info-card category-card">
-                    <span className="product-info-label">Category</span>
-                    <span className="product-info-value">{product.category}</span>
+                    <span className="product-info-label">CATEGORY</span>
+                    <span className="product-info-value" style={{ textTransform: "capitalize" }}>{product.category}</span>
                   </div>
                   <div className="product-info-card type-card">
-                    <span className="product-info-label">Type</span>
-                    <span className="product-info-value">{product.product_type}</span>
+                    <span className="product-info-label">TYPE</span>
+                    <span className="product-info-value" style={{ textTransform: "capitalize" }}>{product.product_type}</span>
                   </div>
                 </div>
 
@@ -463,7 +470,7 @@ export default function ProductDetailsClient({
                   <span className="product-instock">
                     {displayStock > 0 ? "Available" : "Out of Stock"}
                   </span>
-                  <ProductReviewSummary productId={Number(id)} />
+                  <ProductReviewSummary productId={Number(id)} rating={product.average_rating} totalReviews={product.total_reviews} />
                   <span className="product-rating__total">(Verified)</span>
                 </div>
 
@@ -661,9 +668,16 @@ export default function ProductDetailsClient({
                   >
                     Add to Cart
                   </button>
-                  <button type="button" className="icon-btn" aria-label="Wishlist">
-                    <i className="far fa-heart"></i>
+                  {/* Favorite button commented out as per request
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    aria-label={product && isFavorite(product.id) ? "Remove from Favorites" : "Add to Favorites"}
+                    onClick={(e) => product && toggleFavorite({ id: product.id, name: product.name }, e)}
+                  >
+                    <i className={product && isFavorite(product.id) ? "fas fa-heart" : "far fa-heart"} style={{ color: product && isFavorite(product.id) ? "#dc2626" : "#666666" }}></i>
                   </button>
+                  */}
                 </div>
 
                 {/* Payment image */}

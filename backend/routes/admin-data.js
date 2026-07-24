@@ -1,6 +1,7 @@
 const { z } = require("zod");
 const { pool } = require("../db");
 const { sendOrderDeliveredEmail } = require("../email");
+const { authenticate, hasPermission } = require("../auth");
 
 async function getDashboard(_req, res, { sendJson }) {
   const [[products]] = await pool.query("SELECT COUNT(*) AS total_products, COALESCE(SUM(available_quantity), 0) AS total_stock FROM products WHERE is_deleted = 0");
@@ -51,13 +52,15 @@ async function listCategories(req, res, { sendJson }) {
 
   const [rows] = await pool.query(
     `SELECT c.id, c.parent_id, c.category_type, c.name, c.description, c.photo_urls, c.is_active,
-            p.name AS parent_name,
-            COUNT(DISTINCT child.id) AS child_count,
-            COUNT(DISTINCT product.id) AS product_count
-       FROM categories c
-       LEFT JOIN categories p ON p.id = c.parent_id
-       LEFT JOIN categories child ON child.parent_id = c.id
-       LEFT JOIN products product ON product.category_id = c.id AND product.is_deleted = 0
+       p.name AS parent_name,
+       COUNT(DISTINCT child.id) AS child_count,
+       COUNT(DISTINCT direct_product.id) AS direct_product_count,
+       COUNT(DISTINCT product.id) AS product_count
+  FROM categories c
+  LEFT JOIN categories p ON p.id = c.parent_id
+  LEFT JOIN categories child ON child.parent_id = c.id
+  LEFT JOIN products direct_product ON direct_product.category_id = c.id AND direct_product.is_deleted = 0
+  LEFT JOIN products product ON (product.category_id = c.id OR product.category_id = child.id) AND product.is_deleted = 0
        ${whereClause}
        GROUP BY c.id, c.parent_id, c.category_type, c.name, c.description, c.photo_urls, c.is_active, p.name
        ORDER BY COALESCE(p.name, c.name), c.parent_id IS NOT NULL, c.name
@@ -222,8 +225,30 @@ const getOrderSchema = z.object({
 });
 
 async function getOrder(req, res, { readJson, sendJson }) {
+  const user = req.user || authenticate(req);
+  if (!user) {
+    return sendJson(res, 401, { message: "Login required" });
+  }
+
   const payload = getOrderSchema.parse(await readJson(req));
-  
+
+  if (user.role === "customer") {
+    // Check if order belongs to logged-in customer
+    const [ownership] = await pool.query(
+      `SELECT o.id FROM orders o JOIN customers c ON c.id = o.customer_id WHERE o.id = ? AND (c.email = ? OR c.phone = ?)`,
+      [payload.orderId, user.email, user.phone || ""]
+    );
+    if (ownership.length === 0) {
+      return sendJson(res, 403, { message: "Forbidden. You can only view your own orders." });
+    }
+  } else {
+    // Admin / Staff user permission check
+    const allowed = await hasPermission(user, "orders:read");
+    if (!allowed) {
+      return sendJson(res, 403, { message: "Permission denied" });
+    }
+  }
+
   const [orderRows] = await pool.query(
     `SELECT o.id, o.order_number, o.order_source, o.status, o.payment_status, o.total_amount, o.created_at,
             c.name AS customer_name, c.phone, c.email, c.address
@@ -234,7 +259,7 @@ async function getOrder(req, res, { readJson, sendJson }) {
   );
 
   if (orderRows.length === 0) {
-    throw new Error("Order not found");
+    return sendJson(res, 404, { message: "Order not found" });
   }
   
   const order = orderRows[0];

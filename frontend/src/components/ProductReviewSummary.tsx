@@ -120,18 +120,18 @@ export function ProductReviewSummary({ productId, rating: propRating, totalRevie
   };
 
   return (
-    <div className="product-review-summary" style={{ display: "inline-flex", alignItems: "center", gap: "10px", marginBottom: "6px" , marginTop: "6px"}}>
-      <div className="product-review-score" style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
-        <span aria-label={`Rated ${roundedRating.toFixed(1)} out of 5`} style={{ letterSpacing: "1px", fontSize: "14px" }}>
+    <div className="product-review-summary" style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginBottom: "4px" }}>
+      <div className="product-review-score" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+        <span aria-label={`Rated ${roundedRating.toFixed(1)} out of 5`} style={{ letterSpacing: "0.5px", fontSize: "12px" }}>
           {renderStars()}
         </span>
-        <span style={{ color: "var(--title-color)", fontSize: "13px", fontWeight: 700 }}>
+        <span style={{ color: "var(--title-color)", fontSize: "12px", fontWeight: 700 }}>
           {roundedRating.toFixed(1)}
         </span>
       </div>
-      {stats.total_reviews > 1 && (
-        <span style={{ color: "var(--muted)", fontSize: "12px" }}>
-          {stats.total_reviews} reviews
+      {stats.total_reviews > 0 && (
+        <span style={{ color: "var(--muted)", fontSize: "11px", whiteSpace: "nowrap" }}>
+          ({stats.total_reviews} {stats.total_reviews === 1 ? "review" : "reviews"})
         </span>
       )}
     </div>

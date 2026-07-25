@@ -108,6 +108,13 @@ export function SiteHeader() {
               </Link>
             )}
 
+            {user && (
+              <Link href="/profile?tab=favorites" className="nav-icon-btn nav-cart-btn nav-fav-btn" title="My Favorites">
+                <Heart size={18} />
+                {favoriteCount > 0 && <span className="cart-badge">{favoriteCount}</span>}
+              </Link>
+            )}
+
             <Link href="/cart" className="nav-icon-btn nav-cart-btn" title="Shopping Cart">
               <ShoppingCart size={18} />
               {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}

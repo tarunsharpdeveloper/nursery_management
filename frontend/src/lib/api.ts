@@ -18,9 +18,9 @@ export function getStoredToken() {
   if (typeof window === "undefined") return "";
   const isAdminPath = window.location.pathname.startsWith("/admin");
   if (isAdminPath) {
-    return localStorage.getItem("admin_token") || localStorage.getItem("customer_token") || "";
+    return localStorage.getItem("admin_token") || "";
   }
-  return localStorage.getItem("customer_token") || localStorage.getItem("admin_token") || "";
+  return localStorage.getItem("customer_token") || "";
 }
 
 export function getStoredUser(): AdminUser | null {

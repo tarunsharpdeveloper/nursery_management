@@ -13,11 +13,22 @@ async function getFavorites(req, res, { sendJson }) {
   try {
     // Fetch product details for user's favorites
     const [rows] = await pool.query(
-      `SELECT p.id, p.name, p.product_type, p.category, p.description, 
+      `SELECT p.id, p.name, p.product_type, c.name AS category, p.description, 
               p.selling_price, p.actual_price, p.available_quantity, p.unit, 
-              p.photo_url, p.media_urls, p.is_active, f.created_at AS favorited_at
+              p.photo_url, p.media_urls, p.is_active, f.created_at AS favorited_at,
+              COALESCE(r.total_reviews, 0) AS total_reviews,
+              COALESCE(r.average_rating, 0) AS average_rating
          FROM favorites f
          JOIN products p ON p.id = f.product_id
+         JOIN categories c ON c.id = p.category_id
+         LEFT JOIN (
+           SELECT product_id,
+                  COUNT(*) AS total_reviews,
+                  ROUND(AVG(rating), 1) AS average_rating
+             FROM reviews
+            WHERE is_approved = 1
+            GROUP BY product_id
+         ) r ON r.product_id = p.id
         WHERE f.user_id = :userId AND p.is_active = TRUE AND p.is_deleted = 0
         ORDER BY f.created_at DESC`,
       { userId: userId }

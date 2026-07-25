@@ -94,10 +94,10 @@ export function SiteHeader() {
 
             {user ? (
               <>
-                <Link href="/profile" className="nav-icon-btn" title="My Profile" aria-label="My Profile">
+                <Link href="/profile" className="nav-icon-btn d-none d-md-inline-flex" title="My Profile" aria-label="My Profile">
                   <User size={18} />
                 </Link>
-                <button onClick={logout} className="nav-icon-btn" title="Logout" aria-label="Logout">
+                <button onClick={logout} className="nav-icon-btn d-none d-md-inline-flex" title="Logout" aria-label="Logout">
                   <LogOut size={18} />
                 </button>
               </>
@@ -109,7 +109,7 @@ export function SiteHeader() {
             )}
 
             {user && (
-              <Link href="/profile?tab=favorites" className="nav-icon-btn nav-cart-btn nav-fav-btn" title="My Favorites">
+              <Link href="/profile?tab=favorites" className="nav-icon-btn nav-cart-btn nav-fav-btn d-none d-md-inline-flex" title="My Favorites">
                 <Heart size={18} />
                 {favoriteCount > 0 && <span className="cart-badge">{favoriteCount}</span>}
               </Link>
@@ -196,9 +196,20 @@ export function SiteHeader() {
                   <Link 
                     href="/profile" 
                     className="mobile-menu-link"
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
+                    <User size={18} />
                     Profile
+                  </Link>
+                  <Link 
+                    href="/profile?tab=favorites" 
+                    className="mobile-menu-link"
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Heart size={18} />
+                    Favorites
                   </Link>
                 </>
               )}
@@ -207,6 +218,7 @@ export function SiteHeader() {
                 <Link 
                   href="/login" 
                   className="mobile-menu-link mobile-menu-login"
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <LogIn size={18} />
@@ -221,6 +233,7 @@ export function SiteHeader() {
                     setIsMobileMenuOpen(false);
                   }}
                   className="mobile-menu-link mobile-menu-logout"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'var(--danger)', color: 'white', border: 'none', width: '100%', padding: '12px', borderRadius: '8px', cursor: 'pointer', marginTop: '10px', fontSize: '16px', fontWeight: '600' }}
                 >
                   <LogOut size={18} />
                   Logout

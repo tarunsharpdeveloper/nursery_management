@@ -8842,3 +8842,15 @@ body.mobile-menu-open {
   font-size: 14px;
   transition: all 0.2s ease;
 }
+
+@media (max-width: 768px) {
+  /* Fix header horizontal scroll by scaling down elements on mobile */
+  .nav { padding: 0 8px !important; min-height: 70px !important; }
+  .nav-inner { gap: 6px !important; }
+  .brand { margin-left: 0 !important; white-space: normal !important; }
+  .brand-logo-img { width: 40px !important; height: 40px !important; }
+  .brand-name { font-size: 11px !important; line-height: 1.1 !important; letter-spacing: -0.5px !important; }
+  .nav-actions { gap: 4px !important; }
+  .nav-icon-btn, .nav-hamburger { width: 32px !important; height: 32px !important; min-height: 32px !important; padding: 0 !important; }
+  .nav-icon-btn svg, .nav-hamburger svg { width: 16px !important; height: 16px !important; }
+}

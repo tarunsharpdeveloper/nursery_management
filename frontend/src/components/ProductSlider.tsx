@@ -65,7 +65,7 @@ export function ProductSlider({ products, itemsPerView = 5 }: ProductSliderProps
       setIsTransitioning(true);
       setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
       setTimeout(() => setIsTransitioning(false), 600);
-    }, 4000); // Change slide every 4 seconds
+    }, 4000000); // Change slide every 4 seconds
 
     return () => clearInterval(interval);
   }, [isPaused, maxIndex, itemsToShow, products.length, isTransitioning]);
@@ -106,7 +106,7 @@ export function ProductSlider({ products, itemsPerView = 5 }: ProductSliderProps
           onClick={handlePrev}
           aria-label="Previous products"
         >
-          <ChevronLeft size={24} />
+          <ChevronLeft size={18} />
         </button>
 
         <div className="product-slider" ref={sliderRef}>
@@ -123,20 +123,19 @@ export function ProductSlider({ products, itemsPerView = 5 }: ProductSliderProps
               >
                 <div className="vs-product product-style1 modern-card">
                   <div className="product-img">
-                    {/* <button
+                    <button
                       type="button"
                       className="card-favorite-btn"
                       aria-label={isFavorite(prod.id) ? "Remove from Favorites" : "Add to Favorites"}
                       onClick={(e) => toggleFavorite(prod, e)}
                     >
                       <i className={isFavorite(prod.id) ? "fas fa-heart" : "far fa-heart"} style={{ color: isFavorite(prod.id) ? "#dc2626" : "#666666" }}></i>
-                    </button> */}
+                    </button>
                     <Link href={`/products/${prod.id}`}>
                       <img
                         src={prod.image}
                         alt={prod.name}
                         className="img w-100"
-                        style={{ height: "230px", objectFit: "contain", padding: "10px" }}
                       />
                     </Link>
                     {prod.stock <= 0 && (
@@ -150,7 +149,7 @@ export function ProductSlider({ products, itemsPerView = 5 }: ProductSliderProps
                       </span>
                     )}
                   </div>
-                  <div className="product-content" style={{ paddingBottom: "40px" }}>
+                  <div className="product-content">
                     <ProductReviewSummary productId={prod.id} rating={prod.average_rating} totalReviews={prod.total_reviews} />
                     <h3
                       className="product-title"
@@ -180,13 +179,11 @@ export function ProductSlider({ products, itemsPerView = 5 }: ProductSliderProps
                     >
                       {prod.description || "No description available."}
                     </p>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                      <span className="product-cate" style={{ margin: 0, fontSize: "11px", fontWeight: 700 }}>
-                        SUBCATEGORY:{" "}
-                        <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{prod.category}</span>
-                      </span>
-                      <span className="product-price">Rs. {prod.price}</span>
-                    </div>
+                    <span className="product-cate" style={{ margin: 0, fontSize: "11px", fontWeight: 700, marginBottom: "8px", display: "block" }}>
+                      SUBCATEGORY:{" "}
+                      <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{prod.category}</span>
+                    </span>
+                    <span className="product-price">Rs. {prod.price}</span>
                     <div className="product-actions">
                       <button type="button" className="vs-btn" onClick={() => handleAddToCart(prod)}>
                         Add to Cart
@@ -213,7 +210,7 @@ export function ProductSlider({ products, itemsPerView = 5 }: ProductSliderProps
           onClick={handleNext}
           aria-label="Next products"
         >
-          <ChevronRight size={24} />
+          <ChevronRight size={18} />
         </button>
       </div>
 

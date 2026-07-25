@@ -452,7 +452,7 @@ export default function ProductDetailsClient({
                         <img
                           src={src}
                           alt={`View ${i + 1}`}
-                          style={{ width: "100%", height: "85px", objectFit: "cover" }}
+                          style={{ width: "100%", height: "120px", objectFit: "contain", padding: "4px" }}
                         />
                       </div>
                     ))}
@@ -668,7 +668,6 @@ export default function ProductDetailsClient({
                   >
                     Add to Cart
                   </button>
-                  {/* Favorite button commented out as per request
                   <button
                     type="button"
                     className="icon-btn"
@@ -677,7 +676,6 @@ export default function ProductDetailsClient({
                   >
                     <i className={product && isFavorite(product.id) ? "fas fa-heart" : "far fa-heart"} style={{ color: product && isFavorite(product.id) ? "#dc2626" : "#666666" }}></i>
                   </button>
-                  */}
                 </div>
 
                 {/* Payment image */}

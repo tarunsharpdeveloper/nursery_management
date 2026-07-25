@@ -9,6 +9,7 @@ import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
 import { apiRequest } from "@/lib/api";
 import { Heart, ShoppingBag, User, LogOut, CheckCircle, Package } from "lucide-react";
+import { ProductReviewSummary } from "@/components/ProductReviewSummary";
 
 function ProfileContent() {
   const router = useRouter();
@@ -120,7 +121,10 @@ function ProfileContent() {
                   borderRadius: "20px",
                   padding: "24px",
                   boxShadow: "0 10px 30px rgba(45, 80, 22, 0.08)",
-                  border: "1px solid rgba(45, 80, 22, 0.1)"
+                  border: "1px solid rgba(45, 80, 22, 0.1)",
+                  position: "sticky",
+                  top: "120px",
+                  zIndex: 10
                 }}
               >
                 {/* User Avatar & Info */}
@@ -392,7 +396,7 @@ function ProfileContent() {
                     border: "1px solid rgba(45, 80, 22, 0.1)"
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "25px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "25px", flexWrap: "wrap", gap: "10px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                       <Heart size={24} color="#dc2626" fill="#dc2626" />
                       <h2 style={{ fontSize: "22px", fontWeight: "700", color: "#2d5016", margin: 0 }}>
@@ -412,80 +416,58 @@ function ProfileContent() {
                   ) : favoritesList.length > 0 ? (
                     <div className="row g-4">
                       {favoritesList.map((product) => (
-                        <div className="col-12 col-md-6 col-lg-4" key={product.id}>
-                          <div
-                            style={{
-                              border: "1px solid #eef2eb",
-                              borderRadius: "16px",
-                              overflow: "hidden",
-                              background: "#ffffff",
-                              transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                              position: "relative",
-                              display: "flex",
-                              flexDirection: "column",
-                              height: "100%"
-                            }}
-                            className="modern-card"
-                          >
-                            {/* Remove Favourite Heart Button */}
-                            <button
-                              type="button"
-                              onClick={(e) => toggleFavorite(product, e)}
-                              style={{
-                                position: "absolute",
-                                top: "12px",
-                                right: "12px",
-                                background: "rgba(255, 255, 255, 0.9)",
-                                border: "none",
-                                borderRadius: "50%",
-                                width: "36px",
-                                height: "36px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                cursor: "pointer",
-                                boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-                                zIndex: 2
-                              }}
-                              title="Remove from Favourites"
-                            >
-                              <i className="fas fa-heart" style={{ color: "#dc2626", fontSize: "18px" }}></i>
-                            </button>
-
-                            {/* Product Image */}
-                            <Link href={`/products/${product.id}`} style={{ display: "block", padding: "15px", textAlign: "center", background: "#f8fdf6" }}>
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                style={{ height: "180px", width: "100%", objectFit: "contain" }}
-                              />
-                            </Link>
-
-                            {/* Product Info */}
-                            <div style={{ padding: "18px", display: "flex", flexDirection: "column", flex: 1 }}>
-                              <span style={{ fontSize: "11px", fontWeight: 700, color: "#8cc63f", textTransform: "uppercase" }}>
-                                {product.category}
-                              </span>
-                              <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#2d5016", margin: "6px 0" }}>
-                                <Link href={`/products/${product.id}`} style={{ color: "inherit", textDecoration: "none" }}>
-                                  {product.name}
-                                </Link>
+                        <div className="col-6 col-md-6 col-lg-6" key={product.id}>
+                          <div className="vs-product product-style1 modern-card">
+                            <div className="product-img">
+                              <button
+                                type="button"
+                                className="card-favorite-btn"
+                                aria-label={isFavorite(product.id) ? "Remove from Favorites" : "Add to Favorites"}
+                                onClick={(e) => toggleFavorite(product, e)}
+                              >
+                                <i className={isFavorite(product.id) ? "fas fa-heart" : "far fa-heart"} style={{ color: isFavorite(product.id) ? "#dc2626" : "#666666" }}></i>
+                              </button>
+                              <Link href={`/products/${product.id}`}>
+                                <img src={product.image} alt={product.name} className="img w-100" />
+                              </Link>
+                              {product.stock <= 0 && <span className="product-tag2" style={{ background: "var(--danger)" }}>Out of Stock</span>}
+                              {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ background: "var(--accent)" }}>Limited Stock</span>}
+                            </div>
+                            <div className="product-content">
+                              <ProductReviewSummary productId={product.id} rating={product.average_rating} totalReviews={product.total_reviews} />
+                              <h3 className="product-title" style={{
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                marginBottom: "6px"
+                              }}>
+                                <Link href={`/products/${product.id}`}>{product.name}</Link>
                               </h3>
-                              <p style={{ fontSize: "13px", color: "#666", marginBottom: "15px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: "1.4" }}>
-                                {product.description || "Fresh & healthy plant/seed from Awantika Seeds."}
+                              <p style={{
+                                fontSize: "13px",
+                                color: "#777777",
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                marginBottom: "12px",
+                                lineHeight: "1.4"
+                              }}>
+                                {product.description || "No description available."}
                               </p>
-
-                              <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                <span style={{ fontSize: "18px", fontWeight: 800, color: "#2d5016" }}>
-                                  Rs. {product.price}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => addToCart(product, 1)}
-                                  className="vs-btn"
-                                  style={{ padding: "8px 16px", fontSize: "13px", borderRadius: "8px", display: "flex", alignItems: "center", gap: "6px" }}
-                                >
-                                  <ShoppingBag size={14} /> Add to Cart
+                              <span className="product-cate" style={{ margin: 0, fontSize: "11px", fontWeight: 700, marginBottom: "8px", display: "block" }}>
+                                SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{product.category}</span>
+                              </span>
+                              <span className="product-price">Rs. {product.price}</span>
+                              <div className="product-actions">
+                                <button type="button" className="vs-btn" onClick={() => addToCart(product, 1)}>
+                                  Add to Cart
+                                </button>
+                                <button type="button" className="cart-btn" onClick={() => addToCart(product, 1)} aria-label={`Add ${product.name} to cart`}>
+                                  <i className="fas fa-shopping-basket"></i>
                                 </button>
                               </div>
                             </div>

@@ -473,14 +473,14 @@ export default function ProductsPage() {
                         <div className="col-12 mb-30" key={product.id}>
                           <div className="vs-product product-style1 modern-card" style={{ display: "flex", alignItems: "stretch", height: "240px", flexDirection: "row", textAlign: "left" }}>
                             <div className="product-img" style={{ position: "relative", width: "240px", height: "100%", flexShrink: 0, padding: "20px", background: "#f8fcf6", borderRight: "1px solid rgba(0,0,0,0.02)", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                              {/* <button
+                              <button
                                 type="button"
                                 className="card-favorite-btn"
                                 aria-label={isFavorite(product.id) ? "Remove from Favorites" : "Add to Favorites"}
                                 onClick={(e) => toggleFavorite(product, e)}
                               >
                                 <i className={isFavorite(product.id) ? "fas fa-heart" : "far fa-heart"} style={{ color: isFavorite(product.id) ? "#dc2626" : "#666666" }}></i>
-                              </button> */}
+                              </button>
                               <Link href={`/products/${product.id}`} style={{ width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
                                 <img
                                   src={product.image}
@@ -537,21 +537,21 @@ export default function ProductsPage() {
                         <div className="col-6 col-sm-6 col-md-6 col-lg-6 col-xl-6 mb-20 px-2" key={product.id}>
                           <div className="vs-product product-style1 modern-card">
                             <div className="product-img">
-                              {/* <button
+                              <button
                                 type="button"
                                 className="card-favorite-btn"
                                 aria-label={isFavorite(product.id) ? "Remove from Favorites" : "Add to Favorites"}
                                 onClick={(e) => toggleFavorite(product, e)}
                               >
                                 <i className={isFavorite(product.id) ? "fas fa-heart" : "far fa-heart"} style={{ color: isFavorite(product.id) ? "#dc2626" : "#666666" }}></i>
-                              </button> */}
+                              </button>
                               <Link href={`/products/${product.id}`}>
-                                <img src={product.image} alt={product.name} className="img w-100" style={{ height: "230px", objectFit: "contain", padding: "10px" }} />
+                                <img src={product.image} alt={product.name} className="img w-100" />
                               </Link>
                               {product.stock <= 0 && <span className="product-tag2" style={{ background: "var(--danger)" }}>Out of Stock</span>}
                               {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ background: "var(--accent)" }}>Limited Stock</span>}
                             </div>
-                            <div className="product-content" style={{ paddingBottom: "40px" }}>
+                            <div className="product-content">
                               <ProductReviewSummary productId={product.id} rating={product.average_rating} totalReviews={product.total_reviews} />
                               <h3 className="product-title" style={{
                                 display: "-webkit-box",
@@ -576,12 +576,10 @@ export default function ProductsPage() {
                               }}>
                                 {product.description || "No description available."}
                               </p>
-                              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                                <span className="product-cate" style={{ margin: 0, fontSize: "11px", fontWeight: 700 }}>
-                                  SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{product.category}</span>
-                                </span>
-                                <span className="product-price">Rs. {product.price}</span>
-                              </div>
+                              <span className="product-cate" style={{ margin: 0, fontSize: "11px", fontWeight: 700, marginBottom: "8px", display: "block" }}>
+                                SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{product.category}</span>
+                              </span>
+                              <span className="product-price">Rs. {product.price}</span>
                               <div className="product-actions">
                                 <button type="button" className="vs-btn" onClick={() => addToCart(product, 1)}>
                                   Add to Cart

@@ -180,7 +180,7 @@ function ForgotPasswordContent() {
 
       <div style={{
         maxWidth: "500px",
-        margin: "60px auto",
+        margin: "auto",
         padding: "20px",
         position: "relative",
         zIndex: 1
@@ -214,7 +214,7 @@ function ForgotPasswordContent() {
           {/* Card Header */}
           <div style={{
             background: "linear-gradient(135deg, var(--brand) 0%, #1e5231 100%)",
-            padding: "32px 32px 24px",
+            padding: "14px 20px 14px",
             position: "relative",
             overflow: "hidden"
           }}>
@@ -362,7 +362,7 @@ function ForgotPasswordContent() {
               display: "flex",
               alignItems: "center",
               gap: "12px",
-              margin: "28px 0",
+              margin: "10px 0",
               color: "var(--line)"
             }}>
               <div style={{ flex: 1, height: "1px", background: "var(--line)" }} />

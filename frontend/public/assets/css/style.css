@@ -15343,3 +15343,8 @@ blockquote.vs-quote .quote-author {
     margin: -0.25em 0 0px 0;
 }
 }
+@media (max-width: 430px) {
+  .img-box1 .video-thumb1 .play-btn {
+    top: 40%;
+  }
+}

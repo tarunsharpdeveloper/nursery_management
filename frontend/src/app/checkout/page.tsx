@@ -1020,8 +1020,8 @@ export default function CheckoutPage() {
 
                       {/* Order Total */}
                       <div className="d-flex justify-content-between align-items-center" style={{ paddingTop: "4px" }}>
-                        <span style={{ color: "white", fontSize: "16px", fontWeight: "800", textTransform: "uppercase" }}>Order Total</span>
-                        <span style={{ color: "#8cc63f", fontSize: "22px", fontWeight: "800" }}>Rs. {total.toFixed(2)}</span>
+                        <span style={{ color: "white", fontSize: "12px", fontWeight: "800", textTransform: "uppercase" }}>Order Total</span>
+                        <span style={{ color: "#8cc63f", fontSize: "15px", fontWeight: "800" }}>Rs. {total.toFixed(2)}</span>
                       </div>
                     </div>
                     <div className="woocommerce-checkout-payment">

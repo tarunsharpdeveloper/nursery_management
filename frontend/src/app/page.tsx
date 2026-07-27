@@ -431,7 +431,7 @@ export default function HomePage() {
                                 {cat.count} {cat.count === 1 ? "Item" : "Items"}
                               </div>
                             </div>
-                            <div style={{ padding: "20px 16px", background: "linear-gradient(180deg, #ffffff 0%, #fafbfa 100%)" }}>
+                            <div style={{ padding: "10px 16px", background: "linear-gradient(180deg, #ffffff 0%, #fafbfa 100%)" ,marginBottom: "2rem"}}>
                               <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#2d5016", marginBottom: "8px", textAlign: "center", lineHeight: "1.3", letterSpacing: "-0.5px", textTransform: "capitalize" }}>
                                 {cat.name}
                               </h3>

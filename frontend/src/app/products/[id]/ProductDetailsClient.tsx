@@ -790,7 +790,7 @@ export default function ProductDetailsClient({
               {/* Variants */}
               {product.variants && product.variants.length > 0 && (
                 <div className="product-information__item" style={{ flexDirection: "column", alignItems: "flex-start", padding: "15px 25px", borderRadius: "20px" }}>
-                  <span className="product-information__name" style={{ marginRight: 0, marginBottom: "10px", minWidth: "auto", border: "none", padding: 0 }}>
+                  <span className="product-information__name" style={{ marginRight: 0, marginBottom: "10px", minWidth: "auto", border: "none", padding: '1.2rem'}}>
                     Available Variants
                   </span>
                   <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>

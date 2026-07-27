@@ -119,6 +119,38 @@ textarea:focus-visible {
   background: rgba(255, 255, 255, 0.18);
   color: white;
 }
+/* Category slider mobile nav buttons */
+.category-slider-wrap { position: relative; }
+.category-slider-wrap .category-nav-btn {
+  position: absolute;
+  top: -8px;
+  z-index: 60;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(47, 107, 63, 0.18);
+  backdrop-filter: blur(4px);
+}
+.category-slider-wrap .category-nav-btn.prev { right: 56px; }
+.category-slider-wrap .category-nav-btn.next { right: 12px; }
+
+/* Slightly inset on smaller phones and vertically centered over the card */
+@media (max-width: 560px) {
+  .category-slider-wrap .category-nav-btn { width: 24px; height: 24px; }
+  .category-slider-wrap .category-nav-btn.prev { right: 17px; }
+  .category-slider-wrap .category-nav-btn.next { right: -14px; }
+}
+
+/* Hide on large screens only */
+@media (min-width: 992px) {
+  .category-slider-wrap .category-nav-btn { display: none !important; }
+}
 
 /* â”€â”€ Main Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .nav {
@@ -1239,8 +1271,8 @@ p {
   justify-items: center;
   min-height: 150px;
   padding: 30px 18px;
-  text-align: center;
 }
+/* Category slider mobile nav buttons */
 
 .about-stats strong {
   color: var(--accent);
@@ -4602,6 +4634,33 @@ tbody tr:hover {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+/* Smaller category cards and image fit */
+.category-card {
+  max-width: 260px;
+  margin: 12px auto;
+  
+}
+.category-card .category-img {
+  width: 100%;
+  height: 160px !important;
+  object-fit: contain !important;
+  display: block;
+  background: radial-gradient(circle at 50% 20%, rgba(240,240,240,0.6), transparent 40%);
+}
+.category-card h3 {
+  font-size: 16px !important;
+}
+
+@media (max-width: 992px) {
+  .category-card .category-img { height: 180px !important; }
+}
+
+@media (max-width: 420px) {
+  .category-card .category-img { height: 140px !important; }
+  .category-card { max-width: 220px; }
+  .category-card h3 { font-size: 15px !important; }
 }
 
 .product-about .product-title {

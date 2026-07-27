@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { X, ShoppingCart } from "lucide-react";
+import { X, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiRequest, getMediaUrl } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 import { ProductSlider } from "@/components/ProductSlider";
@@ -81,6 +81,8 @@ export default function HomePage() {
   const [testiStart, setTestiStart] = useState(0);
   const [testiPerView, setTestiPerView] = useState(2);
   const [dbCategories, setDbCategories] = useState<any[]>([]);
+  const [isCategorySlider, setIsCategorySlider] = useState(false);
+  const [categoryIndex, setCategoryIndex] = useState(0);
 
   // Testimonials slider data
   const testimonials = [
@@ -102,6 +104,19 @@ export default function HomePage() {
     window.addEventListener("resize", updatePerView);
     return () => window.removeEventListener("resize", updatePerView);
   }, []);
+
+  useEffect(() => {
+    const updateCategoryLayout = () => {
+      setIsCategorySlider(window.innerWidth < 992);
+      setCategoryIndex(0);
+    };
+    updateCategoryLayout();
+    window.addEventListener("resize", updateCategoryLayout);
+    return () => window.removeEventListener("resize", updateCategoryLayout);
+  }, []);
+
+  const categoryPrev = () => setCategoryIndex((prev) => (prev <= 0 ? Math.max(0, categoryList.length - 1) : prev - 1));
+  const categoryNext = () => setCategoryIndex((prev) => (prev >= Math.max(0, categoryList.length - 1) ? 0 : prev + 1));
 
   const testiMaxStart = Math.max(0, testimonials.length - testiPerView);
   const testiNext = () => setTestiStart(prev => prev >= testiMaxStart ? 0 : prev + 1);
@@ -360,161 +375,161 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          <div className="row g-4 justify-content-center" style={{ marginTop: "30px" }}>
-            {categoryList.map((cat) => (
-              <div className="col-lg-3 col-md-4 col-sm-6 col-6" key={cat.name}>
-                <Link 
-                  href={`/products?category=${encodeURIComponent(cat.name)}`}
-                  style={{ textDecoration: "none" }}
-                >
-                  <div 
-                    className="category-card"
+          <div style={{ marginTop: "30px" }}>
+            {isCategorySlider ? (
+              <div className="category-slider-wrap" style={{ position: "relative" }}>
+                <div style={{ overflow: "hidden" }}>
+                  <div
                     style={{
-                      position: "relative",
-                      borderRadius: "20px",
-                      overflow: "hidden",
-                      backgroundColor: "#fff",
-                      boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
-                      transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-                      cursor: "pointer",
-                      height: "100%",
-                      border: "2px solid transparent"
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-12px) scale(1.02)";
-                      e.currentTarget.style.boxShadow = "0 20px 50px rgba(45, 80, 22, 0.2)";
-                      e.currentTarget.style.borderColor = "var(--brand)";
-                      const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
-                      if (img) img.style.transform = "scale(1.15) rotate(2deg)";
-                      const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
-                      if (overlay) overlay.style.opacity = "1";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "translateY(0) scale(1)";
-                      e.currentTarget.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.08)";
-                      e.currentTarget.style.borderColor = "transparent";
-                      const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
-                      if (img) img.style.transform = "scale(1) rotate(0deg)";
-                      const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
-                      if (overlay) overlay.style.opacity = "0";
+                      display: "flex",
+                      transition: "transform 0.4s ease",
+                      transform: `translateX(-${categoryIndex * 100}%)`,
+                      marginTop: "1rem",
+                      marginBottom: "1rem",
+                      
                     }}
                   >
-                    {/* Image Container */}
-                    <div style={{
-                      position: "relative",
-                      width: "100%",
-                      height: "240px",
-                      overflow: "hidden",
-                      borderRadius: "20px 20px 0 0"
-                    }}>
-                      <img 
-                        src={cat.image} 
-                        alt={cat.name}
-                        className="category-img"
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)"
-                        }}
-                      />
-                      
-                      {/* Gradient Overlay */}
-                      <div 
-                        className="category-overlay"
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          background: "linear-gradient(180deg, rgba(45, 80, 22, 0) 0%, rgba(45, 80, 22, 0.6) 100%)",
-                          opacity: 0,
-                          transition: "opacity 0.5s ease",
-                          zIndex: 1
-                        }}
-                      />
-
-                      {/* Product Count Badge */}
-                      <div style={{
-                        position: "absolute",
-                        top: "16px",
-                        right: "16px",
-                        background: "linear-gradient(135deg, var(--brand) 0%, #4a7c2e 100%)",
-                        color: "#fff",
-                        padding: "6px 14px",
-                        borderRadius: "25px",
-                        fontSize: "12px",
-                        fontWeight: "700",
-                        boxShadow: "0 4px 12px rgba(45, 80, 22, 0.4)",
-                        zIndex: 2
-                      }}>
-                        {cat.count} {cat.count === 1 ? "Item" : "Items"}
+                    {categoryList.map((cat) => (
+                      <div key={cat.name} style={{ flex: "0 0 100%", padding: "0 6px" }}>
+                        <Link href={`/products?category=${encodeURIComponent(cat.name)}`} style={{ textDecoration: "none" }}>
+                          <div
+                            className="category-card"
+                            style={{
+                              position: "relative",
+                              borderRadius: "20px",
+                              overflow: "hidden",
+                              backgroundColor: "#fff",
+                              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
+                              transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                              cursor: "pointer",
+                              height: "90%",
+                              border: "2px solid transparent",padding: "12"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = "translateY(-8px) scale(1.01)";
+                              e.currentTarget.style.boxShadow = "0 20px 50px rgba(45, 80, 22, 0.2)";
+                              e.currentTarget.style.borderColor = "var(--brand)";
+                              const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
+                              if (img) img.style.transform = "scale(1.08) rotate(1deg)";
+                              const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
+                              if (overlay) overlay.style.opacity = "1";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = "translateY(0) scale(1)";
+                              e.currentTarget.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.08)";
+                              e.currentTarget.style.borderColor = "transparent";
+                              const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
+                              if (img) img.style.transform = "scale(1) rotate(0deg)";
+                              const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
+                              if (overlay) overlay.style.opacity = "0";
+                            }}
+                          >
+                            <div style={{ position: "relative", width: "100%", height: "165px", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
+                              <img src={cat.image} alt={cat.name} className="category-img" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }} />
+                              <div className="category-overlay" style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(45, 80, 22, 0) 0%, rgba(45, 80, 22, 0.6) 100%)", opacity: 0, transition: "opacity 0.5s ease", zIndex: 1 }} />
+                              <div style={{ position: "absolute", top: "16px", right: "16px", background: "linear-gradient(135deg, var(--brand) 0%, #4a7c2e 100%)", color: "#fff", padding: "6px 14px", borderRadius: "25px", fontSize: "12px", fontWeight: "700", boxShadow: "0 4px 12px rgba(45, 80, 22, 0.4)", zIndex: 2 }}>
+                                {cat.count} {cat.count === 1 ? "Item" : "Items"}
+                              </div>
+                            </div>
+                            <div style={{ padding: "20px 16px", background: "linear-gradient(180deg, #ffffff 0%, #fafbfa 100%)" }}>
+                              <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#2d5016", marginBottom: "8px", textAlign: "center", lineHeight: "1.3", letterSpacing: "-0.5px", textTransform: "capitalize" }}>
+                                {cat.name}
+                              </h3>
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "8px" }}>
+                                <div style={{ width: "30px", height: "2px", background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)" }}></div>
+                                <span style={{ fontSize: "12px", color: "#6b8e23", fontWeight: "600", textTransform: "uppercase", letterSpacing: "1px" }}>
+                                  Explore
+                                </span>
+                                <div style={{ width: "30px", height: "2px", background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)" }}></div>
+                              </div>
+                            </div>
+                            <div style={{ position: "absolute", bottom: 0, left: 0, width: "60px", height: "60px", background: "linear-gradient(135deg, var(--brand) 0%, transparent 100%)", opacity: 0.05, borderRadius: "0 60px 0 0" }}></div>
+                          </div>
+                        </Link>
                       </div>
-                    </div>
-
-                    {/* Content Section */}
-                    <div style={{
-                      padding: "20px 16px",
-                      background: "linear-gradient(180deg, #ffffff 0%, #fafbfa 100%)"
-                    }}>
-                      <h3 style={{
-                        fontSize: "18px",
-                        fontWeight: "800",
-                        color: "#2d5016",
-                        marginBottom: "8px",
-                        textAlign: "center",
-                        lineHeight: "1.3",
-                        letterSpacing: "-0.5px",
-                        textTransform: "capitalize"
-                      }}>
-                        {cat.name}
-                      </h3>
-                      
-                      <div style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px",
-                        marginTop: "8px"
-                      }}>
-                        <div style={{
-                          width: "30px",
-                          height: "2px",
-                          background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)"
-                        }}></div>
-                        <span style={{
-                          fontSize: "12px",
-                          color: "#6b8e23",
-                          fontWeight: "600",
-                          textTransform: "uppercase",
-                          letterSpacing: "1px"
-                        }}>
-                          Explore
-                        </span>
-                        <div style={{
-                          width: "30px",
-                          height: "2px",
-                          background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)"
-                        }}></div>
-                      </div>
-                    </div>
-
-                    {/* Decorative Corner Element */}
-                    <div style={{
-                      position: "absolute",
-                      bottom: 0,
-                      left: 0,
-                      width: "60px",
-                      height: "60px",
-                      background: "linear-gradient(135deg, var(--brand) 0%, transparent 100%)",
-                      opacity: 0.05,
-                      borderRadius: "0 60px 0 0"
-                    }}></div>
+                    ))}
                   </div>
-                </Link>
+                </div>
+                <button className="category-nav-btn prev" aria-label="Previous category" onClick={categoryPrev}>
+                  <ChevronLeft size={18} />
+                </button>
+                <button className="category-nav-btn next" aria-label="Next category" onClick={categoryNext}>
+                  <ChevronRight size={18} />
+                </button>
+                <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "16px" }}>
+                  {categoryList.map((cat, idx) => (
+                    <button
+                      key={cat.name}
+                      onClick={() => setCategoryIndex(idx)}
+                      aria-label={`Go to ${cat.name}`}
+                      style={{ width: "10px", height: "10px", borderRadius: "999px", border: "none", background: idx === categoryIndex ? "var(--brand)" : "#d8e6cf", cursor: "pointer" }}
+                    />
+                  ))}
+                </div>
               </div>
-            ))}
+            ) : (
+              <div className="row g-4 justify-content-center">
+                {categoryList.map((cat) => (
+                  <div className="col-lg-3 col-md-4 col-sm-6 col-6" key={cat.name}>
+                    <Link href={`/products?category=${encodeURIComponent(cat.name)}`} style={{ textDecoration: "none" }}>
+                      <div
+                        className="category-card"
+                        style={{
+                          position: "relative",
+                          borderRadius: "20px",
+                          overflow: "hidden",
+                          backgroundColor: "#fff",
+                          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
+                          transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                          cursor: "pointer",
+                          height: "100%",
+                          border: "2px solid transparent"
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = "translateY(-12px) scale(1.02)";
+                          e.currentTarget.style.boxShadow = "0 20px 50px rgba(45, 80, 22, 0.2)";
+                          e.currentTarget.style.borderColor = "var(--brand)";
+                          const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
+                          if (img) img.style.transform = "scale(1.15) rotate(2deg)";
+                          const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
+                          if (overlay) overlay.style.opacity = "1";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = "translateY(0) scale(1)";
+                          e.currentTarget.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.08)";
+                          e.currentTarget.style.borderColor = "transparent";
+                          const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
+                          if (img) img.style.transform = "scale(1) rotate(0deg)";
+                          const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
+                          if (overlay) overlay.style.opacity = "0";
+                        }}
+                      >
+                        <div style={{ position: "relative", width: "100%", height: "170px", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
+                          <img src={cat.image} alt={cat.name} className="category-img" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }} />
+                          <div className="category-overlay" style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(45, 80, 22, 0) 0%, rgba(45, 80, 22, 0.6) 100%)", opacity: 0, transition: "opacity 0.5s ease", zIndex: 1 }} />
+                          <div style={{ position: "absolute", top: "16px", right: "16px", background: "linear-gradient(135deg, var(--brand) 0%, #4a7c2e 100%)", color: "#fff", padding: "6px 14px", borderRadius: "25px", fontSize: "12px", fontWeight: "700", boxShadow: "0 4px 12px rgba(45, 80, 22, 0.4)", zIndex: 2 }}>
+                            {cat.count} {cat.count === 1 ? "Item" : "Items"}
+                          </div>
+                        </div>
+                        <div style={{ padding: "20px 16px", background: "linear-gradient(180deg, #ffffff 0%, #fafbfa 100%)" }}>
+                          <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#2d5016", marginBottom: "8px", textAlign: "center", lineHeight: "1.3", letterSpacing: "-0.5px", textTransform: "capitalize" }}>
+                            {cat.name}
+                          </h3>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "8px" }}>
+                            <div style={{ width: "30px", height: "2px", background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)" }}></div>
+                            <span style={{ fontSize: "12px", color: "#6b8e23", fontWeight: "600", textTransform: "uppercase", letterSpacing: "1px" }}>
+                              Explore
+                            </span>
+                            <div style={{ width: "30px", height: "2px", background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)" }}></div>
+                          </div>
+                        </div>
+                        <div style={{ position: "absolute", bottom: 0, left: 0, width: "60px", height: "60px", background: "linear-gradient(135deg, var(--brand) 0%, transparent 100%)", opacity: 0.05, borderRadius: "0 60px 0 0" }}></div>
+                      </div>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>

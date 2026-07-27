@@ -11,6 +11,8 @@ export type Product = {
   sold: number;
   image: string;
   active: boolean;
+  average_rating?: number;
+  total_reviews?: number;
 };
 
 export type OrderStatus = "Received" | "Approved" | "Dispatch" | "Delivered";

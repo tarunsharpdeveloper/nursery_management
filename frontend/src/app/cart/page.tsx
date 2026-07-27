@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import { useFavorites } from "@/context/FavoritesContext";
 import { getMediaUrl } from "@/lib/api";
+import { Heart } from "lucide-react";
 import "@/styles/mobile-cart.css";
 
 const DEFAULT_IMG =
@@ -17,6 +19,7 @@ export default function CartPage() {
     shipping,
     total,
   } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   return (
     <main>
@@ -216,15 +219,49 @@ export default function CartPage() {
     const itemTotal = item.selling_price * item.quantity;
 
     return (
-      <div className="mobile-cart-card" key={cartKey}>
-        {/* Remove Button */}
-        <button
-          className="mobile-cart-remove-btn"
-          onClick={() => removeFromCart(cartKey)}
-          title="Remove"
-        >
-          <i className="fal fa-trash-alt"></i>
-        </button>
+      <div className="mobile-cart-card" key={cartKey} style={{ position: "relative" }}>
+        {/* Action Buttons Top Right */}
+        <div style={{ position: "absolute", top: "10px", right: "10px", display: "flex", gap: "8px", zIndex: 2 }}>
+          {/* Favorite icon commented out 
+          <button
+            onClick={(e) => toggleFavorite({ id: item.id, name: item.name }, e)}
+            style={{
+              background: "#ffffff",
+              border: "none",
+              borderRadius: "50%",
+              width: "32px",
+              height: "32px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
+            }}
+          >
+            <Heart
+              size={16}
+              fill={isFavorite(item.id) ? "#dc2626" : "transparent"}
+              color={isFavorite(item.id) ? "#dc2626" : "#666"}
+            />
+          </button>
+          */}
+          <button
+            onClick={() => removeFromCart(cartKey)}
+            style={{
+              background: "#ffffff",
+              border: "none",
+              borderRadius: "50%",
+              width: "32px",
+              height: "32px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+              color: "#dc2626"
+            }}
+          >
+            <i className="fal fa-trash-alt"></i>
+          </button>
+        </div>
 
         {/* Hot Deal Badge */}
         <div className="hot-deal">

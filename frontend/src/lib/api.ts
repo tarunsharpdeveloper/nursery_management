@@ -16,7 +16,11 @@ export type AdminUser = {
 
 export function getStoredToken() {
   if (typeof window === "undefined") return "";
-  return localStorage.getItem("admin_token") || "";
+  const isAdminPath = window.location.pathname.startsWith("/admin");
+  if (isAdminPath) {
+    return localStorage.getItem("admin_token") || "";
+  }
+  return localStorage.getItem("customer_token") || "";
 }
 
 export function getStoredUser(): AdminUser | null {
@@ -48,7 +52,11 @@ function getApiErrorMessage(payload: any) {
   return payload?.message || "API request failed";
 }
 
-export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+export interface ApiOptions extends RequestInit {
+  skipAuthRedirect?: boolean;
+}
+
+export async function apiRequest<T>(path: string, options: ApiOptions = {}): Promise<T> {
   const token = getStoredToken();
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -62,11 +70,22 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   const payload = await response.json().catch(() => ({}));
 
   if (response.status === 401) {
-    clearAdminSession();
-    if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
-      window.location.href = "/admin/login";
+    if (!options.skipAuthRedirect && typeof window !== "undefined") {
+      const isAdminRoute = window.location.pathname.startsWith("/admin");
+      if (isAdminRoute) {
+        clearAdminSession();
+        if (window.location.pathname !== "/admin/login") {
+          window.location.href = "/admin/login";
+        }
+      } else {
+        localStorage.removeItem("customer_token");
+        localStorage.removeItem("customer_user");
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
+      }
     }
-    throw new Error("Session expired. Please log in again.");
+    throw new Error(getApiErrorMessage(payload) || "Session expired. Please log in again.");
   }
 
   if (!response.ok) {

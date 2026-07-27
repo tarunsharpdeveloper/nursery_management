@@ -5,6 +5,7 @@ import Link from "next/link";
 import { apiRequest, getMediaUrl } from "@/lib/api";
 import type { Product, ProductType } from "@/lib/types";
 import { useCart } from "@/context/CartContext";
+import { useFavorites } from "@/context/FavoritesContext";
 import { ProductReviewSummary } from "@/components/ProductReviewSummary";
 
 interface BackendProduct {
@@ -18,6 +19,8 @@ interface BackendProduct {
   media_urls: string | null;
   is_active: boolean;
   category: string;
+  average_rating?: number;
+  total_reviews?: number;
 }
 
 const fallbackProducts: Product[] = [
@@ -61,8 +64,10 @@ const fallbackProducts: Product[] = [
 
 export default function ProductsPage() {
   const { addToCart } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [products, setProducts] = useState<Product[]>([]);
-  const [allProducts, setAllProducts] = useState<Product[]>(fallbackProducts);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [dbCategories, setDbCategories] = useState<{ id: number; name: string; product_count: number }[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<ProductType | "all">("all");
   const [query, setQuery] = useState("");
@@ -72,7 +77,6 @@ export default function ProductsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
-  const itemsPerPage = 3;
 
   useEffect(() => {
     function handleResize() {
@@ -85,19 +89,61 @@ export default function ProductsPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Load all categories for sidebar widget
   useEffect(() => {
-    async function loadProducts() {
+    async function loadCategories() {
       try {
-        // Load first page with pagination
+        const data = await apiRequest<any[]>("/api/categories");
+        if (Array.isArray(data)) {
+          setDbCategories(
+            data
+              .filter((c) => {
+                const isActive = c.is_active !== 0 && c.is_active !== false;
+                const directCount = c.direct_product_count !== undefined ? Number(c.direct_product_count) : Number(c.product_count || 0);
+                return isActive && directCount > 0;
+              })
+              .map((c) => ({
+                id: c.id,
+                name: c.name,
+                product_count: c.direct_product_count !== undefined ? Number(c.direct_product_count) : Number(c.product_count || 0)
+              }))
+          );
+        }
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+      }
+    }
+    loadCategories();
+  }, []);
+
+  // Read URL search params on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const catParam = searchParams.get("category");
+      if (catParam) setSelectedCategory(catParam);
+      const searchParam = searchParams.get("search");
+      if (searchParam) setQuery(searchParam);
+    }
+  }, []);
+
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [visibleCount, setVisibleCount] = useState(6);
+
+  // Fetch all active products once on mount
+  useEffect(() => {
+    let mounted = true;
+    async function loadAllProducts() {
+      try {
+        setLoading(true);
         const response = await apiRequest<{
           data: BackendProduct[];
           totalRecords: number;
-          totalPages: number;
-          currentPage: number;
-        }>("/api/products?page=1&limit=6");
-        
-        const transformedProducts: Product[] = response.data.map((product) => {
-          // Resolve best image: first from media_urls JSON array, then photo_url, then fallback
+        }>("/api/products?limit=1000");
+
+        if (!mounted) return;
+
+        const transformed: Product[] = (response.data || []).map((product) => {
           const FALLBACK_IMG = "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg";
           let resolvedImage = product.photo_url || FALLBACK_IMG;
           if (product.media_urls) {
@@ -120,143 +166,103 @@ export default function ProductsPage() {
             stock: Math.max(0, Number(product.available_quantity)),
             sold: 0,
             image: getMediaUrl(resolvedImage),
-            active: Boolean(product.is_active)
+            active: Boolean(product.is_active),
+            average_rating: product.average_rating || 0,
+            total_reviews: product.total_reviews || 0
           };
         });
 
-        setProducts(transformedProducts);
-        setAllProducts(transformedProducts);
-        setTotalPages(response.totalPages);
-        setCurrentPage(response.currentPage);
+        setAllProducts(transformed);
       } catch (error) {
         console.error("Failed to load products:", error);
-        setProducts(fallbackProducts);
-        setAllProducts(fallbackProducts);
+        if (mounted) setAllProducts(fallbackProducts);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
 
-    loadProducts();
+    loadAllProducts();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  const categories = useMemo(() => {
-    return [...new Set(allProducts.map((product) => product.category))].sort();
-  }, [allProducts]);
+  // Filter and sort in memory over loaded records
+  const filteredProducts = useMemo(() => {
+    let result = [...allProducts];
 
-  useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    
-    // Category param
-    const categoryParam = searchParams.get("category");
-    if (categoryParam) {
-      const matchedCategory = categories.find(
-        (category) => category.toLowerCase() === categoryParam.toLowerCase()
+    // Filter by Category
+    if (selectedCategory) {
+      const selCatLower = selectedCategory.toLowerCase().trim();
+      result = result.filter(
+        (p) => (p.category || "").toLowerCase().trim() === selCatLower
       );
-      setSelectedCategory(matchedCategory || categoryParam);
-    } else {
-      setSelectedCategory(null);
     }
 
-    // Search param
-    const searchParam = searchParams.get("search");
-    if (searchParam) {
-      setQuery(searchParam);
+    // Filter by Product Type ("plant", "seed")
+    if (selectedType && selectedType !== "all") {
+      const typeLower = selectedType.toLowerCase().trim();
+      result = result.filter(
+        (p) =>
+          (p.type || "").toLowerCase().trim().includes(typeLower) ||
+          (p.category || "").toLowerCase().trim().includes(typeLower)
+      );
     }
-  }, [categories]);
+
+    // Filter by Search Query
+    if (query.trim()) {
+      const qLower = query.toLowerCase().trim();
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(qLower) ||
+          (p.description || "").toLowerCase().includes(qLower) ||
+          (p.category || "").toLowerCase().includes(qLower)
+      );
+    }
+
+    // Sort
+    if (sortBy === "price-low") {
+      result.sort((a, b) => a.price - b.price);
+    } else if (sortBy === "price-high") {
+      result.sort((a, b) => b.price - a.price);
+    } else if (sortBy === "name" || sortBy === "featured") {
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === "stock") {
+      result.sort((a, b) => b.stock - a.stock);
+    } else if (sortBy === "rating") {
+      result.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0));
+    }
+
+    return result;
+  }, [allProducts, selectedCategory, selectedType, query, sortBy]);
+
+  // Reset visible count on filter/search/sort change
+  useEffect(() => {
+    setVisibleCount(6);
+  }, [selectedCategory, selectedType, query, sortBy]);
+
+  const displayedProducts = useMemo(() => {
+    return filteredProducts.slice(0, visibleCount);
+  }, [filteredProducts, visibleCount]);
 
   const selectCategory = (category: string | null) => {
     setSelectedCategory(category);
-    setCurrentPage(1);
+    setVisibleCount(6);
     const nextUrl = category ? `/products?category=${encodeURIComponent(category)}` : "/products";
-    window.history.pushState(null, "", nextUrl);
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", nextUrl);
+    }
     document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" });
   };
 
   const selectType = (type: ProductType | "all") => {
     setSelectedType(type);
-    setCurrentPage(1);
+    setVisibleCount(6);
     document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const filteredProducts = useMemo(() => {
-    const search = query.trim().toLowerCase();
-    const filtered = allProducts.filter((product) => {
-      const matchesCategory = selectedCategory
-        ? product.category.toLowerCase() === selectedCategory.toLowerCase()
-        : true;
-      const matchesType = selectedType === "all" ? true : product.type === selectedType;
-      const matchesSearch = search
-        ? `${product.name} ${product.category} ${product.description}`.toLowerCase().includes(search)
-        : true;
-      return product.active && matchesCategory && matchesType && matchesSearch;
-    });
-
-    return [...filtered].sort((a, b) => {
-      if (sortBy === "price-low") return a.price - b.price;
-      if (sortBy === "price-high") return b.price - a.price;
-      if (sortBy === "stock") return b.stock - a.stock;
-      return a.name.localeCompare(b.name);
-    });
-  }, [allProducts, query, selectedCategory, selectedType, sortBy]);
-
-  // Display products from API (paginated)
-  const displayedProducts = products;
-
-  // Load more function
-  const loadMoreProducts = async () => {
-    if (loadingMore || currentPage >= totalPages) return;
-
-    setLoadingMore(true);
-    try {
-      const nextPage = currentPage + 1;
-      const response = await apiRequest<{
-        data: BackendProduct[];
-        totalRecords: number;
-        totalPages: number;
-        currentPage: number;
-      }>(`/api/products?page=${nextPage}&limit=3`);
-      
-      const transformedProducts: Product[] = response.data.map((product) => {
-        const FALLBACK_IMG = "https://dms.mydukaan.io/original/jpeg/media/54ecc558-e85c-462a-b5e5-692caad96f53.jpg";
-        let resolvedImage = product.photo_url || FALLBACK_IMG;
-        if (product.media_urls) {
-          try {
-            const parsed = JSON.parse(product.media_urls);
-            if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]) {
-              resolvedImage = parsed[0];
-            }
-          } catch {
-            if (product.media_urls) resolvedImage = product.media_urls;
-          }
-        }
-        return {
-          id: product.id,
-          name: product.name,
-          type: product.product_type,
-          category: product.category,
-          description: product.description,
-          price: Number(product.selling_price),
-          stock: Math.max(0, Number(product.available_quantity)),
-          sold: 0,
-          image: getMediaUrl(resolvedImage),
-          active: Boolean(product.is_active)
-        };
-      });
-
-      setProducts([...products, ...transformedProducts]);
-      setAllProducts([...allProducts, ...transformedProducts]);
-      setCurrentPage(response.currentPage);
-    } catch (error) {
-      console.error("Failed to load more products:", error);
-    } finally {
-      setLoadingMore(false);
-    }
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" });
+  const loadMoreProducts = () => {
+    setVisibleCount((prev) => prev + 6);
   };
 
   return (
@@ -315,25 +321,25 @@ export default function ProductsPage() {
                           className="cat-item__number"
                           style={selectedCategory === null ? { backgroundColor: "var(--theme-color2)", color: "var(--title-color)" } : {}}
                         >
-                          {allProducts.length}
+                          {dbCategories.reduce((acc, c) => acc + c.product_count, 0) || totalRecords}
                         </span>
                       </a>
                     </li>
-                    {categories.map((category) => {
-                      const isActive = selectedCategory?.toLowerCase() === category.toLowerCase();
+                    {dbCategories.map((cat) => {
+                      const isActive = selectedCategory?.toLowerCase() === cat.name.toLowerCase();
                       return (
-                        <li key={category}>
+                        <li key={cat.id || cat.name}>
                           <a
-                            href={`/products?category=${encodeURIComponent(category)}`}
-                            onClick={(e) => { e.preventDefault(); selectCategory(category); }}
+                            href={`/products?category=${encodeURIComponent(cat.name)}`}
+                            onClick={(e) => { e.preventDefault(); selectCategory(cat.name); }}
                             style={isActive ? { backgroundColor: "var(--theme-color)", color: "var(--white-color)" } : {}}
                           >
-                            {category}
+                            {cat.name}
                             <span
                               className="cat-item__number"
                               style={isActive ? { backgroundColor: "var(--theme-color2)", color: "var(--title-color)" } : {}}
                             >
-                              {allProducts.filter((p) => p.category === category).length}
+                              {cat.product_count}
                             </span>
                           </a>
                         </li>
@@ -395,7 +401,7 @@ export default function ProductsPage() {
                 <div className="row gap-4 align-items-center justify-content-between">
                   <div className="col-md-auto flex-grow-1">
                     <p className="woocommerce-result-count">
-                      Showing {displayedProducts.length} of {allProducts.length} products
+                      Showing {displayedProducts.length} of {filteredProducts.length} products
                     </p>
                   </div>
                   <div className="col-md-auto d-flex align-items-center gap-3" style={{ position: 'relative', zIndex: 10 }}>
@@ -467,6 +473,14 @@ export default function ProductsPage() {
                         <div className="col-12 mb-30" key={product.id}>
                           <div className="vs-product product-style1 modern-card" style={{ display: "flex", alignItems: "stretch", height: "240px", flexDirection: "row", textAlign: "left" }}>
                             <div className="product-img" style={{ position: "relative", width: "240px", height: "100%", flexShrink: 0, padding: "20px", background: "#f8fcf6", borderRight: "1px solid rgba(0,0,0,0.02)", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                              <button
+                                type="button"
+                                className="card-favorite-btn"
+                                aria-label={isFavorite(product.id) ? "Remove from Favorites" : "Add to Favorites"}
+                                onClick={(e) => toggleFavorite(product, e)}
+                              >
+                                <i className={isFavorite(product.id) ? "fas fa-heart" : "far fa-heart"} style={{ color: isFavorite(product.id) ? "#dc2626" : "#666666" }}></i>
+                              </button>
                               <Link href={`/products/${product.id}`} style={{ width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
                                 <img
                                   src={product.image}
@@ -483,7 +497,7 @@ export default function ProductsPage() {
                               {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ position: "absolute", top: "15px", left: "15px", fontSize: "12px", fontWeight: 600, padding: "4px 14px", borderRadius: "20px", background: "var(--accent)", color: "#fff", zIndex: 2, border: "1px solid rgba(255,255,255,0.5)", whiteSpace: "nowrap" }}>Limited Stock</span>}
                             </div>
                             <div className="product-content" style={{ flex: 1, padding: "25px 30px", display: "flex", flexDirection: "column", justifyContent: "flex-start", position: "relative", height: "100%" }}>
-                              <ProductReviewSummary productId={product.id} />
+                              <ProductReviewSummary productId={product.id} rating={product.average_rating} totalReviews={product.total_reviews} />
                               <h3 className="product-title" style={{ marginBottom: "8px", fontSize: "1.2rem" }}>
                                 <Link href={`/products/${product.id}`}>{product.name}</Link>
                               </h3>
@@ -520,17 +534,25 @@ export default function ProductsPage() {
                     /* ── Grid View (product-style1 from homepage) ── */
                     <div className="row">
                       {displayedProducts.map((product) => (
-                        <div className="col-xl-6 col-lg-6 col-md-6 mb-30" key={product.id}>
+                        <div className="col-6 col-sm-6 col-md-6 col-lg-6 col-xl-6 mb-20 px-2" key={product.id}>
                           <div className="vs-product product-style1 modern-card">
                             <div className="product-img">
+                              <button
+                                type="button"
+                                className="card-favorite-btn"
+                                aria-label={isFavorite(product.id) ? "Remove from Favorites" : "Add to Favorites"}
+                                onClick={(e) => toggleFavorite(product, e)}
+                              >
+                                <i className={isFavorite(product.id) ? "fas fa-heart" : "far fa-heart"} style={{ color: isFavorite(product.id) ? "#dc2626" : "#666666" }}></i>
+                              </button>
                               <Link href={`/products/${product.id}`}>
-                                <img src={product.image} alt={product.name} className="img w-100" style={{ height: "230px", objectFit: "contain", padding: "10px" }} />
+                                <img src={product.image} alt={product.name} className="img w-100" />
                               </Link>
                               {product.stock <= 0 && <span className="product-tag2" style={{ background: "var(--danger)" }}>Out of Stock</span>}
                               {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ background: "var(--accent)" }}>Limited Stock</span>}
                             </div>
-                            <div className="product-content" style={{ paddingBottom: "40px" }}>
-                              <ProductReviewSummary productId={product.id} />
+                            <div className="product-content">
+                              <ProductReviewSummary productId={product.id} rating={product.average_rating} totalReviews={product.total_reviews} />
                               <h3 className="product-title" style={{
                                 display: "-webkit-box",
                                 WebkitLineClamp: 2,
@@ -554,12 +576,10 @@ export default function ProductsPage() {
                               }}>
                                 {product.description || "No description available."}
                               </p>
-                              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                                <span className="product-cate" style={{ margin: 0, fontSize: "11px", fontWeight: 700 }}>
-                                  SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{product.category}</span>
-                                </span>
-                                <span className="product-price">Rs. {product.price}</span>
-                              </div>
+                              <span className="product-cate" style={{ margin: 0, fontSize: "11px", fontWeight: 700, marginBottom: "8px", display: "block" }}>
+                                SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{product.category}</span>
+                              </span>
+                              <span className="product-price">Rs. {product.price}</span>
                               <div className="product-actions">
                                 <button type="button" className="vs-btn" onClick={() => addToCart(product, 1)}>
                                   Add to Cart
@@ -576,11 +596,10 @@ export default function ProductsPage() {
                   )}
 
                   {/* Load More Button */}
-                  {currentPage < totalPages && (
-                    <div style={{ display: "flex", justifyContent: "center", marginTop: "40px" }}>
+                  {visibleCount < filteredProducts.length && (
+                    <div style={{ display: "flex", justifyContent: "center", marginTop: "20px", marginBottom: "20px" }}>
                       <button
                         onClick={loadMoreProducts}
-                        disabled={loadingMore}
                         className="vs-btn"
                         style={{
                           padding: "14px 40px",
@@ -588,21 +607,11 @@ export default function ProductsPage() {
                           fontWeight: 600,
                           borderRadius: "10px",
                           minWidth: "200px",
-                          opacity: loadingMore ? 0.7 : 1,
-                          cursor: loadingMore ? "not-allowed" : "pointer"
+                          cursor: "pointer"
                         }}
                       >
-                        {loadingMore ? (
-                          <>
-                            <i className="fas fa-spinner fa-spin" style={{ marginRight: "8px" }}></i>
-                            Loading...
-                          </>
-                        ) : (
-                          <>
-                            Load More Products
-                            <i className="fas fa-arrow-down" style={{ marginLeft: "8px" }}></i>
-                          </>
-                        )}
+                        Load More Products
+                        <i className="fas fa-arrow-down" style={{ marginLeft: "8px" }}></i>
                       </button>
                     </div>
                   )}

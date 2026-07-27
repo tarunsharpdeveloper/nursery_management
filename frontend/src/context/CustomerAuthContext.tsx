@@ -1,14 +1,14 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { apiRequest } from "@/lib/api";
+import { createContext, useContext, useEffect, useState } from "react";
 
 export interface CustomerUser {
   id: number;
+  role_id?: number;
   name: string;
   email: string;
   phone?: string;
-  role: string;
+  role?: string;
 }
 
 interface CustomerAuthContextType {
@@ -18,16 +18,10 @@ interface CustomerAuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, phone: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUser: (updatedFields: Partial<CustomerUser>) => void;
 }
 
 const CustomerAuthContext = createContext<CustomerAuthContextType | undefined>(undefined);
-
-function getErrorMessage(payload: any, fallback: string) {
-  if (Array.isArray(payload?.error) && payload.error[0]?.message) {
-    return payload.error[0].message;
-  }
-  return payload?.message || fallback;
-}
 
 export function CustomerAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<CustomerUser | null>(null);
@@ -43,8 +37,11 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
       } catch (e) {
-        console.error("Failed to parse customer_user:", e);
+        console.error("Failed to parse stored user:", e);
       }
+    } else {
+      setToken(null);
+      setUser(null);
     }
     setIsLoaded(true);
   }, []);
@@ -56,12 +53,19 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     setUser(newUser);
   };
 
+  const updateUser = (updatedFields: Partial<CustomerUser>) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const updated = { ...prev, ...updatedFields };
+      localStorage.setItem("customer_user", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const getApiUrl = () => {
     if (typeof window === 'undefined') {
-      // Server-side: use environment variable
       return process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
     }
-    // Client-side: use environment variable or default
     return typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_BASE_URL 
       ? process.env.NEXT_PUBLIC_API_BASE_URL 
       : "http://localhost:4000";
@@ -76,7 +80,7 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     });
     
     const payload = await response.json();
-    if (!response.ok) throw new Error(getErrorMessage(payload, "Login failed"));
+    if (!response.ok) throw new Error(payload.message || "Login failed");
     
     if (payload.user.role !== "customer") {
       throw new Error("This account is not a customer account.");
@@ -94,7 +98,7 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     });
     
     const payload = await response.json();
-    if (!response.ok) throw new Error(getErrorMessage(payload, "Registration failed"));
+    if (!response.ok) throw new Error(payload.message || "Registration failed");
 
     storeSession(payload.token, payload.user);
   };
@@ -104,10 +108,23 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
     localStorage.removeItem("customer_user");
     setToken(null);
     setUser(null);
+    if (typeof window !== "undefined") {
+      window.location.href = "/";
+    }
   };
 
   return (
-    <CustomerAuthContext.Provider value={{ user, token, isLoaded, login, register, logout }}>
+    <CustomerAuthContext.Provider
+      value={{
+        user,
+        token,
+        isLoaded,
+        login,
+        register,
+        logout,
+        updateUser
+      }}
+    >
       {children}
     </CustomerAuthContext.Provider>
   );
@@ -115,7 +132,7 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
 
 export function useCustomerAuth() {
   const context = useContext(CustomerAuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useCustomerAuth must be used within a CustomerAuthProvider");
   }
   return context;

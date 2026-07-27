@@ -4,16 +4,18 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { Facebook, Instagram, Leaf, LogIn, LogOut, Menu, Search, ShoppingCart, X } from "lucide-react";
+import { Facebook, Heart, Instagram, Leaf, LogIn, LogOut, Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import logo from "@/assets/images/logo.jpeg";
 import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
+import { useFavorites } from "@/context/FavoritesContext";
 
 export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { cartCount } = useCart();
   const { user, logout } = useCustomerAuth();
+  const { favoriteCount } = useFavorites();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -86,19 +88,30 @@ export function SiteHeader() {
 
           {/* Right: Search + Account + Cart */}
           <div className="nav-actions">
-            <button className="nav-search-btn" type="button" aria-label="Search" onClick={() => setIsSearchOpen(true)}>
-              <Search size={16} />
-              <span>Search</span>
+            <button className="nav-icon-btn" type="button" title="Search" aria-label="Search" onClick={() => setIsSearchOpen(true)}>
+              <Search size={18} />
             </button>
-            
+
             {user ? (
-              <button onClick={logout} className="nav-icon-btn" title="Logout" aria-label="Logout">
-                <LogOut size={18} />
-              </button>
+              <>
+                <Link href="/profile" className="nav-icon-btn d-none d-md-inline-flex" title="My Profile" aria-label="My Profile">
+                  <User size={18} />
+                </Link>
+                <button onClick={logout} className="nav-icon-btn d-none d-md-inline-flex" title="Logout" aria-label="Logout">
+                  <LogOut size={18} />
+                </button>
+              </>
             ) : (
               <Link href="/login" className="nav-login-btn" title="Customer Login">
                 <LogIn size={16} />
                 <span>Login</span>
+              </Link>
+            )}
+
+            {user && (
+              <Link href="/profile?tab=favorites" className="nav-icon-btn nav-cart-btn nav-fav-btn d-none d-md-inline-flex" title="My Favorites">
+                <Heart size={18} />
+                {favoriteCount > 0 && <span className="cart-badge">{favoriteCount}</span>}
               </Link>
             )}
 
@@ -171,19 +184,41 @@ export function SiteHeader() {
               </Link>
 
               {user && (
-                <Link 
-                  href="/my-orders" 
-                  className="mobile-menu-link"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  My Orders
-                </Link>
+                <>
+                  <Link 
+                    href="/my-orders" 
+                    className="mobile-menu-link"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    My Orders
+                  </Link>
+
+                  <Link 
+                    href="/profile" 
+                    className="mobile-menu-link"
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <User size={18} />
+                    Profile
+                  </Link>
+                  <Link 
+                    href="/profile?tab=favorites" 
+                    className="mobile-menu-link"
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Heart size={18} />
+                    Favorites
+                  </Link>
+                </>
               )}
 
               {!user && (
                 <Link 
                   href="/login" 
                   className="mobile-menu-link mobile-menu-login"
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <LogIn size={18} />
@@ -198,6 +233,7 @@ export function SiteHeader() {
                     setIsMobileMenuOpen(false);
                   }}
                   className="mobile-menu-link mobile-menu-logout"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'var(--danger)', color: 'white', border: 'none', width: '100%', padding: '12px', borderRadius: '8px', cursor: 'pointer', marginTop: '10px', fontSize: '16px', fontWeight: '600' }}
                 >
                   <LogOut size={18} />
                   Logout

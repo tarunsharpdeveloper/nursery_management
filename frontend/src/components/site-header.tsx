@@ -233,7 +233,7 @@ export function SiteHeader() {
                     setIsMobileMenuOpen(false);
                   }}
                   className="mobile-menu-link mobile-menu-logout"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'var(--danger)', color: 'white', border: 'none', width: '100%', padding: '12px', borderRadius: '8px', cursor: 'pointer', marginTop: '10px', fontSize: '16px', fontWeight: '600' }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'var(--danger)', color: 'white', border: 'none', width: '85%', padding: '12px', borderRadius: '8px', cursor: 'pointer', marginTop: '10px', fontSize: '16px', fontWeight: '600' }}
                 >
                   <LogOut size={18} />
                   Logout

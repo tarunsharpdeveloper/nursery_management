@@ -427,7 +427,7 @@ export default function HomePage() {
                             <div style={{ position: "relative", width: "100%", height: "165px", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
                               <img src={cat.image} alt={cat.name} className="category-img" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }} />
                               <div className="category-overlay" style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(45, 80, 22, 0) 0%, rgba(45, 80, 22, 0.6) 100%)", opacity: 0, transition: "opacity 0.5s ease", zIndex: 1 }} />
-                              <div style={{ position: "absolute", top: "16px", right: "16px", background: "linear-gradient(135deg, var(--brand) 0%, #4a7c2e 100%)", color: "#fff", padding: "6px 14px", borderRadius: "25px", fontSize: "12px", fontWeight: "700", boxShadow: "0 4px 12px rgba(45, 80, 22, 0.4)", zIndex: 2 }}>
+                              <div style={{ position: "absolute", top: "13px", right: "7px", background: "linear-gradient(135deg, var(--brand) 0%, #4a7c2e 100%)", color: "#fff", padding: "6px 14px", borderRadius: "25px", fontSize: "12px", fontWeight: "700", boxShadow: "0 4px 12px rgba(45, 80, 22, 0.4)", zIndex: 2 }}>
                                 {cat.count} {cat.count === 1 ? "Item" : "Items"}
                               </div>
                             </div>
@@ -507,7 +507,7 @@ export default function HomePage() {
                         <div style={{ position: "relative", width: "100%", height: "170px", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
                           <img src={cat.image} alt={cat.name} className="category-img" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }} />
                           <div className="category-overlay" style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(45, 80, 22, 0) 0%, rgba(45, 80, 22, 0.6) 100%)", opacity: 0, transition: "opacity 0.5s ease", zIndex: 1 }} />
-                          <div style={{ position: "absolute", top: "16px", right: "16px", background: "linear-gradient(135deg, var(--brand) 0%, #4a7c2e 100%)", color: "#fff", padding: "6px 14px", borderRadius: "25px", fontSize: "12px", fontWeight: "700", boxShadow: "0 4px 12px rgba(45, 80, 22, 0.4)", zIndex: 2 }}>
+                          <div style={{ position: "absolute", top: "10px", right: "7px", background: "linear-gradient(135deg, var(--brand) 0%, #4a7c2e 100%)", color: "#fff", padding: "6px 14px", borderRadius: "25px", fontSize: "12px", fontWeight: "700", boxShadow: "0 4px 12px rgba(45, 80, 22, 0.4)", zIndex: 2 }}>
                             {cat.count} {cat.count === 1 ? "Item" : "Items"}
                           </div>
                         </div>

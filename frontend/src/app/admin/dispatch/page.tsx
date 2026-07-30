@@ -11,7 +11,7 @@ export default function DispatchPage() {
     referenceType: "online_order",
     dispatchType: "bus",
     status: "pending",
-    dispatchDate: new Date().toISOString().slice(0, 10)
+    dispatchDate: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10)
   });
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export default function DispatchPage() {
           referenceType: "online_order",
           dispatchType: "bus",
           status: "pending",
-          dispatchDate: new Date().toISOString().slice(0, 10)
+          dispatchDate: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10)
         })}
         fields={fields}
         validate={(v) => {

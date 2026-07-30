@@ -734,7 +734,7 @@ const modelsConfig = {
     allowedFilters: ["status"]
   },
   dispatch: {
-    baseSelect: "SELECT d.id, COALESCE(o.order_number, ab.booking_number) AS reference_number, IF(o.id IS NOT NULL, 'Online Order', 'Advance Booking') AS reference_type, d.dispatch_type, d.status, d.dispatch_date, d.bus_number, d.driver_name, d.driver_mobile, d.courier_company, d.docket_number FROM dispatches d LEFT JOIN orders o ON o.id = d.order_id LEFT JOIN advance_bookings ab ON ab.id = d.advance_booking_id",
+    baseSelect: "SELECT d.id, COALESCE(o.order_number, ab.booking_number) AS reference_number, IF(o.id IS NOT NULL, 'Online Order', 'Advance Booking') AS reference_type, d.dispatch_type, d.status, DATE_FORMAT(d.dispatch_date, '%Y-%m-%d') AS dispatch_date, d.bus_number, d.driver_name, d.driver_mobile, d.courier_company, d.docket_number FROM dispatches d LEFT JOIN orders o ON o.id = d.order_id LEFT JOIN advance_bookings ab ON ab.id = d.advance_booking_id",
     baseWhere: "WHERE 1=1",
     searchFields: ["o.order_number", "ab.booking_number", "d.bus_number", "d.driver_name", "d.courier_company", "d.docket_number"],
     orderBy: "ORDER BY d.id DESC",

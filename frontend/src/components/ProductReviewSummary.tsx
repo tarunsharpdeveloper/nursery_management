@@ -8,7 +8,7 @@ interface ReviewStats {
   average_rating: number;
 }
 
-export function ProductReviewSummary({ productId }: { productId: number }) {
+export function ProductReviewSummary({ productId, rating: initialRating, totalReviews: initialTotalReviews }: { productId: number; rating?: number; totalReviews?: number }) {
   const [stats, setStats] = useState<ReviewStats | null>(null);
   const [loading, setLoading] = useState(true);
 

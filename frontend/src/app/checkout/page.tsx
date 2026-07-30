@@ -7,6 +7,7 @@ import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { apiRequest } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
+import TermsAndConditionsModal from "@/components/TermsAndConditionsModal";
 
 // Extend Window interface for AtomPaynetz
 declare global {
@@ -36,6 +37,8 @@ export default function CheckoutPage() {
   const [accountCreationMessage, setAccountCreationMessage] = useState("");
   const [emailExists, setEmailExists] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [isTermsAccepted, setIsTermsAccepted] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -256,10 +259,7 @@ export default function CheckoutPage() {
     }
   };
 
-  const handlePlaceOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (cartItems.length === 0) return;
-
+  const executeOrderCreationAndPayment = async () => {
     setBusy(true);
     setStatus("");
     setAccountCreationMessage("");
@@ -378,6 +378,32 @@ export default function CheckoutPage() {
       }
       setBusy(false);
     }
+  };
+
+  const handlePlaceOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (cartItems.length === 0) return;
+
+    setStatus("");
+
+    if (!/^\d{10}$/.test(formData.phone)) {
+      setStatus("Phone number must be exactly 10 digits.");
+      return;
+    }
+
+    // For Live Payment Gateway (NDPS), require Terms & Conditions acceptance first
+    if (paymentMethod === "ndps" && !isTermsAccepted) {
+      setShowTermsModal(true);
+      return;
+    }
+
+    await executeOrderCreationAndPayment();
+  };
+
+  const handleAcceptTermsAndProceed = async () => {
+    setShowTermsModal(false);
+    setIsTermsAccepted(true);
+    await executeOrderCreationAndPayment();
   };
 
   if (!isLoaded) return <div style={{ minHeight: "60vh" }}></div>;
@@ -1111,6 +1137,17 @@ export default function CheckoutPage() {
       </div>
       {/* Checkout Area End */}
 
+      {/* Terms & Conditions Modal for Live Payment Gateway */}
+      <TermsAndConditionsModal
+        isOpen={showTermsModal}
+        amount={total}
+        isLoading={busy}
+        onAccept={handleAcceptTermsAndProceed}
+        onCancel={() => {
+          setShowTermsModal(false);
+          setIsTermsAccepted(false);
+        }}
+      />
     </main>
   );
 }

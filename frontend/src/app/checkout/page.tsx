@@ -36,6 +36,8 @@ export default function CheckoutPage() {
   const [accountCreationMessage, setAccountCreationMessage] = useState("");
   const [emailExists, setEmailExists] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -1096,10 +1098,307 @@ export default function CheckoutPage() {
                           )}
                         </li>
                       </ul>
-                      <div className="form-row place-order">
+                      <div className="form-row place-order" style={{ marginTop: "20px" }}>
+                        {/* Payment T&C Modal Backdrop */}
+                        {showTermsModal && (
+                          <div 
+                            onClick={() => setShowTermsModal(false)}
+                            style={{
+                              position: "fixed",
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              background: "rgba(0, 0, 0, 0.6)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              zIndex: 1000,
+                              padding: "20px"
+                            }}
+                          >
+                            {/* Modal Content */}
+                            <div 
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                background: "white",
+                                borderRadius: "12px",
+                                boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+                                maxWidth: "600px",
+                                width: "100%",
+                                maxHeight: "90vh",
+                                display: "flex",
+                                flexDirection: "column",
+                                animation: "slideUp 0.3s ease"
+                              }}
+                              className="modal-container"
+                            >
+                              {/* Modal Header */}
+                              <div style={{
+                                padding: "20px",
+                                background: "linear-gradient(135deg, #2d5016 0%, #4a7c2e 100%)",
+                                borderRadius: "12px 12px 0 0",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                borderBottom: "1px solid #c3e6cb",
+                                gap: "12px"
+                              }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, flex: 1 }}>
+                                  <i className="fas fa-file-contract" style={{ color: "white", fontSize: "18px", flexShrink: 0 }}></i>
+                                  <h2 style={{ margin: 0, color: "white", fontSize: "16px", fontWeight: "700", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    Payment Terms
+                                  </h2>
+                                </div>
+                                <button
+                                  onClick={() => setShowTermsModal(false)}
+                                  style={{
+                                    background: "rgba(255, 255, 255, 0.2)",
+                                    border: "none",
+                                    color: "white",
+                                    fontSize: "24px",
+                                    cursor: "pointer",
+                                    width: "36px",
+                                    height: "36px",
+                                    borderRadius: "50%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    transition: "all 0.2s ease",
+                                    flexShrink: 0,
+                                    padding: 0
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = "rgba(255, 255, 255, 0.3)";
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)";
+                                  }}
+                                >
+                                  ×
+                                </button>
+                              </div>
+
+                              {/* Modal Body */}
+                              <div style={{
+                                padding: "20px",
+                                color: "#333",
+                                fontSize: "14px",
+                                lineHeight: "1.8",
+                                flex: 1,
+                                overflowY: "auto",
+                                maxHeight: "calc(90vh - 140px)"
+                              }}
+                              className="modal-body"
+                              >
+                                <h4 style={{ 
+                                  margin: "0 0 14px 0", 
+                                  color: "#2d5016",
+                                  fontWeight: "700",
+                                  fontSize: "16px"
+                                }}>
+                                  📋 Merchant Payment Terms
+                                </h4>
+
+                                <ul style={{ margin: "0 0 16px 0", paddingLeft: "18px", color: "#555", fontSize: "13px" }}>
+                                  <li style={{ marginBottom: "12px" }}>
+                                    <strong>Non-Refundable Payments:</strong> Once payment is made, it is non-refundable or non-cancellable for any reason.
+                                  </li>
+                                  <li style={{ marginBottom: "12px" }}>
+                                    <strong>Transaction Fees:</strong> Transaction fees charged would be borne by the cardholder for any payment (including duplicate payments).
+                                  </li>
+                                  <li style={{ marginBottom: "12px" }}>
+                                    <strong>No Refund of Fees:</strong> Transaction fee charges would not be refunded or reversed under any circumstances for any refund, reversal, chargeback, or any other reasons and even for duplicate payments.
+                                  </li>
+                                  <li style={{ marginBottom: "0px" }}>
+                                    <strong>Dispute Resolution:</strong> Cardholders or customers can connect with our call center, helpdesk, or helpline for further queries, disputes, or chargebacks.
+                                  </li>
+                                </ul>
+
+                                <h4 style={{ 
+                                  margin: "16px 0 10px 0", 
+                                  color: "#2d5016",
+                                  fontWeight: "700",
+                                  fontSize: "16px"
+                                }}>
+                                  ✓ Your Agreement Required
+                                </h4>
+
+                                <p style={{ margin: "0 0 12px 0", color: "#555", fontSize: "13px" }}>
+                                  By checking the box below, you agree to accept these payment terms and conditions before proceeding to the payment gateway.
+                                </p>
+
+                                <div style={{
+                                  padding: "12px",
+                                  background: "#fff3cd",
+                                  border: "1px solid #ffeaa7",
+                                  borderRadius: "6px",
+                                  fontSize: "12px",
+                                  color: "#856404"
+                                }}>
+                                  <i className="fas fa-info-circle" style={{ marginRight: "8px" }}></i>
+                                  <strong>Note:</strong> This agreement is required by our payment gateway partner for all online transactions.
+                                </div>
+                              </div>
+
+                              {/* Modal Footer */}
+                              <div style={{
+                                padding: "14px 16px",
+                                background: "#f8f9fa",
+                                borderTop: "1px solid #e9ecef",
+                                borderRadius: "0 0 12px 12px",
+                                display: "flex",
+                                gap: "10px",
+                                justifyContent: "flex-end"
+                              }}>
+                                <button
+                                  onClick={() => setShowTermsModal(false)}
+                                  style={{
+                                    padding: "8px 20px",
+                                    background: "#e9ecef",
+                                    border: "1px solid #dee2e6",
+                                    borderRadius: "6px",
+                                    color: "#495057",
+                                    fontSize: "13px",
+                                    fontWeight: "600",
+                                    cursor: "pointer",
+                                    transition: "all 0.2s ease"
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = "#dee2e6";
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = "#e9ecef";
+                                  }}
+                                >
+                                  Close
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Style for modal animation */}
+                        <style jsx>{`
+                          @keyframes slideUp {
+                            from {
+                              transform: translateY(20px);
+                              opacity: 0;
+                            }
+                            to {
+                              transform: translateY(0);
+                              opacity: 1;
+                            }
+                          }
+
+                          @media (max-width: 480px) {
+                            /* Mobile adjustments - 60vh max height */
+                            :global(.modal-container) {
+                              max-height: 60vh !important;
+                            }
+                            
+                            :global(.modal-body) {
+                              max-height: calc(60vh - 140px) !important;
+                            }
+                          }
+                        `}</style>
+
+                        {/* Payment T&C Button */}
+                        <div className="col-12 form-group" style={{ marginBottom: "20px" }}>
+                          <button
+                            type="button"
+                            onClick={() => setShowTermsModal(true)}
+                            style={{
+                              width: "100%",
+                              padding: "14px",
+                              background: "linear-gradient(135deg, #f0f4e8 0%, #e8f1e0 100%)",
+                              border: "1px solid #c3e6cb",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "10px",
+                              color: "#2d5016",
+                              fontWeight: "600",
+                              fontSize: "0.85rem",
+                              transition: "all 0.3s ease"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = "linear-gradient(135deg, #e8f1e0 0%, #d4edda 100%)";
+                              e.currentTarget.style.boxShadow = "0 4px 12px rgba(45, 80, 22, 0.15)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = "linear-gradient(135deg, #f0f4e8 0%, #e8f1e0 100%)";
+                              e.currentTarget.style.boxShadow = "none";
+                            }}
+                          >
+                            <i className="fas fa-file-contract"></i>
+                            View Payment Terms & Conditions
+                          </button>
+                        </div>
+
+                        {/* T&C Agreement Checkbox */}
+                        <div className="col-12 form-group" style={{ marginBottom: "20px", padding: "15px", background: "#f8f9fa", borderRadius: "8px", border: "1px solid #e9ecef" }}>
+                          <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+                            <input
+                              type="checkbox"
+                              id="agreeToTerms"
+                              checked={agreeToTerms}
+                              onChange={(e) => setAgreeToTerms(e.target.checked)}
+                              style={{ marginTop: "3px", cursor: "pointer", width: "18px", height: "18px" }}
+                            />
+                            <label htmlFor="agreeToTerms" style={{ cursor: "pointer", margin: 0, fontSize: "0.85rem", color: "#333", lineHeight: "1.5" }}>
+                              I agree to the{" "}
+                              <Link 
+                                href="/terms-of-service" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                style={{ color: "#2d5016", fontWeight: "600", textDecoration: "none", borderBottom: "1px solid #2d5016" }}
+                              >
+                                Terms of Service
+                              </Link>
+                              {" "}and{" "}
+                              <Link 
+                                href="/privacy-policy" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                style={{ color: "#2d5016", fontWeight: "600", textDecoration: "none", borderBottom: "1px solid #2d5016" }}
+                              >
+                                Privacy Policy
+                              </Link>
+                              . I understand that payment transactions are non-refundable and final.
+                            </label>
+                          </div>
+                          {!agreeToTerms && (
+                            <div style={{
+                              marginTop: "10px",
+                              paddingLeft: "30px",
+                              fontSize: "12px",
+                              color: "#dc3545",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px"
+                            }}>
+                              <i className="fas fa-exclamation-circle"></i>
+                              Please accept terms and conditions to continue
+                            </div>
+                          )}
+                        </div>
+
                         {status && <p style={{ color: "#ffd6d6", marginBottom: 12 }}>{status}</p>}
-                        <button type="submit" className="vs-btn style2" disabled={busy || (paymentMethod === "ndps" && !scriptLoaded)}>
-                          {busy ? "Placing Order..." : paymentMethod === "ndps" && !scriptLoaded ? "Loading Payment..." : "Place Order"}
+                        <button 
+                          type="submit" 
+                          className="vs-btn style2" 
+                          disabled={busy || (paymentMethod === "ndps" && !scriptLoaded) || !agreeToTerms}
+                          style={{
+                            opacity: !agreeToTerms ? 0.6 : 1,
+                            cursor: !agreeToTerms ? "not-allowed" : "pointer",
+                            width: "100%"
+                          }}
+                          title={!agreeToTerms ? "Please accept terms and conditions" : ""}
+                        >
+                          {busy ? "Placing Order..." : paymentMethod === "ndps" && !scriptLoaded ? "Loading Payment..." : !agreeToTerms ? "Accept Terms to Continue" : "Place Order"}
                         </button>
                       </div>
                     </div>

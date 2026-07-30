@@ -13963,18 +13963,13 @@ blockquote.vs-quote .quote-author {
   padding-top: 4px;
 }
 
-.product-about .product-price {
-  font-size: 40px;
-  font-weight: 700;
-  color: var(--black-color);
-  line-height: 1;
-  margin: 0 0 40px 0;
-}
+
 
 .product-about .product-price del {
-  font-size: 20px;
+  font-size: 15px;
   color: var(--text-color);
   font-weight: 700;
+  margin-left: 10px;
 }
 
 .product-about .product-text {
@@ -15347,4 +15342,11 @@ blockquote.vs-quote .quote-author {
   .img-box1 .video-thumb1 .play-btn {
     top: 40%;
   }
+}
+.product-about .product-price {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--black-color);
+  line-height: 1;
+  margin: 0 0 40px 0;
 }

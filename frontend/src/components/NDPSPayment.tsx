@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { apiRequest } from '@/lib/api';
+import TermsAndConditionsModal from './TermsAndConditionsModal';
 
 interface NDPSPaymentProps {
   orderId: number;
@@ -29,6 +30,7 @@ export default function NDPSPayment({
 }: NDPSPaymentProps) {
   const [loading, setLoading] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   // Load AtomPaynetz script dynamically (like working implementation)
   useEffect(() => {
@@ -161,6 +163,15 @@ export default function NDPSPayment({
     }
   };
 
+  const handlePayClick = () => {
+    setShowTermsModal(true);
+  };
+
+  const handleAcceptTerms = async () => {
+    setShowTermsModal(false);
+    await handlePayment();
+  };
+
   return (
     <div style={{ textAlign: 'center', padding: '20px' }}>
       <h3>Secure Payment via NTT DATA</h3>
@@ -170,7 +181,7 @@ export default function NDPSPayment({
       </p>
       
       <button
-        onClick={handlePayment}
+        onClick={handlePayClick}
         disabled={loading || !scriptLoaded}
         className="vs-btn"
         style={{ minWidth: '200px' }}
@@ -197,6 +208,14 @@ export default function NDPSPayment({
         <p>🔒 Your payment is secured by NTT DATA Payment Services</p>
         <p>Supported: Credit Card, Debit Card, Net Banking, UPI, Wallets</p>
       </div>
+
+      <TermsAndConditionsModal
+        isOpen={showTermsModal}
+        amount={amount}
+        isLoading={loading}
+        onAccept={handleAcceptTerms}
+        onCancel={() => setShowTermsModal(false)}
+      />
     </div>
   );
 }

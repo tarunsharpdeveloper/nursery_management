@@ -13,7 +13,7 @@ const { initiatePayment, paymentWebhook } = require("./routes/payments");
 const { createEmployee, saveAttendance, saveBulkAttendance, editEmployee, toggleEmployee, deleteEmployee } = require("./routes/attendance");
 const { calculateWages } = require("./routes/wages");
 const { getLedger, getCustomerLedgerDetails, getReport } = require("./routes/reports");
-const { getReviews, submitReview, getReviewStats } = require("./routes/reviews");
+const { getReviews, submitReview, getReviewStats, getBatchReviewStats } = require("./routes/reviews");
 const { getFavorites, toggleFavorite } = require("./routes/favorites");
 const { initiateNDPSPayment, handleNDPSResponse, checkPaymentStatus, requeryTransactionStatus, handleNDPSPopupResponse } = require("./routes/ndps-payments");
 const { ensureAdminSchema } = require("./migrate");
@@ -129,6 +129,7 @@ const routes = [
   ["GET", "/api/reviews/:productId", null, getReviews],
   ["POST", "/api/reviews", null, submitReview],
   ["GET", "/api/reviews/stats/:productId", null, getReviewStats],
+  ["POST", "/api/reviews/stats/batch", null, getBatchReviewStats],
   ["GET", "/api/favorites", null, getFavorites],
   ["POST", "/api/favorites/toggle", null, toggleFavorite],
   ["POST", "/api/ndps/initiate", null, initiateNDPSPayment],

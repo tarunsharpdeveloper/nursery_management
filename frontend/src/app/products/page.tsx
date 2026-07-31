@@ -172,7 +172,26 @@ export default function ProductsPage() {
           };
         });
 
-        setAllProducts(transformed);
+        // Fetch batch review stats for all products
+        try {
+          const productIds = transformed.map(p => p.id);
+          const statsResponse = await apiRequest<Record<number, any>>("/api/reviews/stats/batch", {
+            method: "POST",
+            body: JSON.stringify({ productIds })
+          });
+          
+          // Update products with fetched stats
+          const productsWithStats = transformed.map(product => ({
+            ...product,
+            average_rating: statsResponse[product.id]?.average_rating || product.average_rating || 0,
+            total_reviews: statsResponse[product.id]?.total_reviews || product.total_reviews || 0
+          }));
+          
+          if (mounted) setAllProducts(productsWithStats);
+        } catch (statsError) {
+          console.error("Failed to load review stats:", statsError);
+          if (mounted) setAllProducts(transformed);
+        }
       } catch (error) {
         console.error("Failed to load products:", error);
         if (mounted) setAllProducts(fallbackProducts);

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiRequest } from "@/lib/api";
 
 interface ReviewStats {
   total_reviews: number;
@@ -10,33 +9,21 @@ interface ReviewStats {
 
 export function ProductReviewSummary({ productId, rating: initialRating, totalReviews: initialTotalReviews }: { productId: number; rating?: number; totalReviews?: number }) {
   const [stats, setStats] = useState<ReviewStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
-
-    async function loadStats() {
-      try {
-        const data = await apiRequest<ReviewStats>(`/api/reviews/stats/${productId}`);
-        if (mounted) {
-          setStats(data);
-        }
-      } catch (error) {
-        if (mounted) {
-          setStats({ total_reviews: 0, average_rating: 0 });
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
+    // Use the props directly if provided (from parent/batch API)
+    if (initialRating !== undefined && initialTotalReviews !== undefined) {
+      setStats({
+        average_rating: initialRating,
+        total_reviews: initialTotalReviews
+      });
+      setLoading(false);
+    } else {
+      // Only load if props are not provided
+      setLoading(true);
     }
-
-    loadStats();
-    return () => {
-      mounted = false;
-    };
-  }, [productId]);
+  }, [initialRating, initialTotalReviews]);
 
   if (loading) {
     return (

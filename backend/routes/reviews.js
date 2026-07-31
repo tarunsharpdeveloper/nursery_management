@@ -120,4 +120,74 @@ async function getReviewStats(req, res) {
   }
 }
 
-module.exports = { getReviews, submitReview, getReviewStats };
+/**
+ * Get review statistics for multiple products in a batch
+ */
+async function getBatchReviewStats(req, res) {
+  try {
+    const body = await readJson(req);
+    const { productIds } = body;
+    
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      return sendJson(res, 400, { error: 'productIds array is required and must not be empty' });
+    }
+    
+    // Limit batch size to prevent abuse
+    if (productIds.length > 1000) {
+      return sendJson(res, 400, { error: 'Maximum 1000 product IDs allowed per batch' });
+    }
+    
+    const placeholders = productIds.map(() => '?').join(',');
+    
+    const [stats] = await pool.query(
+      `SELECT 
+        product_id,
+        COUNT(*) as total_reviews,
+        AVG(rating) as average_rating,
+        SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END) as five_star,
+        SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) as four_star,
+        SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as three_star,
+        SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) as two_star,
+        SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as one_star
+       FROM reviews 
+       WHERE product_id IN (${placeholders}) AND is_approved = TRUE
+       GROUP BY product_id`,
+      productIds
+    );
+    
+    // Create a map for quick lookup
+    const statsMap = {};
+    stats.forEach(stat => {
+      statsMap[stat.product_id] = {
+        total_reviews: stat.total_reviews,
+        average_rating: stat.average_rating,
+        five_star: stat.five_star,
+        four_star: stat.four_star,
+        three_star: stat.three_star,
+        two_star: stat.two_star,
+        one_star: stat.one_star
+      };
+    });
+    
+    // Ensure all requested product IDs have an entry
+    const result = productIds.reduce((acc, id) => {
+      acc[id] = statsMap[id] || {
+        total_reviews: 0,
+        average_rating: 0,
+        five_star: 0,
+        four_star: 0,
+        three_star: 0,
+        two_star: 0,
+        one_star: 0
+      };
+      return acc;
+    }, {});
+    
+    sendJson(res, 200, result);
+  } catch (error) {
+    console.error('Error fetching batch review stats:', error);
+    sendJson(res, 500, { error: 'Failed to fetch review statistics' });
+  }
+}
+
+module.exports = { getReviews, submitReview, getReviewStats, getBatchReviewStats };

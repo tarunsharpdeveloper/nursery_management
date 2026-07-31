@@ -124,12 +124,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <div className="sidebar-brand-icon">
-            <Leaf size={20} />
+          <div className="sidebar-brand-icon" style={{ background: "transparent", padding: 0, display: "flex", alignItems: "center" }}>
+            <img src="/awantika-logo.png" alt="Awantika Logo" style={{ height: "48px", width: "auto", objectFit: "contain", borderRadius: "6px" }} />
           </div>
           <div className="sidebar-label">
             <h3>Admin Portal</h3>
-            <span>Saniya Hi-Tech Nursery</span>
+            <span>Awantika Seeds</span>
           </div>
         </div>
 

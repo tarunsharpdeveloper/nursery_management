@@ -493,8 +493,8 @@ export default function ProductsPage() {
                                   }}
                                 />
                               </Link>
-                              {product.stock <= 0 && <span className="product-tag2" style={{ position: "absolute", top: "15px", left: "15px", fontSize: "12px", fontWeight: 600, padding: "4px 14px", borderRadius: "20px", background: "var(--danger)", color: "#fff", zIndex: 2, border: "1px solid rgba(255,255,255,0.5)" }}>Out of Stock</span>}
-                              {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ position: "absolute", top: "15px", left: "15px", fontSize: "12px", fontWeight: 600, padding: "4px 14px", borderRadius: "20px", background: "var(--accent)", color: "#fff", zIndex: 2, border: "1px solid rgba(255,255,255,0.5)", whiteSpace: "nowrap" }}>Limited Stock</span>}
+                              {product.stock <= 0 && <span className="product-tag2">Out of Stock</span>}
+                              {product.stock > 0 && product.stock < 100 && <span className="product-tag2">Limited Stock</span>}
                             </div>
                             <div className="product-content" style={{ flex: 1, padding: "25px 30px", display: "flex", flexDirection: "column", justifyContent: "flex-start", position: "relative", height: "100%" }}>
                               <ProductReviewSummary productId={product.id} rating={product.average_rating} totalReviews={product.total_reviews} />

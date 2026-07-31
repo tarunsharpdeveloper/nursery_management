@@ -16,6 +16,8 @@ export interface CartItem {
   quantity: number;
   available_quantity: number;
   unit: string | null;
+  average_rating?: number;
+  total_reviews?: number;
 }
 
 interface CartContextType {
@@ -89,6 +91,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           quantity: Math.min(limit, qty),
           available_quantity: limit,
           unit: product.unit || null,
+          average_rating: Number(product.average_rating || product.rating || 0),
+          total_reviews: Number(product.total_reviews || 0),
         },
       ]);
       

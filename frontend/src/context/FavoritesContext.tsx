@@ -112,7 +112,9 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
       event.stopPropagation();
     }
 
-    if (!token && typeof window !== "undefined" && !localStorage.getItem("customer_token")) {
+    const currentToken = token || (typeof window !== "undefined" ? localStorage.getItem("customer_token") : null);
+
+    if (!currentToken) {
       showToast("Please login to add items to your favourites!", "warning");
       return false;
     }
@@ -133,6 +135,10 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
 
       if (!response.isFavorite && response.message?.toLowerCase().includes("login")) {
         showToast(response.message, "warning");
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("customer_token");
+          localStorage.removeItem("customer_user");
+        }
         return false;
       }
 
@@ -147,7 +153,14 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
 
       return response.isFavorite;
     } catch (err: any) {
-      showToast(err.message || "Please login to add items to your favourites!", "warning");
+      const msg = err?.message || "Please login to add items to your favourites!";
+      if (msg.toLowerCase().includes("login") || msg.toLowerCase().includes("expired") || msg.toLowerCase().includes("unauthorized")) {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("customer_token");
+          localStorage.removeItem("customer_user");
+        }
+      }
+      showToast(msg, "warning");
       return isFavorite(product.id);
     }
   };

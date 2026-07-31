@@ -57,6 +57,32 @@ export function ProductSlider({ products, itemsPerView = 5 }: ProductSliderProps
     setTimeout(() => setIsTransitioning(false), 600);
   };
 
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const minSwipeDistance = 40;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+    setIsPaused(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    setIsPaused(false);
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    if (distance > minSwipeDistance) {
+      handleNext();
+    } else if (distance < -minSwipeDistance) {
+      handlePrev();
+    }
+  };
+
   // Auto-play functionality
   useEffect(() => {
     if (isPaused || products.length <= itemsToShow || isTransitioning) return;
@@ -65,7 +91,7 @@ export function ProductSlider({ products, itemsPerView = 5 }: ProductSliderProps
       setIsTransitioning(true);
       setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
       setTimeout(() => setIsTransitioning(false), 600);
-    }, 4000000); // Change slide every 4 seconds
+    }, 4000); // Change slide every 4 seconds
 
     return () => clearInterval(interval);
   }, [isPaused, maxIndex, itemsToShow, products.length, isTransitioning]);
@@ -99,6 +125,9 @@ export function ProductSlider({ products, itemsPerView = 5 }: ProductSliderProps
       className="product-slider-container"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <div className="product-slider-wrapper">
         <button

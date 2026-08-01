@@ -2245,9 +2245,9 @@ textarea.is-invalid {
 }
 
 .vs-btn>i {
-  margin-left: 40px;
-  width: 40px;
-  height: 40px;
+  margin-left: 16px;
+  width: 25px;
+  height: 26px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

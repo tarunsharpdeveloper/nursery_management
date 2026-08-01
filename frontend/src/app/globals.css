@@ -326,8 +326,8 @@ textarea:focus-visible {
 
 @media (max-width: 768px) {
   .hero-slider-nav-btn {
-    width: 36px;
-    height: 36px;
+    width: 25px;
+    height: 26px;
   }
   .hero-slider-prev {
     left: 10px;
@@ -8988,18 +8988,18 @@ body.mobile-menu-open {
     object-position: center !important;
   }
   .hero-slider-nav-btn {
-    width: 32px !important;
-    height: 32px !important;
+    width: 25px !important;
+    height: 26px !important;
   }
   .hero-slider-nav-btn svg {
     width: 18px !important;
     height: 18px !important;
   }
   .hero-slider-prev {
-    left: 10px !important;
+    left: 1px !important;
   }
   .hero-slider-next {
-    right: 10px !important;
+    right: 1px !important;
   }
   .hero-slider-dots {
     bottom: 8px !important;

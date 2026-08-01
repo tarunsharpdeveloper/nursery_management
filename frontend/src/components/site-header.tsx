@@ -35,8 +35,22 @@ export function SiteHeader() {
             <span>Fresh plants &amp; seeds delivered to your doorstep — Ujjain, MP | Call: +91 80852 63020</span>
           </div>
           <div className="social-links">
-            <a href="#" aria-label="Facebook"><Facebook size={14} /></a>
-            <a href="https://www.instagram.com/saniyahightechnursery/" aria-label="Instagram"><Instagram size={14} /></a>
+            <a
+              href="https://www.facebook.com/share/v/1C4kL6PPwP/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+            >
+              <Facebook size={15} />
+            </a>
+            <a
+              href="https://www.instagram.com/saniyahightechnursery?igsh=MWJoMTBzbmlzMGVjNA=="
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+            >
+              <Instagram size={15} />
+            </a>
           </div>
         </div>
       </div>
@@ -48,16 +62,12 @@ export function SiteHeader() {
           <Link className="brand" href="/">
             <Image
               src={logo}
-              alt="Awantika Seeds"
-              width={50}
-              height={50}
+              alt="Shri Saniya Hi-Tech Nursery (Awantika Seeds)"
+              width={300}
+              height={105}
               className="brand-logo-img"
               priority
             />
-            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1,gap: "7px" }}>
-            <span className="brand-name">Shri Saniya Hi-Tech Nursery</span>
-            <div style={{display:'flex'}}><span className="brand-name">(Awantika Seeds)</span></div>
-            </div>
           </Link>
 
           {/* Center: Nav links */}

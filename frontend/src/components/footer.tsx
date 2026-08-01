@@ -16,42 +16,22 @@ export function Footer() {
   return (
     <footer className="footer">
       <div className="footer-brand-col">
-        <div style={{ 
-          display: "flex",
-          alignItems: "center",
-          gap: "3px",
-          marginBottom: "20px"
-        }}>
+        <Link href="/" style={{ display: "inline-block", marginBottom: "16px" }}>
           <Image
             src={logo}
-            alt="Shri Saniya Hi-Tech Nursery logo"
-            width={70}
-            height={70}
+            alt="Shri Saniya Hi-Tech Nursery (Awantika Seeds)"
+            width={240}
+            height={85}
             style={{ 
-              flexShrink: 0,
-              borderRadius: "50%",
-              padding: "2px"
+              height: "auto",
+              maxHeight: "90px",
+              width: "auto",
+              maxWidth: "260px",
+              objectFit: "contain",
+              borderRadius: "8px"
             }}
           />
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <span className="brand-name" style={{ 
-              color: "white",
-              fontSize: "16px", 
-              fontWeight: "700",
-              lineHeight: "1.2"
-            }}>
-              Shri Saniya Hi-Tech Nursery
-            </span>
-            <span className="brand-name" style={{ 
-              color: "rgba(255, 255, 255, 0.85)",
-              fontSize: "17px", 
-              fontWeight: "600",
-              lineHeight: "1"
-            }}>
-              (Awantika Seeds)
-            </span>
-          </div>
-        </div>
+        </Link>
         <p className="meta" style={{ color: "rgba(255, 255, 255, 0.7)", maxWidth: 280 }}>
           Premium nursery plants and high-yield seeds. Cultivating green spaces and providing professional agricultural solutions.
         </p>

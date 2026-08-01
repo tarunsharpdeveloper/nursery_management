@@ -26,23 +26,31 @@ function base64url(input) {
   return Buffer.from(JSON.stringify(input)).toString("base64url");
 }
 
-function signToken(payload) {
+function signToken(payload, expiresInSeconds = 60 * 60 * 24 * 30) {
   const header = base64url({ alg: "HS256", typ: "JWT" });
-  const body = base64url({ ...payload, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8 });
+  const body = base64url({ ...payload, exp: Math.floor(Date.now() / 1000) + expiresInSeconds });
   const signature = crypto.createHmac("sha256", secret()).update(`${header}.${body}`).digest("base64url");
   return `${header}.${body}.${signature}`;
 }
 
 function verifyToken(token) {
-  const [header, body, signature] = (token || "").split(".");
-  if (!header || !body || !signature) return null;
+  try {
+    const [header, body, signature] = (token || "").split(".");
+    if (!header || !body || !signature) return null;
 
-  const expected = crypto.createHmac("sha256", secret()).update(`${header}.${body}`).digest("base64url");
-  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(crypto.createHmac("sha256", secret()).update(`${header}.${body}`).digest("base64url"));
 
-  const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8"));
-  if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
-  return payload;
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      return null;
+    }
+
+    const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8"));
+    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
+    return payload;
+  } catch {
+    return null;
+  }
 }
 
 async function permissionsForRole(role) {

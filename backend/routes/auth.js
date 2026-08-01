@@ -38,7 +38,12 @@ async function login(req, res, { readJson, sendJson }) {
 }
 
 async function me(req, res, { sendJson }) {
-  sendJson(res, 200, { user: req.user, permissions: await permissionsForRole(req.user.role) });
+  const user = req.user || authenticate(req);
+  if (!user) {
+    sendJson(res, 401, { message: "Unauthorized" });
+    return;
+  }
+  sendJson(res, 200, { user, permissions: await permissionsForRole(user.role) });
 }
 
 const registerSchema = z.object({

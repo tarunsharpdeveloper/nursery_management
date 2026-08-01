@@ -3022,7 +3022,7 @@ textarea.is-invalid {
 .social-links {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 10px;
 }
 
 .social-links .links-title {
@@ -12363,7 +12363,7 @@ blockquote.vs-quote .quote-author {
   text-align: left;
 }
 
-.cart_table .cart_item__des span {
+.cart_table .cart_item__des > span {
   display: block;
 }
 

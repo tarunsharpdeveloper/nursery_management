@@ -63,12 +63,14 @@ const fallbackProducts: Product[] = [
 ];
 
 const categoryArt: Record<string, string> = {
-  "Fruit Plants": "/assets/img/cate/c-1-1.png",
-  "Flower Plants": "/assets/img/cate/c-1-2.png",
-  "Medicinal Plants": "/assets/img/cate/c-1-3.png",
-  "Ornamental Plants": "/assets/img/cate/c-1-4.png",
-  "Vegetable Seeds": "/assets/img/cate/c-1-5.png",
-  "Flower Seeds": "/assets/img/cate/c-1-2.png"
+  "Fruit Plants": "/item-1.png",
+  "Flower Plants": "/item-1.png",
+  "Medicinal Plants": "/item-1.png",
+  "Ornamental Plants": "/item-1.png",
+  "Vegetable Seeds": "/item-2.png",
+  "Flower Seeds": "/item-2.png",
+  "Plants": "/item-1.png",
+  "Seeds": "/item-2.png"
 };
 
 export default function HomePage() {
@@ -122,13 +124,55 @@ export default function HomePage() {
   const testiNext = () => setTestiStart(prev => prev >= testiMaxStart ? 0 : prev + 1);
   const testiPrev = () => setTestiStart(prev => prev <= 0 ? testiMaxStart : prev - 1);
 
+  const [heroPaused, setHeroPaused] = useState(false);
+
+  const heroSlides = [
+    { src: "/slider-4.png", alt: "Awantika Seeds Slider 1" },
+    { src: "/slider-5.png", alt: "Awantika Seeds Slider 2" },
+    { src: "/slider-6.png", alt: "Awantika Seeds Slider 3" }
+  ];
+
+  const handleHeroNext = () => {
+    setActiveSlide((prev) => (prev + 1) % heroSlides.length);
+  };
+
+  const handleHeroPrev = () => {
+    setActiveSlide((prev) => (prev <= 0 ? heroSlides.length - 1 : prev - 1));
+  };
+
+  const [heroTouchStart, setHeroTouchStart] = useState<number | null>(null);
+  const [heroTouchEnd, setHeroTouchEnd] = useState<number | null>(null);
+
+  const handleHeroTouchStart = (e: React.TouchEvent) => {
+    setHeroTouchEnd(null);
+    setHeroTouchStart(e.targetTouches[0].clientX);
+    setHeroPaused(true);
+  };
+
+  const handleHeroTouchMove = (e: React.TouchEvent) => {
+    setHeroTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleHeroTouchEnd = () => {
+    setHeroPaused(false);
+    if (!heroTouchStart || !heroTouchEnd) return;
+    const distance = heroTouchStart - heroTouchEnd;
+    const minSwipe = 40;
+    if (distance > minSwipe) {
+      handleHeroNext();
+    } else if (distance < -minSwipe) {
+      handleHeroPrev();
+    }
+  };
+
   // Auto-scroll hero slideshow
   useEffect(() => {
+    if (heroPaused) return;
     const slideTimer = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % 3);
-    }, 6000);
+      setActiveSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 4000);
     return () => clearInterval(slideTimer);
-  }, []);
+  }, [heroPaused, heroSlides.length]);
 
   // Countdown timer logic
   useEffect(() => {
@@ -213,18 +257,32 @@ export default function HomePage() {
     loadCategories();
   }, []);
 
-  const getCategoryImageUrl = (categoryName: string) => {
+  const getCategoryImageUrl = (categoryName: string, index: number = 0) => {
+    const lowerName = categoryName.toLowerCase();
+
+    // Prioritize explicit item-1.png / item-2.png mapping
+    if (categoryArt[categoryName]) {
+      return categoryArt[categoryName];
+    }
+    if (lowerName.includes("seed")) {
+      return "/item-2.png";
+    }
+    if (lowerName.includes("plant") || lowerName.includes("fruit") || lowerName.includes("flower") || lowerName.includes("tree")) {
+      return "/item-1.png";
+    }
+
     const dbCat = dbCategories.find(c => c.name.toLowerCase() === categoryName.toLowerCase());
     if (dbCat && dbCat.photo_urls) {
       try {
         const urls = JSON.parse(dbCat.photo_urls);
-        if (Array.isArray(urls) && urls.length > 0) return getMediaUrl(urls[0]);
-        if (typeof urls === 'string') return getMediaUrl(urls);
+        if (Array.isArray(urls) && urls.length > 0 && urls[0]) return getMediaUrl(urls[0]);
+        if (typeof urls === 'string' && urls) return getMediaUrl(urls);
       } catch {
-        return getMediaUrl(dbCat.photo_urls);
+        if (dbCat.photo_urls) return getMediaUrl(dbCat.photo_urls);
       }
     }
-    return categoryArt[categoryName] || "/assets/img/cate/c-1-1.png";
+    
+    return index % 2 === 0 ? "/item-1.png" : "/item-2.png";
   };
 
   const categoryList = useMemo(() => {
@@ -233,6 +291,7 @@ export default function HomePage() {
     // 1. Add from dbCategories: Only include categories that have direct products
     // OR have products and no child subcategories (leaf categories).
     // Exclude parent container categories that have 0 direct products and have subcategories.
+    let catIndex = 0;
     dbCategories.forEach((c) => {
       const directCount = Number(c.direct_product_count || 0);
       const totalCount = Number(c.product_count || 0);
@@ -244,7 +303,7 @@ export default function HomePage() {
         const cleanName = c.name.trim();
         const key = cleanName.toLowerCase();
         const pCount = directCount > 0 ? directCount : totalCount;
-        let imageUrl = getCategoryImageUrl(cleanName);
+        let imageUrl = getCategoryImageUrl(cleanName, catIndex++);
 
         categoryMap.set(key, {
           name: cleanName,
@@ -298,66 +357,54 @@ export default function HomePage() {
 
   return (
     <>
-      {/* ── Hero Slides Area (Awantika Seeds Content) ── */}
-      <section className="hero-style1">
-        <div className="hero-bg" style={{backgroundImage:'assets\img\bg\b-1-1' }}></div>
-        <div className="hero-leaf2 wow fadeInUp" data-wow-delay="1s">
-          <img src="/assets/img/hero/h-1-3.png" alt="hero leaf 2" />
-        </div>
-        <div className="hero-leaf3 wow fadeInUp" data-wow-delay="1.2s">
-          <img src="/assets/img/hero/h-1-4.png" alt="hero leaf 3" />
-        </div>
-        <div className="container" style={{ position: "relative" }}>
-          {[
-            { title: "High-Quality Plants & Saplings", text: "Premium organic saplings and custom-crafted fruit plants directly from our central nursery fields.", subtitle: "100% Certified Nursery Stock & Seeds.", img: "assets\\img\\hero\\h-1-1.png", imgAlt: "saplings" },
-            { title: "Pure & Certified Seeds Selection", text: "High-yield hybrid vegetable and flower seeds optimized for regional Indian soil conditions.", subtitle: "Tested for High Germination Rates.", img: "assets\\img\\hero\\h-1-22.png", imgAlt: "seeds display" },
-            { title: "Premium Nursery & Farm Supplies", text: "A complete range of organic garden soils, compost mixes, nutrients and planting assistance.", subtitle: "Direct Dispatch & Billing Ledger Support.", img: "assets\\img\\hero\\h-1-23.png", imgAlt: "nursery showcase" }
-          ].map((slide, idx) => (
+      {/* ── Hero Image Slider (Slider 1, 2, 3) ── */}
+      <section 
+        className="home-hero-slider" 
+        onMouseEnter={() => setHeroPaused(true)} 
+        onMouseLeave={() => setHeroPaused(false)}
+        onTouchStart={handleHeroTouchStart}
+        onTouchMove={handleHeroTouchMove}
+        onTouchEnd={handleHeroTouchEnd}
+      >
+        <div className="home-hero-slider-track">
+          {heroSlides.map((slide, idx) => (
             <div
               key={idx}
-              className="row gy-4 justify-content-between align-items-center"
-              style={{
-                opacity: activeSlide === idx ? 1 : 0,
-                visibility: activeSlide === idx ? "visible" : "hidden",
-                transition: "opacity 0.6s ease, visibility 0.6s ease",
-                position: activeSlide === idx ? "relative" : "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                pointerEvents: activeSlide === idx ? "auto" : "none"
-              }}
+              className={`hero-slide-item ${activeSlide === idx ? "active" : ""}`}
             >
-              <div className="col-xxl-6 col-xl-6 col-lg-8 mx-auto">
-                <div className="hero-content">
-                  <h1 className="hero-title">{slide.title}</h1>
-                  <p className="hero-text">{slide.text}</p>
-                  <span className="hero-subtitle">
-                    <img src="/assets/img/icons/i-1-1.png" alt="icon" />
-                    {slide.subtitle}
-                  </span>
-                  <div className="d-flex">
-                    <Link href="/products" className="vs-btn style1">Start Shopping<i className="fas fa-long-arrow-right"></i></Link>
-                  </div>
-                </div>
-              </div>
-              <div className="col-xxl-auto col-xl-6 col-lg-8 mx-auto">
-                <div className="hero-img">
-                  <div className="circle">
-                  <img src={slide.img} alt={slide.imgAlt} />
-                  </div>
-                </div>
-              </div>
+              <img src={slide.src} alt={slide.alt} className="hero-slide-img" />
             </div>
           ))}
         </div>
 
-        {/* Manual Slides Select */}
-        <div className="category-dots" style={{ position: "absolute", bottom: "20px", left: "50%", transform: "translateX(-50%)" }}>
-          {[0, 1, 2].map((idx) => (
+        {/* Previous Button */}
+        <button
+          type="button"
+          className="hero-slider-nav-btn hero-slider-prev"
+          onClick={handleHeroPrev}
+          aria-label="Previous Slide"
+        >
+          <ChevronLeft size={24} />
+        </button>
+
+        {/* Next Button */}
+        <button
+          type="button"
+          className="hero-slider-nav-btn hero-slider-next"
+          onClick={handleHeroNext}
+          aria-label="Next Slide"
+        >
+          <ChevronRight size={24} />
+        </button>
+
+        {/* Pagination Dots */}
+        <div className="hero-slider-dots">
+          {heroSlides.map((_, idx) => (
             <button
               key={idx}
-              className={`category-dot ${idx === activeSlide ? "active" : ""}`}
+              className={`hero-slider-dot ${idx === activeSlide ? "active" : ""}`}
               onClick={() => setActiveSlide(idx)}
+              aria-label={`Go to slide ${idx + 1}`}
             />
           ))}
         </div>
@@ -376,160 +423,67 @@ export default function HomePage() {
             </div>
           </div>
           <div style={{ marginTop: "30px" }}>
-            {isCategorySlider ? (
-              <div className="category-slider-wrap" style={{ position: "relative" }}>
-                <div style={{ overflow: "hidden" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      transition: "transform 0.4s ease",
-                      transform: `translateX(-${categoryIndex * 100}%)`,
-                      marginTop: "1rem",
-                      marginBottom: "1rem",
-                      
-                    }}
-                  >
-                    {categoryList.map((cat) => (
-                      <div key={cat.name} style={{ flex: "0 0 100%", padding: "0 6px" }}>
-                        <Link href={`/products?category=${encodeURIComponent(cat.name)}`} style={{ textDecoration: "none" }}>
-                          <div
-                            className="category-card"
-                            style={{
-                              position: "relative",
-                              borderRadius: "20px",
-                              overflow: "hidden",
-                              backgroundColor: "#fff",
-                              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
-                              transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-                              cursor: "pointer",
-                              height: "90%",
-                              border: "2px solid transparent",padding: "12"
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.transform = "translateY(-8px) scale(1.01)";
-                              e.currentTarget.style.boxShadow = "0 20px 50px rgba(45, 80, 22, 0.2)";
-                              e.currentTarget.style.borderColor = "var(--brand)";
-                              const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
-                              if (img) img.style.transform = "scale(1.08) rotate(1deg)";
-                              const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
-                              if (overlay) overlay.style.opacity = "1";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.transform = "translateY(0) scale(1)";
-                              e.currentTarget.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.08)";
-                              e.currentTarget.style.borderColor = "transparent";
-                              const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
-                              if (img) img.style.transform = "scale(1) rotate(0deg)";
-                              const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
-                              if (overlay) overlay.style.opacity = "0";
-                            }}
-                          >
-                            <div style={{ position: "relative", width: "100%", height: "165px", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
-                              <img src={cat.image} alt={cat.name} className="category-img" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }} />
-                              <div className="category-overlay" style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(45, 80, 22, 0) 0%, rgba(45, 80, 22, 0.6) 100%)", opacity: 0, transition: "opacity 0.5s ease", zIndex: 1 }} />
-                              <div style={{ position: "absolute", top: "13px", right: "7px", background: "linear-gradient(135deg, var(--brand) 0%, #4a7c2e 100%)", color: "#fff", padding: "6px 14px", borderRadius: "25px", fontSize: "12px", fontWeight: "700", boxShadow: "0 4px 12px rgba(45, 80, 22, 0.4)", zIndex: 2 }}>
-                                {cat.count} {cat.count === 1 ? "Item" : "Items"}
-                              </div>
-                            </div>
-                            <div style={{ padding: "10px 16px", background: "linear-gradient(180deg, #ffffff 0%, #fafbfa 100%)" ,marginBottom: "2rem"}}>
-                              <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#2d5016", marginBottom: "8px", textAlign: "center", lineHeight: "1.3", letterSpacing: "-0.5px", textTransform: "capitalize" }}>
-                                {cat.name}
-                              </h3>
-                              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "8px" }}>
-                                <div style={{ width: "30px", height: "2px", background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)" }}></div>
-                                <span style={{ fontSize: "12px", color: "#6b8e23", fontWeight: "600", textTransform: "uppercase", letterSpacing: "1px" }}>
-                                  Explore
-                                </span>
-                                <div style={{ width: "30px", height: "2px", background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)" }}></div>
-                              </div>
-                            </div>
-                            <div style={{ position: "absolute", bottom: 0, left: 0, width: "60px", height: "60px", background: "linear-gradient(135deg, var(--brand) 0%, transparent 100%)", opacity: 0.05, borderRadius: "0 60px 0 0" }}></div>
-                          </div>
-                        </Link>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <button className="category-nav-btn prev" aria-label="Previous category" onClick={categoryPrev}>
-                  <ChevronLeft size={18} />
-                </button>
-                <button className="category-nav-btn next" aria-label="Next category" onClick={categoryNext}>
-                  <ChevronRight size={18} />
-                </button>
-                <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "16px" }}>
-                  {categoryList.map((cat, idx) => (
-                    <button
-                      key={cat.name}
-                      onClick={() => setCategoryIndex(idx)}
-                      aria-label={`Go to ${cat.name}`}
-                      style={{ width: "10px", height: "10px", borderRadius: "999px", border: "none", background: idx === categoryIndex ? "var(--brand)" : "#d8e6cf", cursor: "pointer" }}
-                    />
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="row g-4 justify-content-center">
-                {categoryList.map((cat) => (
-                  <div className="col-lg-3 col-md-4 col-sm-6 col-6" key={cat.name}>
-                    <Link href={`/products?category=${encodeURIComponent(cat.name)}`} style={{ textDecoration: "none" }}>
-                      <div
-                        className="category-card"
-                        style={{
-                          position: "relative",
-                          borderRadius: "20px",
-                          overflow: "hidden",
-                          backgroundColor: "#fff",
-                          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
-                          transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-                          cursor: "pointer",
-                          height: "100%",
-                          border: "2px solid transparent"
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = "translateY(-12px) scale(1.02)";
-                          e.currentTarget.style.boxShadow = "0 20px 50px rgba(45, 80, 22, 0.2)";
-                          e.currentTarget.style.borderColor = "var(--brand)";
-                          const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
-                          if (img) img.style.transform = "scale(1.15) rotate(2deg)";
-                          const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
-                          if (overlay) overlay.style.opacity = "1";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = "translateY(0) scale(1)";
-                          e.currentTarget.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.08)";
-                          e.currentTarget.style.borderColor = "transparent";
-                          const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
-                          if (img) img.style.transform = "scale(1) rotate(0deg)";
-                          const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
-                          if (overlay) overlay.style.opacity = "0";
-                        }}
-                      >
-                        <div style={{ position: "relative", width: "100%", height: "170px", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
-                          <img src={cat.image} alt={cat.name} className="category-img" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }} />
-                          <div className="category-overlay" style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(45, 80, 22, 0) 0%, rgba(45, 80, 22, 0.6) 100%)", opacity: 0, transition: "opacity 0.5s ease", zIndex: 1 }} />
-                          <div style={{ position: "absolute", top: "10px", right: "7px", background: "linear-gradient(135deg, var(--brand) 0%, #4a7c2e 100%)", color: "#fff", padding: "6px 14px", borderRadius: "25px", fontSize: "12px", fontWeight: "700", boxShadow: "0 4px 12px rgba(45, 80, 22, 0.4)", zIndex: 2 }}>
-                            {cat.count} {cat.count === 1 ? "Item" : "Items"}
-                          </div>
+            <div className="row g-3 g-md-4 justify-content-center">
+              {categoryList.map((cat) => (
+                <div className="col-lg-3 col-md-4 col-sm-6 col-6" key={cat.name}>
+                  <Link href={`/products?category=${encodeURIComponent(cat.name)}`} style={{ textDecoration: "none" }}>
+                    <div
+                      className="category-card"
+                      style={{
+                        position: "relative",
+                        borderRadius: "20px",
+                        overflow: "hidden",
+                        backgroundColor: "#fff",
+                        boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
+                        transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                        cursor: "pointer",
+                        height: "100%",
+                        border: "2px solid transparent"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-8px) scale(1.02)";
+                        e.currentTarget.style.boxShadow = "0 20px 50px rgba(45, 80, 22, 0.2)";
+                        e.currentTarget.style.borderColor = "var(--brand)";
+                        const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
+                        if (img) img.style.transform = "scale(1.1) rotate(1deg)";
+                        const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
+                        if (overlay) overlay.style.opacity = "1";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "translateY(0) scale(1)";
+                        e.currentTarget.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.08)";
+                        e.currentTarget.style.borderColor = "transparent";
+                        const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
+                        if (img) img.style.transform = "scale(1) rotate(0deg)";
+                        const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
+                        if (overlay) overlay.style.opacity = "0";
+                      }}
+                    >
+                      <div style={{ position: "relative", width: "100%", height: "165px", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
+                        <img src={cat.image} alt={cat.name} className="category-img" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }} />
+                        <div className="category-overlay" style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(45, 80, 22, 0) 0%, rgba(45, 80, 22, 0.6) 100%)", opacity: 0, transition: "opacity 0.5s ease", zIndex: 1 }} />
+                        <div className="category-item-badge">
+                          {cat.count} {cat.count === 1 ? "Item" : "Items"}
                         </div>
-                        <div style={{ padding: "20px 16px", background: "linear-gradient(180deg, #ffffff 0%, #fafbfa 100%)" }}>
-                          <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#2d5016", marginBottom: "8px", textAlign: "center", lineHeight: "1.3", letterSpacing: "-0.5px", textTransform: "capitalize" }}>
-                            {cat.name}
-                          </h3>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "8px" }}>
-                            <div style={{ width: "30px", height: "2px", background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)" }}></div>
-                            <span style={{ fontSize: "12px", color: "#6b8e23", fontWeight: "600", textTransform: "uppercase", letterSpacing: "1px" }}>
-                              Explore
-                            </span>
-                            <div style={{ width: "30px", height: "2px", background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)" }}></div>
-                          </div>
-                        </div>
-                        <div style={{ position: "absolute", bottom: 0, left: 0, width: "60px", height: "60px", background: "linear-gradient(135deg, var(--brand) 0%, transparent 100%)", opacity: 0.05, borderRadius: "0 60px 0 0" }}></div>
                       </div>
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            )}
+                      <div style={{ padding: "16px 12px", background: "linear-gradient(180deg, #ffffff 0%, #fafbfa 100%)" }}>
+                        <h3 style={{ fontSize: "16px", fontWeight: "800", color: "#2d5016", marginBottom: "6px", textAlign: "center", lineHeight: "1.3", letterSpacing: "-0.3px", textTransform: "capitalize" }}>
+                          {cat.name}
+                        </h3>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", marginTop: "6px" }}>
+                          <div style={{ width: "24px", height: "2px", background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)" }}></div>
+                          <span style={{ fontSize: "11px", color: "#6b8e23", fontWeight: "600", textTransform: "uppercase", letterSpacing: "1px" }}>
+                            Explore
+                          </span>
+                          <div style={{ width: "24px", height: "2px", background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)" }}></div>
+                        </div>
+                      </div>
+                      <div style={{ position: "absolute", bottom: 0, left: 0, width: "60px", height: "60px", background: "linear-gradient(135deg, var(--brand) 0%, transparent 100%)", opacity: 0.05, borderRadius: "0 60px 0 0" }}></div>
+                    </div>
+                  </Link>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

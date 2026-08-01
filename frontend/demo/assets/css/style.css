@@ -3007,7 +3007,7 @@ textarea.is-invalid {
 .social-links {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 10px;
 }
 
 .social-links .links-title {

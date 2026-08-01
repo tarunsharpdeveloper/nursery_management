@@ -36,6 +36,30 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
       try {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
+
+        // Validate token with backend /api/auth/me
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+        fetch(`${apiUrl}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${storedToken}` }
+        })
+          .then(async (res) => {
+            if (res.status === 401) {
+              // Token expired or invalid: clear session
+              localStorage.removeItem("customer_token");
+              localStorage.removeItem("customer_user");
+              setToken(null);
+              setUser(null);
+            } else if (res.ok) {
+              const data = await res.json().catch(() => null);
+              if (data?.user) {
+                setUser(data.user);
+                localStorage.setItem("customer_user", JSON.stringify(data.user));
+              }
+            }
+          })
+          .catch((err) => {
+            console.error("Failed to verify token with backend:", err);
+          });
       } catch (e) {
         console.error("Failed to parse stored user:", e);
       }

@@ -54,7 +54,7 @@ async function toggleFavorite(req, res, { readJson, sendJson }) {
   console.log("POST /api/favorites/toggle called for userId:", userId || "Guest", "productId:", productId);
 
   if (!userId) {
-    sendJson(res, 200, {
+    sendJson(res, 401, {
       isFavorite: false,
       message: "Please login to add items to your favourites!",
       favoriteIds: []

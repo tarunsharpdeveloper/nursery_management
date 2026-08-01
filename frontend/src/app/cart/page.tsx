@@ -5,6 +5,7 @@ import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import { getMediaUrl } from "@/lib/api";
 import { Heart } from "lucide-react";
+import { ProductReviewSummary } from "@/components/ProductReviewSummary";
 import "@/styles/mobile-cart.css";
 
 const DEFAULT_IMG =
@@ -94,6 +95,9 @@ export default function CartPage() {
                                   <Link className="cart-productname" href={`/products/${item.id}`}>
                                     {item.name}
                                   </Link>
+                                  <div style={{ marginTop: "2px", marginBottom: "2px" }}>
+                                    <ProductReviewSummary productId={item.id} rating={item.average_rating} totalReviews={item.total_reviews} />
+                                  </div>
                                   <span>{item.category}</span>
                                 </div>
                               </div>
@@ -296,13 +300,7 @@ export default function CartPage() {
 
             {/* Rating */}
             <div className="mobile-cart-rating">
-              <span className="mobile-cart-stars">
-                ★★★★★
-              </span>
-
-              <span className="mobile-cart-reviews">
-                (120)
-              </span>
+              <ProductReviewSummary productId={item.id} rating={item.average_rating} totalReviews={item.total_reviews} />
             </div>
 
             {/* Price */}
@@ -601,8 +599,30 @@ export default function CartPage() {
         .cart_table .cart-productname {
           font-size: 15px !important;
         }
-        .cart_table .cart_item__des span {
+        .cart_table .cart_item__des > span {
           font-size: 12px !important;
+        }
+        .cart_table .cart_item__des {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 4px !important;
+        }
+        .cart_table .product-review-summary {
+          display: inline-flex !important;
+          flex-direction: row !important;
+          align-items: center !important;
+          gap: 6px !important;
+          margin: 2px 0 !important;
+        }
+        .cart_table .product-review-stars {
+          display: inline-flex !important;
+          flex-direction: row !important;
+          align-items: center !important;
+          gap: 2px !important;
+        }
+        .cart_table .product-review-stars span,
+        .cart_table .product-review-summary span {
+          display: inline-block !important;
         }
         .cart_table .amount {
           font-size: 15px !important;

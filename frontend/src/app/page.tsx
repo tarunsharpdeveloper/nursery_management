@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { X, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiRequest, getMediaUrl } from "@/lib/api";
@@ -72,6 +72,54 @@ const categoryArt: Record<string, string> = {
   "Plants": "/item-1.png",
   "Seeds": "/item-2.png"
 };
+
+// ── Animated Counter Component (Starts on Scroll Into View) ──────────────────
+function AnimatedCounter({ end, duration = 2200, suffix = "" }: { end: number; duration?: number; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setHasStarted(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!hasStarted) return;
+
+    let startTimestamp: number | null = null;
+    let animationFrameId: number;
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const easeOutProgress = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(easeOutProgress * end));
+
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(step);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [hasStarted, end, duration]);
+
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
+}
 
 export default function HomePage() {
   const { addToCart } = useCart();
@@ -410,6 +458,29 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Trust Accent Banner Strip ── */}
+      <div className="hero-trust-bar">
+        <div className="hero-trust-single-line">
+          <span className="trust-text-item">
+            <span>🌱</span>
+            <span className="d-none d-md-inline">100% Organically Grown Saplings</span>
+            <span className="d-inline d-md-none">100% Organic Saplings</span>
+          </span>
+          <span className="trust-dot">•</span>
+          <span className="trust-text-item">
+            <span>✨</span>
+            <span className="d-none d-md-inline">High-Yield Certified Seeds</span>
+            <span className="d-inline d-md-none">Certified Seeds</span>
+          </span>
+          <span className="trust-dot">•</span>
+          <span className="trust-text-item">
+            <span>📍</span>
+            <span className="d-none d-md-inline">Direct From Ujjain Nursery</span>
+            <span className="d-inline d-md-none">Direct From Ujjain</span>
+          </span>
+        </div>
+      </div>
+
       {/* ── Category Showcase (Dynamic Catalog Categories) ── */}
       <section className="cate space-top space-extra-bottom">
         <div className="container">
@@ -523,6 +594,63 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+
+          {/* Trust Statistics Section */}
+          <div className="home-stats-section">
+            <div className="row g-3 g-md-4 justify-content-center">
+              <div className="col-6 col-lg-3">
+                <div className="stat-card">
+                  <div className="stat-icon-wrapper">
+                    <img src="/assets/img/icons/feature-1-1.png" alt="saplings" />
+                  </div>
+                  <div className="stat-number-wrap">
+                    <AnimatedCounter end={50000} suffix="+" />
+                  </div>
+                  <div className="stat-title">Saplings Dispatched</div>
+                  <div className="stat-subtext">Across India &amp; MP</div>
+                </div>
+              </div>
+
+              <div className="col-6 col-lg-3">
+                <div className="stat-card">
+                  <div className="stat-icon-wrapper">
+                    <img src="/assets/img/icons/feature-1-3.png" alt="germination" />
+                  </div>
+                  <div className="stat-number-wrap">
+                    <AnimatedCounter end={98} suffix="%" />
+                  </div>
+                  <div className="stat-title">Germination Rate</div>
+                  <div className="stat-subtext">Certified Lab Tested</div>
+                </div>
+              </div>
+
+              <div className="col-6 col-lg-3">
+                <div className="stat-card">
+                  <div className="stat-icon-wrapper">
+                    <img src="/assets/img/icons/feature-1-4.png" alt="experience" />
+                  </div>
+                  <div className="stat-number-wrap">
+                    <AnimatedCounter end={15} suffix="+ Yrs" />
+                  </div>
+                  <div className="stat-title">Nursery Experience</div>
+                  <div className="stat-subtext">Trusted Farming Heritage</div>
+                </div>
+              </div>
+
+              <div className="col-6 col-lg-3">
+                <div className="stat-card">
+                  <div className="stat-icon-wrapper">
+                    <img src="/assets/img/icons/feature-1-2.png" alt="organic" />
+                  </div>
+                  <div className="stat-number-wrap">
+                    <AnimatedCounter end={100} suffix="%" />
+                  </div>
+                  <div className="stat-title">Certified Organic</div>
+                  <div className="stat-subtext">Zero Harmful Chemicals</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -605,13 +733,13 @@ export default function HomePage() {
       <section className="space-top space-extra-bottom overflow-hidden">
         <div className="container">
           <div className="row justify-content-between align-items-center">
-            <div className="col-xl-7 col-lg-8">
+            <div className="col-xl-7 col-lg-8 text-center text-lg-start">
               <div className="title-area">
                 <span className="sec-subtitle">What Makes Us Different?</span>
                 <h2 className="sec-title">What Makes Awantika Seeds Different?</h2>
               </div>
             </div>
-            <div className="col-auto center-feature">
+            <div className="col-12 col-lg-auto center-feature text-center">
               <div className="call-card">
                 <div className="call-card__content">
                   <span className="call-card__title">Need Help?</span>

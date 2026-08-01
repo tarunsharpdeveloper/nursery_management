@@ -5,7 +5,7 @@ export default function ShippingPolicyPage() {
     <div className="main-content">
       {/* Page Header */}
       <div className="breadcumb-wrapper" style={{ 
-        backgroundImage: "url('https://images.unsplash.com/photo-1493673272479-a20888bcee10?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZGFyayUyMHBsYW50fGVufDB8fDB8fHww')",
+        backgroundImage: "url('https://img.freepik.com/free-photo/pot-with-young-monstera-with-deep-cuts-droplets-water-after-spraying-tropical-liana-dark-background-growing-tropical-plants-home-office_166373-9133.jpg?semt=ais_hybrid&w=740&q=80')",
         backgroundSize: "cover",
         backgroundPosition: "center"
       }}>

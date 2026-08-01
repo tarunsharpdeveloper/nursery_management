@@ -9192,6 +9192,8 @@ blockquote.vs-quote .quote-author {
   line-height: 32px;
   margin-bottom: 35px;
   padding-right: 36px;
+  text-align: center;
+
 }
 
 @media (max-width: 1399px) {

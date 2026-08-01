@@ -31,20 +31,20 @@ export const metadata: Metadata = {
   description: "Premium plants and seeds — Ujjain, Madhya Pradesh",
   icons: {
     icon: [
-      { url: "/logo.png", sizes: "any" },
-      { url: "/logo.png", sizes: "16x16", type: "image/png" },
-      { url: "/logo.png", sizes: "32x32", type: "image/png" },
-      { url: "/logo.png", sizes: "64x64", type: "image/png" },
-      { url: "/logo.png", sizes: "128x128", type: "image/png" },
-      { url: "/logo.png", sizes: "256x256", type: "image/png" }
+      { url: "/avntika-favicon.png", sizes: "any" },
+      { url: "/avntika-favicon.png", sizes: "16x16", type: "image/png" },
+      { url: "/avntika-favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/avntika-favicon.png", sizes: "64x64", type: "image/png" },
+      { url: "/avntika-favicon.png", sizes: "128x128", type: "image/png" },
+      { url: "/avntika-favicon.png", sizes: "256x256", type: "image/png" }
     ],
-    shortcut: "/logo.png",
+    shortcut: "/avntika-favicon.png",
     apple: [
-      { url: "/logo.png", sizes: "120x120" },
-      { url: "/logo.png", sizes: "152x152" },
-      { url: "/logo.png", sizes: "167x167" },
-      { url: "/logo.png", sizes: "180x180" },
-      { url: "/logo.png", sizes: "192x192" }
+      { url: "/avntika-favicon.png", sizes: "120x120" },
+      { url: "/avntika-favicon.png", sizes: "152x152" },
+      { url: "/avntika-favicon.png", sizes: "167x167" },
+      { url: "/avntika-favicon.png", sizes: "180x180" },
+      { url: "/avntika-favicon.png", sizes: "192x192" }
     ]
   }
 };
@@ -60,8 +60,8 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <link rel="stylesheet" href="/assets/css/slick.min.css" />
         <link rel="stylesheet" href="/assets/css/jquery-ui.min.css" />
         <link rel="stylesheet" href="/assets/css/style.css" />
-        <link rel="icon" href="/logo.png" type="image/png" sizes="256x256" />
-        <link rel="apple-touch-icon" href="/logo.png" sizes="192x192" />
+        <link rel="icon" href="/avntika-favicon.png" type="image/png" sizes="256x256" />
+        <link rel="apple-touch-icon" href="/avntika-favicon.png" sizes="192x192" />
         <meta name="theme-color" content="#2d5016" />
       </head>
       <body suppressHydrationWarning>

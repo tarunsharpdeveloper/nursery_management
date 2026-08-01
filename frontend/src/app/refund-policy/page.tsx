@@ -5,7 +5,9 @@ export default function RefundPolicyPage() {
     <div className="main-content">
       {/* Page Header */}
       <div className="breadcumb-wrapper" style={{ 
-        backgroundImage: "url('https://www.shutterstock.com/image-photo/hand-holding-young-plant-on-260nw-1554603536.jpg')",backgroundSize: "cover", backgroundPosition: "center"
+        backgroundImage: "url('https://img.freepik.com/free-photo/pot-with-young-monstera-with-deep-cuts-droplets-water-after-spraying-tropical-liana-dark-background-growing-tropical-plants-home-office_166373-9133.jpg?semt=ais_hybrid&w=740&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center"
       }}>
         <div className="container">
           <div className="breadcumb-content">

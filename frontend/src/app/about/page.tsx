@@ -20,7 +20,7 @@ export default function AboutPage() {
   return (
     <main>
       {/* breadcumb */}
-      <section className="z-index-common breadcumb-wrapper" style={{ backgroundImage: "url('https://t3.ftcdn.net/jpg/03/61/44/76/360_F_361447601_xgUiLE3tNHW7sdI01beMHPTp2VPzTL8G.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
+      <section className="z-index-common breadcumb-wrapper" style={{ backgroundImage: "url('https://img.freepik.com/free-photo/pot-with-young-monstera-with-deep-cuts-droplets-water-after-spraying-tropical-liana-dark-background-growing-tropical-plants-home-office_166373-9133.jpg?semt=ais_hybrid&w=740&q=80')", backgroundSize: "cover", backgroundPosition: "center" }}>
         <div className="container">
           <div className="row justify-content-between align-items-center">
             <div className="col-auto">

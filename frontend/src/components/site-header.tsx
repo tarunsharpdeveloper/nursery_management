@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Facebook, Heart, Instagram, Leaf, LogIn, LogOut, Menu, Search, ShoppingCart, User, X } from "lucide-react";
-import logo from "@/assets/images/logo.jpeg";
+import logo from "@/assets/images/avntika-logo-wbg.png";
 import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { useFavorites } from "@/context/FavoritesContext";
@@ -56,15 +56,15 @@ export function SiteHeader() {
       </div>
 
       {/* Main navigation — Cannabo-style */}
-      <nav className="nav">
+      <nav className="nav site-header-nav" style={{ flexWrap: "nowrap" }}>
         <div className="nav-inner">
           {/* Left: Logo */}
           <Link className="brand" href="/">
             <Image
               src={logo}
               alt="Shri Saniya Hi-Tech Nursery (Awantika Seeds)"
-              width={300}
-              height={105}
+              width={700}
+              height={160}
               className="brand-logo-img"
               priority
             />

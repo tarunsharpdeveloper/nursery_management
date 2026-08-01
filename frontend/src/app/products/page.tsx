@@ -600,14 +600,17 @@ export default function ProductsPage() {
                     <div style={{ display: "flex", justifyContent: "center", marginTop: "20px", marginBottom: "20px" }}>
                       <button
                         onClick={loadMoreProducts}
-                        className="vs-btn"
+                        className=""
                         style={{
-                          padding: "14px 40px",
-                          fontSize: "16px",
-                          fontWeight: 600,
+                          padding: "10px 30px",
+                          fontSize: "14px",
+                          fontWeight: 700,
                           borderRadius: "10px",
-                          minWidth: "200px",
-                          cursor: "pointer"
+                          minWidth: "100px",
+                          cursor: "pointer",
+                          background:'#47b32d',
+                          color:'white',
+                          border:'0px solid #47b32d'
                         }}
                       >
                         Load More Products

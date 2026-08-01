@@ -61,6 +61,9 @@ export function TermsAndConditionsModal({
         style={{
           maxWidth: "560px",
           width: "92%",
+          maxHeight: "85vh",
+          display: "flex",
+          flexDirection: "column",
           borderRadius: "18px",
           padding: "0",
           overflow: "hidden",
@@ -68,6 +71,7 @@ export function TermsAndConditionsModal({
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
           background: "#ffffff",
           animation: "modalFadeIn 0.25s ease-out",
+          margin: "auto",
         }}
       >
         {/* Header */}
@@ -75,8 +79,9 @@ export function TermsAndConditionsModal({
           style={{
             background: "linear-gradient(135deg, #1e3a10 0%, #2d5016 100%)",
             color: "#ffffff",
-            padding: "24px 28px",
+            padding: "20px 24px",
             position: "relative",
+            flexShrink: 0,
           }}
         >
           <button
@@ -144,16 +149,22 @@ export function TermsAndConditionsModal({
         </div>
 
         {/* Content Body */}
-        <div style={{ padding: "24px 28px", backgroundColor: "#fafdf8" }}>
+        <div
+          style={{
+            padding: "20px 24px",
+            backgroundColor: "#fafdf8",
+            flex: "1 1 auto",
+            overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           <div
             style={{
               display: "flex",
               flexDirection: "column",
               gap: "12px",
-              marginBottom: "22px",
-              maxHeight: "300px",
-              overflowY: "auto",
-              paddingRight: "6px",
+              marginBottom: "18px",
             }}
           >
             {config.points.map((point, index) => (
@@ -248,13 +259,14 @@ export function TermsAndConditionsModal({
         {/* Footer Actions */}
         <div
           style={{
-            padding: "16px 28px",
+            padding: "16px 24px",
             backgroundColor: "#ffffff",
             borderTop: "1px solid #f1f5f9",
             display: "flex",
             justifyContent: "flex-end",
             alignItems: "center",
             gap: "12px",
+            flexShrink: 0,
           }}
         >
           <button
@@ -324,6 +336,14 @@ export function TermsAndConditionsModal({
           to {
             opacity: 1;
             transform: scale(1);
+          }
+        }
+
+        @media (max-width: 576px) {
+          .modal-content {
+            width: 95% !important;
+            max-height: 90vh !important;
+            border-radius: 14px !important;
           }
         }
       `}</style>

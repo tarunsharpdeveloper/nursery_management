@@ -280,7 +280,7 @@ export default function ProductDetailsClient({
       <main>
         <section
           className="z-index-common breadcumb-wrapper"
-          style={{ backgroundImage: "url('https://img.magnific.com/premium-photo/blurred-background-garden-center-interior_841543-65637.jpg?semt=ais_hybrid&w=740&q=80')" }}
+          style={{ backgroundImage: "url('https://img.freepik.com/free-photo/pot-with-young-monstera-with-deep-cuts-droplets-water-after-spraying-tropical-liana-dark-background-growing-tropical-plants-home-office_166373-9133.jpg?semt=ais_hybrid&w=740&q=80')", backgroundSize: "cover", backgroundPosition: "center" }}
         >
           <div className="container">
             <div className="breadcumb-content">
@@ -307,7 +307,7 @@ export default function ProductDetailsClient({
       <main>
         <section
           className="z-index-common breadcumb-wrapper"
-          style={{ backgroundImage: "url('https://img.magnific.com/premium-photo/blurred-background-garden-center-interior_841543-65637.jpg?semt=ais_hybrid&w=740&q=80')" }}
+          style={{ backgroundImage: "url('https://img.freepik.com/free-photo/pot-with-young-monstera-with-deep-cuts-droplets-water-after-spraying-tropical-liana-dark-background-growing-tropical-plants-home-office_166373-9133.jpg?semt=ais_hybrid&w=740&q=80')", backgroundSize: "cover", backgroundPosition: "center" }}
         >
           <div className="container">
             <div className="breadcumb-content">
@@ -381,7 +381,7 @@ export default function ProductDetailsClient({
       {/* ── Breadcrumb ── */}
       <section
         className="z-index-common breadcumb-wrapper"
-        style={{ backgroundImage: "url('https://img.magnific.com/premium-photo/blurred-background-garden-center-interior_841543-65637.jpg?semt=ais_hybrid&w=740&q=80')", backgroundSize: "cover", backgroundPosition: "center" }}
+        style={{ backgroundImage: "url('https://img.freepik.com/free-photo/pot-with-young-monstera-with-deep-cuts-droplets-water-after-spraying-tropical-liana-dark-background-growing-tropical-plants-home-office_166373-9133.jpg?semt=ais_hybrid&w=740&q=80')", backgroundSize: "cover", backgroundPosition: "center" }}
       >
         <div className="container">
           <div className="row justify-content-between align-items-center">

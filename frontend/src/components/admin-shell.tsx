@@ -125,7 +125,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <aside className="sidebar">
         <div className="sidebar-brand">
           <div className="sidebar-brand-icon" style={{ background: "transparent", padding: 0, display: "flex", alignItems: "center" }}>
-            <img src="/awantika-logo.png" alt="Awantika Logo" style={{ height: "48px", width: "auto", objectFit: "contain", borderRadius: "6px" }} />
+            <img src="/avntika-favicon.png" alt="Awantika Logo" style={{ height: "42px", width: "42px", objectFit: "contain", borderRadius: "8px" }} />
           </div>
           <div className="sidebar-label">
             <h3>Admin Portal</h3>

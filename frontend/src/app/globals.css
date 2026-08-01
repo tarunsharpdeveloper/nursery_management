@@ -74,7 +74,7 @@ textarea:focus-visible {
   font-weight: 500;
   position: sticky;
   top: 0;
-  z-index: 21;
+  z-index: 101;
 }
 .section-heading {
     color: #fff;
@@ -159,13 +159,19 @@ textarea:focus-visible {
 /* â”€â”€ Main Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .nav {
   background: #ffffff;
-  min-height: 115px;
+  height: 105px;
+  /* min-height: 115px; */
   padding: 0 clamp(16px, 3vw, 48px);
   position: sticky;
-  top: 35px;
-  z-index: 20;
+  top: 44px;
+  z-index: 100;
   display: flex;
   align-items: center;
+}
+
+.site-header-nav {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid rgba(47, 107, 63, 0.12);
 }
 
 .nav-inner {
@@ -189,13 +195,12 @@ textarea:focus-visible {
 }
 
 .brand-logo-img {
-  border-radius: 8px;
   display: block;
   flex-shrink: 0;
-  height: 85px;
-  max-height: 90px;
+  height: 120px;
+  max-height: 135px;
   width: auto;
-  max-width: 260px;
+  max-width: 480px;
   object-fit: contain;
   transition: all 0.3s ease;
 }
@@ -205,9 +210,9 @@ textarea:focus-visible {
     margin-left: 0.25rem;
   }
   .brand-logo-img {
-    height: 60px;
-    max-height: 65px;
-    max-width: 180px;
+    height: 80px;
+    max-height: 90px;
+    max-width: 300px;
   }
 }
 
@@ -3680,6 +3685,8 @@ tbody tr:hover {
     font-size: 12px;
     gap: 8px;
     padding: 6px 16px;
+    position: relative;
+    top: auto;
   }
 
   .nav {
@@ -3687,8 +3694,15 @@ tbody tr:hover {
     gap: 0;
     min-height: auto;
     padding: 12px 19px;
-    position: static;
-    top: auto;
+    height: 60px !important;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .site-header-nav {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid rgba(47, 107, 63, 0.12);
   }
 
   .brand {
@@ -9226,7 +9240,7 @@ body.mobile-menu-open {
 
 @media (max-width: 768px) {
   /* Fix header horizontal scroll by scaling down elements on mobile */
-  .nav { padding: 0 8px !important; min-height: 80px !important; }
+  .nav { padding: 0 8px !important; min-height: 65px !important; }
   .nav-inner { gap: 6px !important; }
   .brand { margin-left: 0 !important; white-space: normal !important; }
   .brand-logo-img { height: 65px !important; max-height: 70px !important; width: auto !important; max-width: 210px !important; }
@@ -9235,3 +9249,491 @@ body.mobile-menu-open {
   .nav-icon-btn, .nav-hamburger { width: 32px !important; height: 32px !important; min-height: 32px !important; padding: 0 !important; }
   .nav-icon-btn svg, .nav-hamburger svg { width: 16px !important; height: 16px !important; }
 }
+
+/* ── Global Breadcrumb Hero Banner Image ── */
+.breadcumb-wrapper {
+  background-image: url('https://img.freepik.com/free-photo/pot-with-young-monstera-with-deep-cuts-droplets-water-after-spraying-tropical-liana-dark-background-growing-tropical-plants-home-office_166373-9133.jpg?semt=ais_hybrid&w=740&q=80') !important;
+  background-size: cover !important;
+  background-position: center !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ── Home Page Visual & Animation Enhancements ────────────────────────────────
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@keyframes subtleFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes pulseGlowRing {
+  0% { box-shadow: 0 0 0 0 rgba(140, 198, 63, 0.5); }
+  70% { box-shadow: 0 0 0 12px rgba(140, 198, 63, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(140, 198, 63, 0); }
+}
+
+/* Glassmorphic Trust Badge on Hero */
+.hero-glass-badge {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  background: rgba(15, 28, 12, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(140, 198, 63, 0.4);
+  border-radius: 50px;
+  padding: 8px 22px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  animation: subtleFloat 3.5s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+@media (max-width: 576px) {
+  .hero-glass-badge {
+    font-size: 11px;
+    padding: 6px 14px;
+    top: 12px;
+    width: 92%;
+    justify-content: center;
+  }
+}
+
+/* Hero Slider Navigation Arrows */
+@media (min-width: 769px) {
+  .hero-slider-nav-btn {
+    width: 48px !important;
+    height: 48px !important;
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.6) !important;
+    color: #1e3a10 !important;
+    border-radius: 50% !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  }
+
+  .hero-slider-nav-btn:hover {
+    background: var(--brand) !important;
+    color: #ffffff !important;
+    transform: translateY(-50%) scale(1.15) !important;
+    box-shadow: 0 12px 30px rgba(45, 80, 22, 0.4) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-slider-nav-btn {
+    width: 28px !important;
+    height: 28px !important;
+    background: rgba(255, 255, 255, 0.75) !important;
+    backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    color: #1e3a10 !important;
+    border-radius: 50% !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  }
+  .hero-slider-nav-btn svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  .hero-slider-prev {
+    left: 4px !important;
+  }
+  .hero-slider-next {
+    right: 4px !important;
+  }
+}
+
+/* Category Cards Interactive Lift & Glow */
+.category-card {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  border: 1.5px solid rgba(45, 80, 22, 0.08) !important;
+}
+
+.category-card:hover {
+  transform: translateY(-8px) scale(1.02) !important;
+  box-shadow: 0 20px 40px rgba(45, 80, 22, 0.18) !important;
+  border-color: rgba(45, 80, 22, 0.35) !important;
+}
+
+.category-item-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  background: linear-gradient(135deg, #1e3a10 0%, #2d5016 100%);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Feature Item (Why Choose Us) Hover Effect */
+.feature-item {
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  border-radius: 16px !important;
+  padding: 20px !important;
+  border: 1px solid rgba(0,0,0,0.04) !important;
+}
+
+.feature-item:hover {
+  transform: translateY(-6px) !important;
+  background: #ffffff !important;
+  box-shadow: 0 18px 36px rgba(45, 80, 22, 0.1) !important;
+  border-color: rgba(45, 80, 22, 0.2) !important;
+}
+
+/* ── Single-Line Hero Trust Accent Bar ── */
+@keyframes pulseGlowBar {
+  0%, 100% { border-bottom-color: rgba(140, 198, 63, 0.3); }
+  50% { border-bottom-color: rgba(140, 198, 63, 0.75); box-shadow: 0 4px 18px rgba(140, 198, 63, 0.25); }
+}
+
+.hero-trust-bar {
+  background: linear-gradient(135deg, #142b0d 0%, #224013 50%, #142b0d 100%);
+  padding: 10px 16px;
+  border-bottom: 1.5px solid rgba(140, 198, 63, 0.3);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+  animation: pulseGlowBar 4s ease-in-out infinite;
+}
+
+.hero-trust-single-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  white-space: nowrap;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 600;
+  width: 100%;
+}
+
+.trust-text-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.trust-dot {
+  color: #8cc63f;
+  font-size: 14px;
+  font-weight: 800;
+  opacity: 0.8;
+}
+
+@media (min-width: 769px) {
+  .hero-trust-bar {
+    padding: 12px 20px;
+  }
+  .hero-trust-single-line {
+    gap: 20px;
+  }
+  .trust-text-item {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 6px 18px;
+    border-radius: 30px;
+    border: 1px solid rgba(140, 198, 63, 0.35);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    gap: 8px;
+  }
+  .trust-text-item:hover {
+    background: rgba(140, 198, 63, 0.2);
+    border-color: #8cc63f;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(140, 198, 63, 0.25);
+    color: #ffffff;
+  }
+  .trust-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #8cc63f;
+    box-shadow: 0 0 8px #8cc63f;
+    font-size: 0;
+    line-height: 0;
+    color: transparent;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-trust-bar {
+    padding: 6px 4px;
+    overflow: hidden;
+  }
+  .hero-trust-single-line {
+    justify-content: space-around;
+    overflow: hidden;
+    gap: 4px;
+    font-size: 9.5px;
+    letter-spacing: -0.3px;
+  }
+  .trust-text-item {
+    gap: 3px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+  }
+  .trust-dot {
+    font-size: 8px;
+  }
+}
+
+/* ── Modern Stat Cards & Counter Animation ── */
+.home-stats-section {
+  margin-top: 40px;
+}
+
+.stat-card {
+  background: linear-gradient(145deg, #18340f 0%, #294c1a 100%);
+  border: 1px solid rgba(140, 198, 63, 0.25);
+  border-radius: 20px;
+  padding: 24px 18px;
+  text-align: center;
+  color: #ffffff;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+  transition: transform 0.6s ease;
+}
+
+.stat-card:hover::before {
+  transform: translateX(350%);
+}
+
+.stat-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: #8cc63f;
+  box-shadow: 0 20px 40px rgba(45, 80, 22, 0.35);
+}
+
+.stat-icon-wrapper {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: rgba(140, 198, 63, 0.15);
+  border: 1px solid rgba(140, 198, 63, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-icon-wrapper {
+  background: #8cc63f;
+  transform: rotate(6deg) scale(1.1);
+}
+
+.stat-card:hover .stat-icon-wrapper img {
+  filter: brightness(0.2);
+}
+
+.stat-icon-wrapper img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  transition: filter 0.3s ease;
+}
+
+.stat-number-wrap {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #ffffff 40%, #8cc63f 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 6px;
+  font-family: var(--title-font);
+}
+
+.stat-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+
+.stat-subtext {
+  font-size: 12px;
+  color: #a7d088;
+  font-weight: 500;
+}
+
+@media (max-width: 576px) {
+  .stat-card {
+    padding: 16px 10px;
+    border-radius: 16px;
+  }
+  .stat-icon-wrapper {
+    width: 42px;
+    height: 42px;
+    margin-bottom: 10px;
+  }
+  .stat-icon-wrapper img {
+    width: 20px;
+    height: 20px;
+  }
+  .stat-number-wrap {
+    font-size: 24px;
+  }
+  .stat-title {
+    font-size: 12.5px;
+  }
+  .stat-subtext {
+    font-size: 10.5px;
+  }
+}
+
+/* ── Call Card Mobile Centering & Alignment Fix ── */
+@media (max-width: 768px) {
+  .center-feature {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    margin: 16px auto 24px auto !important;
+    padding: 0 !important;
+  }
+
+  .center-feature .call-card {
+    display: flex !important;
+    flex-direction: column-reverse !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 auto !important;
+    gap: 8px !important;
+    text-align: center !important;
+    background: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .center-feature .call-card__content {
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  .center-feature .call-card__title {
+    font-size: 13px !important;
+    margin-bottom: 2px !important;
+    text-align: center !important;
+    color: var(--brand) !important;
+  }
+
+  .center-feature .call-card__number {
+    font-size: 18px !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+  }
+
+  .center-feature .call-card__icon {
+    --icon-size: 52px !important;
+    width: 52px !important;
+    height: 52px !important;
+    flex-shrink: 0 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .center-feature .call-card__icon img {
+    width: 24px !important;
+    height: 24px !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ── Remaining Homepage Sections Micro-Animations & Polish ──────────────────
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* 1. Video Play Button Ripple Pulse Animation */
+@keyframes playRipplePulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7), 0 0 0 0 rgba(140, 198, 63, 0.5); }
+  70% { box-shadow: 0 0 0 18px rgba(255, 255, 255, 0), 0 0 0 32px rgba(140, 198, 63, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0), 0 0 0 0 rgba(140, 198, 63, 0); }
+}
+
+.video-thumb1 .play-btn,
+.play-btn.style7 {
+  border-radius: 50% !important;
+  animation: playRipplePulse 2.2s infinite !important;
+  transition: transform 0.3s ease !important;
+}
+
+.video-thumb1:hover .play-btn {
+  transform: scale(1.12) !important;
+}
+
+/* 2. Promo Banner Cards Hover & Image Zoom */
+.banner-style {
+  overflow: hidden !important;
+  border-radius: 20px !important;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+.banner-style:hover {
+  transform: translateY(-8px) !important;
+  box-shadow: 0 20px 40px rgba(30, 58, 16, 0.15) !important;
+}
+
+.banner-style .banner-img img {
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.banner-style:hover .banner-img img {
+  transform: scale(1.08) rotate(1.5deg) !important;
+}
+
+.banner-style .banner-link img {
+  transition: transform 0.3s ease !important;
+}
+
+.banner-style:hover .banner-link img {
+  transform: translateX(6px) !important;
+}
+
+
+/* 4. Title Section Leaf Icon Pulse */
+@keyframes leafRotateGlow {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(12deg) scale(1.1); }
+}
+
+.title-area .sec-icon img {
+  animation: leafRotateGlow 4s ease-in-out infinite !important;
+}
+
+

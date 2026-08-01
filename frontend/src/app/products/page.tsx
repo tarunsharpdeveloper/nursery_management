@@ -62,6 +62,21 @@ const fallbackProducts: Product[] = [
   }
 ];
 
+function normalizeCategory(str: string | null | undefined): string {
+  if (!str) return "";
+  let clean = str.toLowerCase().trim().replace(/[-_]/g, " ");
+  clean = clean.replace(/\b(seeds|plants)\b/g, (match) => match.slice(0, -1));
+  return clean;
+}
+
+function isCategoryMatch(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (!a || !b) return false;
+  const normA = normalizeCategory(a);
+  const normB = normalizeCategory(b);
+  if (normA === normB) return true;
+  return normA.includes(normB) || normB.includes(normA);
+}
+
 export default function ProductsPage() {
   const { addToCart } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -118,13 +133,25 @@ export default function ProductsPage() {
 
   // Read URL search params on mount
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const searchParams = new URLSearchParams(window.location.search);
-      const catParam = searchParams.get("category");
-      if (catParam) setSelectedCategory(catParam);
-      const searchParam = searchParams.get("search");
-      if (searchParam) setQuery(searchParam);
+    function readParams() {
+      if (typeof window !== "undefined") {
+        const searchParams = new URLSearchParams(window.location.search);
+        const catParam = searchParams.get("category");
+        if (catParam) {
+          const cleanCat = decodeURIComponent(catParam).replace(/\+/g, " ");
+          setSelectedCategory(cleanCat);
+        }
+        const searchParam = searchParams.get("search");
+        if (searchParam) {
+          const cleanQuery = decodeURIComponent(searchParam).replace(/\+/g, " ");
+          setQuery(cleanQuery);
+        }
+      }
     }
+
+    readParams();
+    window.addEventListener("popstate", readParams);
+    return () => window.removeEventListener("popstate", readParams);
   }, []);
 
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -193,10 +220,7 @@ export default function ProductsPage() {
 
     // Filter by Category
     if (selectedCategory) {
-      const selCatLower = selectedCategory.toLowerCase().trim();
-      result = result.filter(
-        (p) => (p.category || "").toLowerCase().trim() === selCatLower
-      );
+      result = result.filter((p) => isCategoryMatch(p.category, selectedCategory));
     }
 
     // Filter by Product Type ("plant", "seed")
@@ -326,7 +350,7 @@ export default function ProductsPage() {
                       </a>
                     </li>
                     {dbCategories.map((cat) => {
-                      const isActive = selectedCategory?.toLowerCase() === cat.name.toLowerCase();
+                      const isActive = isCategoryMatch(selectedCategory, cat.name);
                       return (
                         <li key={cat.id || cat.name}>
                           <a

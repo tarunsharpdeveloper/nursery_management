@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { X, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
-import { apiRequest, getMediaUrl } from "@/lib/api";
+import { apiRequest, getMediaUrl, getStoredUser } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 import { ProductSlider } from "@/components/ProductSlider";
 import type { Product } from "@/lib/types";
@@ -122,6 +123,7 @@ function AnimatedCounter({ end, duration = 2200, suffix = "" }: { end: number; d
 }
 
 export default function HomePage() {
+  const router = useRouter();
   const { addToCart } = useCart();
   const [products, setProducts] = useState<Product[]>(fallbackProducts);
   const [loading, setLoading] = useState(true);
@@ -133,6 +135,14 @@ export default function HomePage() {
   const [dbCategories, setDbCategories] = useState<any[]>([]);
   const [isCategorySlider, setIsCategorySlider] = useState(false);
   const [categoryIndex, setCategoryIndex] = useState(0);
+
+  // Redirect admin users to dashboard
+  useEffect(() => {
+    const adminUser = getStoredUser();
+    if (adminUser) {
+      router.replace("/admin/dashboard");
+    }
+  }, [router]);
 
   // Testimonials slider data
   const testimonials = [

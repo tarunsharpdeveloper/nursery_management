@@ -69,7 +69,7 @@ export default function ContactsAdminPage() {
 
       const response = await apiRequest(`/api/contact/messages?${params.toString()}`, {
         method: "GET"
-      });
+      }) as { data?: ContactMessage[]; currentPage?: number; totalPages?: number };
 
       setMessages(response.data || []);
       setCurrentPage(response.currentPage || 1);
@@ -85,7 +85,7 @@ export default function ContactsAdminPage() {
     try {
       const response = await apiRequest("/api/contact/stats", {
         method: "GET"
-      });
+      }) as { data?: ContactStats };
       setStats(response.data || null);
     } catch (error: any) {
       console.error("Failed to load stats:", error);
@@ -107,7 +107,7 @@ export default function ContactsAdminPage() {
       const response = await apiRequest("/api/contact/message", {
         method: "POST",
         body: JSON.stringify({ messageId: message.id })
-      });
+      }) as { data?: ContactMessage };
       setSelectedMessage(response.data || message);
     } catch (error: any) {
       console.error("Error fetching message:", error);
@@ -155,7 +155,7 @@ export default function ContactsAdminPage() {
       const response = await apiRequest("/api/contact/message", {
         method: "POST",
         body: JSON.stringify({ messageId: selectedMessage.id })
-      });
+      }) as { data?: ContactMessage };
       setSelectedMessage(response.data || selectedMessage);
     } catch (error: any) {
       showToast(error?.message || "Failed to send reply", "error");

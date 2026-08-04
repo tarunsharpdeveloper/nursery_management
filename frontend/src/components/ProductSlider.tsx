@@ -173,7 +173,7 @@ export function ProductSlider({ products, itemsPerView = 5 }: ProductSliderProps
                       </span>
                     )}
                     {prod.stock > 0 && prod.stock < 100 && (
-                      <span className="product-tag2" style={{ background: "var(--accent)" }}>
+                      <span className="product-tag2" style={{ background: "#d4a516" }}>
                         Limited Stock
                       </span>
                     )}

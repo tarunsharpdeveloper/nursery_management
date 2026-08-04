@@ -5482,9 +5482,8 @@ tbody tr:hover {
   width: 155px !important;
   transform: rotate(45deg) !important;
   text-align: center !important;
-  background: linear-gradient(135deg, #d9381e 0%, #a9200c 100%) !important;
   color: #ffffff !important;
-  font-size: 8.5px !important;
+  font-size: 8.8px !important;
   font-weight: 800 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.3px !important;
@@ -5510,7 +5509,6 @@ tbody tr:hover {
 .vs-product:hover .product-tag2,
 .product-card:hover .product-tag2,
 .modern-card:hover .product-tag2 {
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
   transform: rotate(45deg) !important;
 }

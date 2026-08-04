@@ -431,7 +431,7 @@ function ProfileContent() {
                                 <img src={product.image} alt={product.name} className="img w-100" />
                               </Link>
                               {product.stock <= 0 && <span className="product-tag2" style={{ background: "var(--danger)" }}>Out of Stock</span>}
-                              {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ background: "var(--accent)" }}>Limited Stock</span>}
+                              {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ background: "#d4a516" }}>Limited Stock</span>}
                             </div>
                             <div className="product-content">
                               <ProductReviewSummary productId={product.id} rating={product.average_rating} totalReviews={product.total_reviews} />

@@ -517,8 +517,8 @@ export default function ProductsPage() {
                                   }}
                                 />
                               </Link>
-                              {product.stock <= 0 && <span className="product-tag2">Out of Stock</span>}
-                              {product.stock > 0 && product.stock < 100 && <span className="product-tag2">Limited Stock</span>}
+                              {product.stock <= 0 && <span className="product-tag2" style={{ background: "var(--danger)" }}>Out of Stock</span>}
+                              {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ background: "#d4a516" }}>Limited Stock</span>}
                             </div>
                             <div className="product-content" style={{ flex: 1, padding: "25px 30px", display: "flex", flexDirection: "column", justifyContent: "flex-start", position: "relative", height: "100%" }}>
                               <ProductReviewSummary productId={product.id} rating={product.average_rating} totalReviews={product.total_reviews} />
@@ -573,7 +573,7 @@ export default function ProductsPage() {
                                 <img src={product.image} alt={product.name} className="img w-100" />
                               </Link>
                               {product.stock <= 0 && <span className="product-tag2" style={{ background: "var(--danger)" }}>Out of Stock</span>}
-                              {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ background: "var(--accent)" }}>Limited Stock</span>}
+                              {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ background: "#d4a516" }}>Limited Stock</span>}
                             </div>
                             <div className="product-content">
                               <ProductReviewSummary productId={product.id} rating={product.average_rating} totalReviews={product.total_reviews} />

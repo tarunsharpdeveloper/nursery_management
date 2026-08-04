@@ -221,7 +221,7 @@ async function deleteOrder(req, res, { readJson, sendJson }) {
 }
 
 const getOrderSchema = z.object({
-  orderId: z.number().int().positive()
+  orderId: z.union([z.number(), z.string().min(1)])
 });
 
 async function getOrder(req, res, { readJson, sendJson }) {
@@ -232,11 +232,15 @@ async function getOrder(req, res, { readJson, sendJson }) {
 
   const payload = getOrderSchema.parse(await readJson(req));
 
+  const searchVal = String(payload.orderId).trim();
+  const searchNum = !isNaN(Number(searchVal)) ? Number(searchVal) : -1;
+  const prefVal = searchVal.startsWith("ORD-") ? searchVal : `ORD-${searchVal}`;
+
   if (user.role === "customer") {
     // Check if order belongs to logged-in customer
     const [ownership] = await pool.query(
-      `SELECT o.id FROM orders o JOIN customers c ON c.id = o.customer_id WHERE o.id = ? AND (c.email = ? OR c.phone = ?)`,
-      [payload.orderId, user.email, user.phone || ""]
+      `SELECT o.id FROM orders o JOIN customers c ON c.id = o.customer_id WHERE (o.id = ? OR o.order_number = ? OR o.order_number = ?) AND (c.email = ? OR c.phone = ?)`,
+      [searchNum, searchVal, prefVal, user.email, user.phone || ""]
     );
     if (ownership.length === 0) {
       return sendJson(res, 403, { message: "Forbidden. You can only view your own orders." });
@@ -253,9 +257,9 @@ async function getOrder(req, res, { readJson, sendJson }) {
     `SELECT o.id, o.order_number, o.order_source, o.status, o.payment_status, o.total_amount, o.created_at,
             c.name AS customer_name, c.phone, c.email, c.address
        FROM orders o
-       JOIN customers c ON c.id = o.customer_id
-      WHERE o.id = ?`,
-    [payload.orderId]
+       LEFT JOIN customers c ON c.id = o.customer_id
+      WHERE (o.id = ? OR o.order_number = ? OR o.order_number = ?) AND (o.is_deleted IS NULL OR o.is_deleted = 0)`,
+    [searchNum, searchVal, prefVal]
   );
 
   if (orderRows.length === 0) {
@@ -272,7 +276,7 @@ async function getOrder(req, res, { readJson, sendJson }) {
        JOIN products p ON p.id = oi.product_id
        LEFT JOIN product_variants v ON v.id = oi.variant_id
       WHERE oi.order_id = ?`,
-    [payload.orderId]
+    [order.id]
   );
   
   order.items = items;
@@ -650,17 +654,56 @@ async function listWageSummary(req, res, { sendJson }) {
     params
   );
 
+  const [payoutRows] = await pool.query(
+    `SELECT employee_id, payout_type, SUM(amount) AS total_amount
+       FROM employee_payouts
+      WHERE payout_month = :wageMonth
+      GROUP BY employee_id, payout_type`,
+    { wageMonth }
+  );
+
+  const payoutMap = {};
+  payoutRows.forEach((p) => {
+    if (!payoutMap[p.employee_id]) {
+      payoutMap[p.employee_id] = { advance: 0, salary: 0 };
+    }
+    payoutMap[p.employee_id][p.payout_type] = Number(p.total_amount || 0);
+  });
+
   sendJson(res, 200, rows.map((row) => {
     const daysWorked = Number(row.days_worked || 0);
     const absentDays = Number(row.absent_days || 0);
     const salary = Number(row.monthly_salary || 0);
     const dailyWage = Number(row.daily_wage || 0);
+
     const baseAmount = row.employee_type === "monthly_salary" ? salary : dailyWage * daysWorked;
     const attendanceDeduction = row.employee_type === "monthly_salary" ? (salary / 30) * absentDays : 0;
     const deductionAmount = attendanceDeduction + Number(row.wage_deduction || 0);
-    const payable = Math.max(baseAmount - deductionAmount, 0);
+    const grossPayable = Math.max(baseAmount - deductionAmount, 0);
 
-    return { ...row, days_worked: daysWorked, absent_days: absentDays, deduction_amount: deductionAmount, payable_amount: payable };
+    const empPayouts = payoutMap[row.id] || { advance: 0, salary: 0 };
+    const advancePaid = empPayouts.advance;
+    const salaryPaid = empPayouts.salary;
+    const netPayable = Math.max(grossPayable - advancePaid - salaryPaid, 0);
+
+    let payoutStatus = "pending";
+    if (grossPayable > 0 && (salaryPaid + advancePaid) >= grossPayable) {
+      payoutStatus = "paid";
+    } else if ((salaryPaid + advancePaid) > 0) {
+      payoutStatus = "partial";
+    }
+
+    return {
+      ...row,
+      days_worked: daysWorked,
+      absent_days: absentDays,
+      deduction_amount: deductionAmount,
+      gross_payable: grossPayable,
+      advance_paid: advancePaid,
+      salary_paid: salaryPaid,
+      payable_amount: netPayable,
+      payout_status: payoutStatus
+    };
   }));
 }
 
@@ -829,6 +872,97 @@ async function getUnifiedList(req, res, { sendJson }) {
   });
 }
 
+async function getOrdersGraph(req, res, { sendJson }) {
+  try {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const preset = url.searchParams.get("preset") || "7days";
+    let startStr = url.searchParams.get("startDate");
+    let endStr = url.searchParams.get("endDate");
+
+    const now = new Date();
+    let startDate = new Date();
+    let endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+    if (preset === "today") {
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    } else if (preset === "7days") {
+      startDate.setDate(now.getDate() - 6);
+      startDate.setHours(0, 0, 0, 0);
+    } else if (preset === "30days") {
+      startDate.setDate(now.getDate() - 29);
+      startDate.setHours(0, 0, 0, 0);
+    } else if (preset === "this_month") {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    } else if (preset === "custom" && startStr && endStr) {
+      startDate = new Date(`${startStr}T00:00:00`);
+      endDate = new Date(`${endStr}T23:59:59`);
+    } else {
+      startDate.setDate(now.getDate() - 6);
+      startDate.setHours(0, 0, 0, 0);
+    }
+
+    const formattedStart = startDate.toISOString().slice(0, 19).replace('T', ' ');
+    const formattedEnd = endDate.toISOString().slice(0, 19).replace('T', ' ');
+
+    const [rows] = await pool.query(
+      `SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS order_date,
+              COUNT(*) AS total_orders,
+              COALESCE(SUM(total_amount), 0) AS total_revenue
+         FROM orders
+        WHERE created_at >= ? AND created_at <= ?
+        GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d')
+        ORDER BY order_date ASC`,
+      [formattedStart, formattedEnd]
+    );
+
+    const rowMap = new Map();
+    if (Array.isArray(rows)) {
+      rows.forEach(r => {
+        rowMap.set(r.order_date, {
+          orders: Number(r.total_orders || 0),
+          revenue: Number(r.total_revenue || 0)
+        });
+      });
+    }
+
+    const graphData = [];
+    const curr = new Date(startDate);
+    let periodOrders = 0;
+    let periodRevenue = 0;
+
+    while (curr <= endDate) {
+      const yyyymmdd = curr.toISOString().slice(0, 10);
+      const dayLabel = curr.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+      const stats = rowMap.get(yyyymmdd) || { orders: 0, revenue: 0 };
+
+      periodOrders += stats.orders;
+      periodRevenue += stats.revenue;
+
+      graphData.push({
+        date: yyyymmdd,
+        label: dayLabel,
+        orders: stats.orders,
+        revenue: stats.revenue
+      });
+
+      curr.setDate(curr.getDate() + 1);
+    }
+
+    sendJson(res, 200, {
+      preset,
+      startDate: startDate.toISOString().slice(0, 10),
+      endDate: endDate.toISOString().slice(0, 10),
+      period_orders: periodOrders,
+      period_revenue: periodRevenue,
+      average_order_value: periodOrders > 0 ? Math.round(periodRevenue / periodOrders) : 0,
+      data: graphData
+    });
+  } catch (error) {
+    console.error("Error fetching orders graph:", error);
+    sendJson(res, 500, { error: error.message || "Failed to fetch orders graph data" });
+  }
+}
+
 module.exports = {
   getDashboard,
   listCustomers,
@@ -855,5 +989,6 @@ module.exports = {
   listWageSummary,
   getUnifiedList,
   listMonthlyAttendance,
-  getEmployeeAttendance
+  getEmployeeAttendance,
+  getOrdersGraph
 };

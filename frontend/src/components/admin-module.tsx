@@ -17,6 +17,7 @@ type Field = {
   isMulti?: boolean;
   fullWidth?: boolean;
   renderChipsBelow?: boolean;
+  error?: string;
 };
 
 type AdminModuleProps = {
@@ -46,8 +47,10 @@ type AdminModuleProps = {
   headerActions?: React.ReactNode;
   rowActions?: (row: any, reload: () => Promise<void>, openModal: () => void) => React.ReactNode;
   filterContent?: React.ReactNode;
+  filterExtra?: React.ReactNode;
   filterRows?: (rows: any[]) => any[];
   renderCell?: (row: any, column: { key: string; label: string }, reload: () => Promise<void>) => React.ReactNode;
+  isSubmitDisabled?: boolean | ((values: Record<string, any>) => boolean);
 };
 
 function formatCell(value: unknown) {
@@ -79,8 +82,10 @@ export function AdminModule({
   headerActions,
   rowActions,
   filterContent,
+  filterExtra,
   filterRows,
-  renderCell
+  renderCell,
+  isSubmitDisabled
 }: AdminModuleProps) {
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [internalValues, setInternalValues] = useState<Record<string, any>>(initialValues);
@@ -95,20 +100,10 @@ export function AdminModule({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterValue, setFilterValue] = useState("");
 
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-      setCurrentPage(1);
-    }, 400);
-    return () => clearTimeout(t);
-  }, [searchQuery]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filterValue]);
-
   const values = externalValues !== undefined ? externalValues : internalValues;
   const displayedRows = filterRows ? filterRows(rows) : rows;
+
+  const submitDisabled = busy || (typeof isSubmitDisabled === "function" ? isSubmitDisabled(values) : Boolean(isSubmitDisabled));
 
   const updateValues = (nextValues: Record<string, any> | ((current: Record<string, any>) => Record<string, any>)) => {
     if (onValuesChange) {
@@ -234,7 +229,7 @@ export function AdminModule({
           footer={
             <React.Fragment>
               <button className="button secondary" type="button" onClick={() => setIsModalOpen(false)}>Cancel</button>
-              <button className="button" type="button" onClick={submitForm} disabled={busy}>
+              <button className="button" type="button" onClick={submitForm} disabled={submitDisabled}>
                 <Save size={17} />
                 {submitLabel}
               </button>
@@ -282,10 +277,10 @@ export function AdminModule({
                           ...base,
                           minHeight: '50px',
                           borderRadius: '8px',
-                          borderColor: fieldErrors[field.name] ? '#ef4444' : (state.isFocused ? 'rgba(47, 107, 63, 0.65)' : 'var(--line)'),
+                          borderColor: (fieldErrors[field.name] || field.error) ? '#ef4444' : (state.isFocused ? 'rgba(47, 107, 63, 0.65)' : 'var(--line)'),
                           boxShadow: state.isFocused ? '0 0 0 1px rgba(47, 107, 63, 0.24)' : 'none',
                           '&:hover': {
-                            borderColor: fieldErrors[field.name] ? '#ef4444' : (state.isFocused ? 'rgba(47, 107, 63, 0.65)' : 'var(--line)')
+                            borderColor: (fieldErrors[field.name] || field.error) ? '#ef4444' : (state.isFocused ? 'rgba(47, 107, 63, 0.65)' : 'var(--line)')
                           }
                         }),
                         valueContainer: (base) => ({
@@ -342,7 +337,7 @@ export function AdminModule({
                       rows={3}
                       placeholder={field.placeholder}
                       value={values[field.name] ?? ""}
-                      style={fieldErrors[field.name] ? { borderColor: '#ef4444' } : {}}
+                      style={(fieldErrors[field.name] || field.error) ? { borderColor: '#ef4444' } : {}}
                       onChange={(e) => handleChange(field.name, field.valueType === "number" ? Number(e.target.value) : e.target.value)}
                     />
                   ) : (
@@ -350,13 +345,13 @@ export function AdminModule({
                       type={field.type || "text"}
                       placeholder={field.placeholder}
                       value={values[field.name] ?? ""}
-                      style={fieldErrors[field.name] ? { borderColor: '#ef4444' } : {}}
+                      style={(fieldErrors[field.name] || field.error) ? { borderColor: '#ef4444' } : {}}
                       onChange={(e) => handleChange(field.name, field.valueType === "number" ? Number(e.target.value) : e.target.value)}
                     />
                   )}
-                  {fieldErrors[field.name] && (
+                  {(fieldErrors[field.name] || field.error) && (
                     <span style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '4px', fontWeight: 500 }}>
-                      {fieldErrors[field.name]}
+                      {fieldErrors[field.name] || field.error}
                     </span>
                   )}
                 </label>
@@ -393,7 +388,7 @@ export function AdminModule({
         </div>
       )}
 
-      {(searchPlaceholder || filterConfig) && (
+      {(searchPlaceholder || filterConfig || filterExtra) && (
         <div className="filter-bar-container">
           <div className="filter-bar-wrapper">
             {searchPlaceholder && (
@@ -429,6 +424,12 @@ export function AdminModule({
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {filterExtra && (
+              <div className="filter-group-fixed">
+                {filterExtra}
               </div>
             )}
           </div>

@@ -85,21 +85,6 @@ export default function AdminLoginPage() {
             </button>
           </form>
         </div>
-
-        <div className="role-list">
-          <div>
-            <strong>Super Admin</strong>
-            <span>owner@nursery.local / owner123</span>
-          </div>
-          <div>
-            <strong>Staff User</strong>
-            <span>staff@nursery.local / staff123</span>
-          </div>
-          <div>
-            <strong>Billing User</strong>
-            <span>billing@nursery.local / billing123</span>
-          </div>
-        </div>
       </section>
     </main>
   );

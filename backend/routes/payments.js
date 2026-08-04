@@ -2,9 +2,9 @@ const { z } = require("zod");
 const { pool } = require("../db");
 
 const initiateSchema = z.object({
-  orderId: z.number().int().positive(),
+  orderId: z.union([z.number(), z.string().min(1)]),
   amount: z.number().positive(),
-  paymentMethod: z.enum(["upi", "credit_card", "debit_card", "net_banking"])
+  paymentMethod: z.enum(["upi", "credit_card", "debit_card", "net_banking", "cash"])
 });
 
 const webhookSchema = z.object({
@@ -16,20 +16,35 @@ const webhookSchema = z.object({
 
 async function initiatePayment(req, res, { readJson, sendJson }) {
   const payload = initiateSchema.parse(await readJson(req));
-  const provider = process.env.PAYMENT_GATEWAY_PROVIDER || "razorpay";
+  const provider = payload.paymentMethod === "cash" ? "cash" : (process.env.PAYMENT_GATEWAY_PROVIDER || "razorpay");
+
+  const searchVal = String(payload.orderId).trim();
+  const searchNum = !isNaN(Number(searchVal)) ? Number(searchVal) : -1;
+  const prefVal = searchVal.startsWith("ORD-") ? searchVal : `ORD-${searchVal}`;
+
+  const [orderRows] = await pool.query(
+    `SELECT id FROM orders WHERE (id = ? OR order_number = ? OR order_number = ?) AND (is_deleted IS NULL OR is_deleted = 0)`,
+    [searchNum, searchVal, prefVal]
+  );
+
+  const realOrderId = orderRows.length > 0 ? orderRows[0].id : (typeof payload.orderId === 'number' ? payload.orderId : null);
+
+  if (!realOrderId) {
+    return sendJson(res, 404, { message: "Order not found" });
+  }
 
   const [result] = await pool.query(
     `INSERT INTO payments
       (order_id, payment_gateway, payment_method, payment_status, amount, remarks)
-     VALUES (:orderId, :provider, :paymentMethod, 'pending', :amount, 'Payment initiated')`,
-    { ...payload, provider }
+     VALUES (:realOrderId, :provider, :paymentMethod, 'pending', :amount, 'Payment initiated')`,
+    { realOrderId, provider, paymentMethod: payload.paymentMethod, amount: payload.amount }
   );
 
   sendJson(res, 201, {
     paymentId: Number(result.insertId),
     provider,
     status: "pending",
-    supportedMethods: ["upi", "credit_card", "debit_card", "net_banking"]
+    supportedMethods: ["upi", "credit_card", "debit_card", "net_banking", "cash"]
   });
 }
 

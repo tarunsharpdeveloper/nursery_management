@@ -84,6 +84,10 @@ export function SiteHeader() {
               Products
             </Link>
 
+            <Link href="/gallery" className="nav-link">
+              Gallery
+            </Link>
+
             <Link href="/contact" className="nav-link">
               Contact
             </Link>
@@ -183,6 +187,14 @@ export function SiteHeader() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Products
+              </Link>
+
+              <Link 
+                href="/gallery" 
+                className="mobile-menu-link"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Gallery
               </Link>
 
               <Link 

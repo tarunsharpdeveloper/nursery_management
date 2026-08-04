@@ -1,4 +1,6 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 const processSteps = [
@@ -15,6 +17,54 @@ const processSteps = [
     text: "Collect from our Ujjain store or coordinate dispatch for healthy, carefully packed plants."
   }
 ];
+
+// ── Scroll-Triggered Animated Counter ──────────────────────────────────────
+function AnimatedCounter({ end, duration = 2200, suffix = "" }: { end: number; duration?: number; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setHasStarted(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!hasStarted) return;
+
+    let startTimestamp: number | null = null;
+    let animationFrameId: number;
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const easeOutProgress = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(easeOutProgress * end));
+
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(step);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [hasStarted, end, duration]);
+
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
+}
 
 export default function AboutPage() {
   return (
@@ -79,7 +129,7 @@ export default function AboutPage() {
       </section>
       {/* About Area End */}
 
-      {/* Featue Area */}
+      {/* Feature Area */}
       <section className="space-top space-bottom z-index-common" style={{ backgroundImage: "url('/assets/img/bg/bg-1-1.jpg')" }}>
         <img src="/assets/img/leafs/feature-3-1.png" alt="feature element 1" className="feature-element1" />
         <div className="container">
@@ -110,9 +160,6 @@ export default function AboutPage() {
               <div className="img-box7">
                 <img src="https://static.vecteezy.com/system/resources/thumbnails/080/863/023/small/vibrant-foliage-of-a-peperomia-plant-also-known-as-a-baby-rubber-plant-or-green-succulent-showing-shiny-textured-surfaces-this-indoor-greenery-thrives-in-bright-light-photo.jpg" alt="feature-img" className="img1" />
                 <a href="#" className="play-btn style5 popup-video"><i className="fas fa-play"></i></a>
-                {/* <img src="/assets/img/leafs/feature-3-2.png" alt="leafs" className="img2" />
-                <img src="/assets/img/leafs/feature-3-3.png" alt="leafs" className="img3" />
-                <img src="/assets/img/leafs/feature-3-4.png" alt="leafs" className="img4" /> */}
               </div>
             </div>
           </div>
@@ -120,53 +167,60 @@ export default function AboutPage() {
       </section>
       {/* Features Area End */}
 
-      {/* Counter Area */}
-      <div className="space-extra-bottom space-top">
+      {/* ── Modern Trust Statistics Section ── */}
+      <div className="space-top space-extra-bottom">
         <div className="container">
-          <div className="counter-wrap2">
-            <div className="row justify-content-between">
-              <div className="col-xxl-3 col-xl-4 col-lg-4 col-md-6">
-                <div className="counter-media">
-                  <div className="counter-media__icon">
-                    <img src="/assets/img/icons/count-1-1.png" alt="icon" />
+          <div className="home-stats-section" style={{ marginTop: 0 }}>
+            <div className="row g-3 g-md-4 justify-content-center">
+              <div className="col-6 col-lg-3">
+                <div className="stat-card">
+                  <div className="stat-icon-wrapper">
+                    <img src="/assets/img/icons/count-1-1.png" alt="categories" />
                   </div>
-                  <div className="media-body">
-                    <h3 className="counter-media__title"><span className="counter-media__number">6</span>+</h3>
-                    <p className="counter-media__text">Product Categories</p>
+                  <div className="stat-number-wrap">
+                    <AnimatedCounter end={6} suffix="+" />
                   </div>
+                  <div className="stat-title">Product Categories</div>
+                  <div className="stat-subtext">Plants &amp; Seeds Varieties</div>
                 </div>
               </div>
-              <div className="col-xxl-3 col-xl-4 col-lg-4 col-md-6">
-                <div className="counter-media">
-                  <div className="counter-media__icon">
-                    <img src="/assets/img/icons/count-1-2.png" alt="icon" />
+
+              <div className="col-6 col-lg-3">
+                <div className="stat-card">
+                  <div className="stat-icon-wrapper">
+                    <img src="/assets/img/icons/count-1-2.png" alt="customers" />
                   </div>
-                  <div className="media-body">
-                    <h3 className="counter-media__title"><span className="counter-media__number">1000</span>+</h3>
-                    <p className="counter-media__text">Local Customers Served</p>
+                  <div className="stat-number-wrap">
+                    <AnimatedCounter end={1000} suffix="+" />
                   </div>
+                  <div className="stat-title">Local Customers Served</div>
+                  <div className="stat-subtext">Trusted Across Ujjain &amp; MP</div>
                 </div>
               </div>
-              <div className="col-xxl-3 col-xl-4 col-lg-4 col-md-6">
-                <div className="counter-media">
-                  <div className="counter-media__icon">
-                    <img src="/assets/img/icons/count-1-3.png" alt="icon" />
+
+              <div className="col-6 col-lg-3">
+                <div className="stat-card">
+                  <div className="stat-icon-wrapper">
+                    <img src="/assets/img/icons/count-1-3.png" alt="follow-up" />
                   </div>
-                  <div className="media-body">
-                    <h3 className="counter-media__title"><span className="counter-media__number">24</span> hr</h3>
-                    <p className="counter-media__text">Order Follow-up</p>
+                  <div className="stat-number-wrap">
+                    <AnimatedCounter end={24} suffix=" hr" />
                   </div>
+                  <div className="stat-title">Order Follow-up</div>
+                  <div className="stat-subtext">Quick Dispatch Assistance</div>
                 </div>
               </div>
-              <div className="col-xxl-3 col-xl-4 col-lg-4 col-md-6">
-                <div className="counter-media">
-                  <div className="counter-media__icon">
-                    <img src="/assets/img/icons/count-1-4.png" alt="icon" />
+
+              <div className="col-6 col-lg-3">
+                <div className="stat-card">
+                  <div className="stat-icon-wrapper">
+                    <img src="/assets/img/icons/count-1-4.png" alt="nursery" />
                   </div>
-                  <div className="media-body">
-                    <h3 className="counter-media__title"><span className="counter-media__number">100</span>%</h3>
-                    <p className="counter-media__text">Nursery Focused</p>
+                  <div className="stat-number-wrap">
+                    <AnimatedCounter end={100} suffix="%" />
                   </div>
+                  <div className="stat-title">Nursery Focused</div>
+                  <div className="stat-subtext">Dedicated Plant Expertise</div>
                 </div>
               </div>
             </div>
@@ -216,7 +270,7 @@ export default function AboutPage() {
             </div>
             <div className="col-xxl-4 col-xl-4 col-lg-auto mx-auto mb-30">
               <div className="img-box8" style={{ maxWidth: '100%', height: 'auto' }}>
-                <img src="/assets/img/about/about-p-1-1.png"  alt="feature-img" className="about-feature-img" />
+                <img src="/assets/img/about/about-p-1-1.png" alt="feature-img" className="about-feature-img" />
               </div>
             </div>
             <div className="col-xxl-4 col-xl-4 col-lg-7 mx-auto mb-30">

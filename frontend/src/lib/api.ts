@@ -2,8 +2,9 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://loca
 
 export function getMediaUrl(url: string | null | undefined): string {
   if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:") || url.startsWith("blob:") || url.startsWith("/")) return url;
-  return `/uploads/${url}`;
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:") || url.startsWith("blob:")) return url;
+  const cleanPath = url.startsWith("/") ? url : `/uploads/${url}`;
+  return `${API_BASE_URL}${cleanPath}`;
 }
 
 export type AdminUser = {

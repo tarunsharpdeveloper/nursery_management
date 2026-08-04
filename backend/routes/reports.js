@@ -1,4 +1,59 @@
+const { z } = require("zod");
 const { pool } = require("../db");
+
+const payLedgerSchema = z.object({
+  customerId: z.number().int().positive(),
+  amount: z.number().positive(),
+  paymentMethod: z.enum(["cash", "upi", "credit_card", "debit_card", "net_banking"]).default("cash"),
+  remarks: z.string().optional()
+});
+
+async function payCustomerLedger(req, res, { readJson, sendJson }) {
+  const payload = payLedgerSchema.parse(await readJson(req));
+
+  const [customerRows] = await pool.query(
+    "SELECT id, name FROM customers WHERE id = ?",
+    [payload.customerId]
+  );
+
+  if (customerRows.length === 0) {
+    return sendJson(res, 404, { message: "Customer not found" });
+  }
+
+  const customer = customerRows[0];
+  const remarksText = payload.remarks && payload.remarks.trim()
+    ? payload.remarks.trim()
+    : `Outstanding payment received via ${payload.paymentMethod.toUpperCase()}`;
+
+  await pool.query(
+    `INSERT INTO customer_ledger
+      (customer_id, transaction_date, transaction_type, debit_amount, credit_amount, reference_type, remarks)
+     VALUES (:customerId, CURDATE(), 'payment', 0, :amount, 'payment', :remarksText)`,
+    {
+      customerId: payload.customerId,
+      amount: payload.amount,
+      remarksText
+    }
+  );
+
+  const provider = payload.paymentMethod === "cash" ? "cash" : "manual";
+  await pool.query(
+    `INSERT INTO payments
+      (payment_gateway, payment_method, payment_status, amount, paid_at, remarks)
+     VALUES (:provider, :paymentMethod, 'paid', :amount, NOW(), :remarksText)`,
+    {
+      provider,
+      paymentMethod: payload.paymentMethod,
+      amount: payload.amount,
+      remarksText: `Ledger Payment - ${customer.name}: ${remarksText}`
+    }
+  );
+
+  sendJson(res, 201, {
+    success: true,
+    message: `Payment of ₹${payload.amount} recorded for ${customer.name}`
+  });
+}
 
 async function getLedger(_req, res, { sendJson }) {
   const [rows] = await pool.query(
@@ -144,4 +199,4 @@ async function getReport(req, res, { sendJson }) {
   sendJson(res, 200, rows);
 }
 
-module.exports = { getLedger, getCustomerLedgerDetails, getReport };
+module.exports = { getLedger, getCustomerLedgerDetails, getReport, payCustomerLedger };

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Banknote, BarChart3, Boxes, CalendarCheck, ClipboardList, CreditCard, Factory, Leaf, LogOut, Menu, NotebookTabs, Package, Receipt, Tags, Truck, UserCircle, Users, User, Shield } from "lucide-react";
+import { Banknote, BarChart3, Boxes, CalendarCheck, ClipboardList, CreditCard, Factory, Leaf, LogOut, Menu, NotebookTabs, Package, Receipt, Tags, Truck, UserCircle, Users, User, Shield, Image } from "lucide-react";
 import { clearAdminSession, getStoredUser, type AdminUser } from "@/lib/api";
 
 const links = [
@@ -24,7 +24,8 @@ const links = [
   { href: "/admin/users", label: "Users Management", icon: UserCircle, permission: "users:read" },
   { href: "/admin/wages", label: "Wages", icon: Banknote, permission: "wages:read" },
   { href: "/admin/roles", label: "Roles", icon: Shield, permission: "roles:read" },
-  { href: "/admin/reports", label: "Reports", icon: BarChart3, permission: "reports:read" }
+  { href: "/admin/reports", label: "Reports", icon: BarChart3, permission: "reports:read" },
+  { href: "/admin/gallery", label: "Media Showcase", icon: Image, permission: "products:read" }
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

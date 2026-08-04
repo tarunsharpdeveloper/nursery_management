@@ -3529,29 +3529,32 @@ tbody tr:hover {
 
 .login-page {
   display: grid;
-  grid-template-columns: minmax(340px, 1fr) minmax(360px, 520px);
-  min-height: calc(100vh - 68px);
+  grid-template-columns: 1.1fr 0.9fr;
+  min-height: calc(100vh - 80px);
+  align-items: stretch;
 }
 
 .login-visual {
-  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
   background:
-    linear-gradient(180deg, rgba(19, 36, 23, 0.22), rgba(19, 36, 23, 0.86)),
+    linear-gradient(180deg, rgba(19, 36, 23, 0.35), rgba(19, 36, 23, 0.85)),
     url("https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1500&q=80") center/cover;
   color: white;
-  display: flex;
-  padding: clamp(28px, 6vw, 72px);
+  padding: clamp(32px, 5vw, 64px);
 }
 
 .login-visual-content {
-  max-width: 680px;
+  max-width: 580px;
 }
 
 .login-visual h1 {
-  font-size: clamp(36px, 5vw, 64px);
-  line-height: 1.02;
+  font-size: clamp(30px, 3.8vw, 52px);
+  line-height: 1.1;
   margin-bottom: 18px;
-  color:white;
+  color: white;
 }
 
 .login-highlights {
@@ -3567,24 +3570,28 @@ tbody tr:hover {
   border-radius: 999px;
   display: inline-flex;
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 700;
   gap: 7px;
-  padding: 8px 11px;
+  padding: 8px 14px;
 }
 
 .login-panel {
-  align-content: center;
-  display: grid;
-  gap: 18px;
-  padding: clamp(22px, 5vw, 56px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(24px, 4vw, 56px);
+  background: #f8fafc;
 }
 
 .login-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  box-shadow: var(--shadow);
-  padding: clamp(22px, 4vw, 34px);
+  width: 100%;
+  max-width: 450px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
+  padding: clamp(28px, 4vw, 40px);
 }
 
 .login-card h2 {

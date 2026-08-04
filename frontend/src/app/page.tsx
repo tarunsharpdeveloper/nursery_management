@@ -136,14 +136,6 @@ export default function HomePage() {
   const [isCategorySlider, setIsCategorySlider] = useState(false);
   const [categoryIndex, setCategoryIndex] = useState(0);
 
-  // Redirect admin users to dashboard
-  useEffect(() => {
-    const adminUser = getStoredUser();
-    if (adminUser) {
-      router.replace("/admin/dashboard");
-    }
-  }, [router]);
-
   // Testimonials slider data
   const testimonials = [
     { name: "Suresh R. (Farmer)", title: "Excellent Grafted Mango Plants", avatar: "/assets/img/testimonials/testi-1-1.png", text: "I ordered Alphonso Mango grafts for my orchard. They were dispatched quickly. The root health was incredible, and they are adapting very well." },

@@ -11,9 +11,10 @@ const { createAdvanceBooking } = require("./routes/bookings");
 const { createDispatch } = require("./routes/dispatch");
 const { initiatePayment, paymentWebhook } = require("./routes/payments");
 const { createEmployee, saveAttendance, saveBulkAttendance, editEmployee, toggleEmployee, deleteEmployee } = require("./routes/attendance");
-const { calculateWages } = require("./routes/wages");
-const { getLedger, getCustomerLedgerDetails, getReport } = require("./routes/reports");
+const { calculateWages, recordPayout, getEmployeePayoutHistory } = require("./routes/wages");
+const { getLedger, getCustomerLedgerDetails, getReport, payCustomerLedger } = require("./routes/reports");
 const { getReviews, submitReview, getReviewStats } = require("./routes/reviews");
+const { listGalleryItems, createGalleryItem, editGalleryItem, toggleGalleryItem, deleteGalleryItem } = require("./routes/gallery");
 const { getFavorites, toggleFavorite } = require("./routes/favorites");
 const { initiateNDPSPayment, handleNDPSResponse, checkPaymentStatus, requeryTransactionStatus, handleNDPSPopupResponse } = require("./routes/ndps-payments");
 const { ensureAdminSchema } = require("./migrate");
@@ -45,7 +46,8 @@ const {
   listWageSummary,
   getUnifiedList,
   listMonthlyAttendance,
-  getEmployeeAttendance
+  getEmployeeAttendance,
+  getOrdersGraph
 } = require("./routes/admin-data");
 
 const { listUsers, createUser, editUser, toggleUser, deleteUser } = require("./routes/users");
@@ -123,8 +125,11 @@ const routes = [
   ["POST", "/api/attendance/bulk", "attendance:write", saveBulkAttendance],
   ["GET", "/api/wages/summary", "wages:read", listWageSummary],
   ["POST", "/api/wages/calculate", "wages:read", calculateWages],
+  ["POST", "/api/wages/payout", "wages:read", recordPayout],
+  ["GET", "/api/wages/payout-history", "wages:read", getEmployeePayoutHistory],
   ["GET", "/api/customer-ledger", "ledger:read", getLedger],
   ["GET", "/api/customer-ledger/details", "ledger:read", getCustomerLedgerDetails],
+  ["POST", "/api/customer-ledger/pay", "ledger:read", payCustomerLedger],
   ["GET", "/api/reports", "reports:read", getReport],
   ["GET", "/api/reviews/:productId", null, getReviews],
   ["POST", "/api/reviews", null, submitReview],
@@ -132,12 +137,18 @@ const routes = [
   ["GET", "/api/favorites", null, getFavorites],
   ["POST", "/api/favorites/toggle", null, toggleFavorite],
   ["POST", "/api/ndps/initiate", null, initiateNDPSPayment],
-  ["POST", "/api/ndps/response", null, handleNDPSResponse],
+  ["POST", "/api/ndps/respon  se", null, handleNDPSResponse],
   ["POST", "/Response", null, handleNDPSPopupResponse],
   ["GET", "/api/ndps/status/:paymentId", null, checkPaymentStatus],
   ["POST", "/api/ndps/requery", null, requeryTransactionStatus],
   ["GET", "/api/admin/data-list", null, getUnifiedList],
-  ["POST", "/api/upload", null, uploadFiles]
+  ["GET", "/api/admin/orders-graph", "dashboard:read", getOrdersGraph],
+  ["POST", "/api/upload", null, uploadFiles],
+  ["GET", "/api/gallery", null, listGalleryItems],
+  ["POST", "/api/gallery", null, createGalleryItem],
+  ["PATCH", "/api/gallery", null, editGalleryItem],
+  ["PATCH", "/api/gallery/toggle", null, toggleGalleryItem],
+  ["POST", "/api/gallery/delete", null, deleteGalleryItem]
 ];
 
 // Route matcher that handles path parameters

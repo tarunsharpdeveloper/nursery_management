@@ -288,6 +288,35 @@ async function ensureAdminSchema() {
       calculated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS employee_payouts (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      employee_id INT NOT NULL,
+      payout_month VARCHAR(7) NOT NULL,
+      payout_type ENUM('salary', 'advance') NOT NULL DEFAULT 'salary',
+      amount DECIMAL(10,2) NOT NULL,
+      payment_method ENUM('cash', 'upi', 'bank_transfer', 'cheque') NOT NULL DEFAULT 'cash',
+      payout_date DATE NOT NULL,
+      remarks TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS gallery_items (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      media_type ENUM('image', 'video') NOT NULL DEFAULT 'image',
+      title VARCHAR(255) NOT NULL,
+      description TEXT,
+      media_url TEXT NOT NULL,
+      thumbnail_url TEXT,
+      category VARCHAR(100) DEFAULT 'General',
+      is_active TINYINT(1) NOT NULL DEFAULT 1,
+      is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 }
 
 module.exports = { ensureAdminSchema };

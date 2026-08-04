@@ -317,6 +317,25 @@ async function ensureAdminSchema() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS contact_messages (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+      email VARCHAR(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+      phone VARCHAR(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+      message LONGTEXT COLLATE utf8mb4_unicode_ci NOT NULL,
+      status ENUM('new','read','replied','closed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'new',
+      admin_reply LONGTEXT COLLATE utf8mb4_unicode_ci,
+      replied_by INT DEFAULT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      KEY email_idx (email),
+      KEY status_idx (status),
+      KEY created_at_idx (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
 }
 
 module.exports = { ensureAdminSchema };

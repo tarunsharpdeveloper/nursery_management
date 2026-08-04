@@ -299,4 +299,179 @@ async function sendOrderDeliveredEmail(orderData) {
   }
 }
 
-module.exports = { initEmailService, sendPasswordResetEmail, sendAccountCreationEmail, sendOrderConfirmationEmail, sendOrderDeliveredEmail };
+async function sendContactConfirmationEmail(contactData) {
+  if (!transporter) {
+    console.warn(`Contact confirmation email not sent to ${contactData.email}: Email service not configured`);
+    return false;
+  }
+
+  try {
+    const mailOptions = {
+      from: `${process.env.EMAIL_FROM_NAME || "Nursery Management"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
+      to: contactData.email,
+      subject: "We Received Your Message - Nursery Management",
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+            <h2 style="color: #2d5016;">Thank You for Contacting Us!</h2>
+            
+            <p>Hello <strong>${contactData.name}</strong>,</p>
+            
+            <p>Thank you for reaching out to us. We have received your message and will get back to you as soon as possible.</p>
+            
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #4CAF50;">
+              <p style="margin: 5px 0;"><strong>Reference Number:</strong> #${contactData.messageId}</p>
+              <p style="margin: 5px 0;"><strong>Email:</strong> ${contactData.email}</p>
+              <p style="margin: 5px 0;"><strong>Phone:</strong> ${contactData.phone}</p>
+            </div>
+            
+            <p>Our team will review your inquiry and respond to you within 24-48 hours. In the meantime, if you have any urgent questions, feel free to call us directly.</p>
+            
+            <p style="color: #666; font-size: 14px;">
+              <strong>Contact Details:</strong><br/>
+              Phone: <a href="tel:+918085263020">+91 80852 63020</a><br/>
+              Email: <a href="mailto:sales@greennursery.local">sales@greennursery.local</a>
+            </p>
+            
+            <p style="color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;">
+              Best regards,<br/>
+              <strong>Nursery Management Team</strong>
+            </p>
+          </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`Contact confirmation email sent to ${contactData.email}`);
+    return true;
+  } catch (error) {
+    console.error(`Failed to send contact confirmation email to ${contactData.email}:`, error.message);
+    return false;
+  }
+}
+
+async function sendContactToAdminEmail(contactData) {
+  if (!transporter) {
+    console.warn(`Admin notification email not sent: Email service not configured`);
+    return false;
+  }
+
+  try {
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER || process.env.EMAIL_USER;
+    if (!adminEmail) {
+      console.warn("Admin email not configured. Admin notification will not be sent.");
+      return false;
+    }
+
+    const dashboardUrl = `${process.env.CORS_ORIGIN || "http://localhost:3000"}/admin/contacts`;
+
+    const mailOptions = {
+      from: `${process.env.EMAIL_FROM_NAME || "Nursery Management"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
+      to: adminEmail,
+      subject: `New Contact Form Submission from ${contactData.name}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+            <h2 style="color: #2d5016;">New Contact Form Submission</h2>
+            
+            <p>A new contact form submission has been received from the website.</p>
+            
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #4CAF50;">
+              <p style="margin: 5px 0;"><strong>Name:</strong> ${contactData.name}</p>
+              <p style="margin: 5px 0;"><strong>Email:</strong> ${contactData.email}</p>
+              <p style="margin: 5px 0;"><strong>Phone:</strong> ${contactData.phone}</p>
+              <p style="margin: 5px 0;"><strong>Message ID:</strong> #${contactData.messageId}</p>
+              <p style="margin: 5px 0;"><strong>Submitted:</strong> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p>
+            </div>
+            
+            <h3 style="color: #2d5016;">Message:</h3>
+            <div style="background-color: #fff3cd; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #ffc107;">
+              <p style="white-space: pre-wrap; margin: 0;">${contactData.message}</p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${dashboardUrl}" style="background-color: #4CAF50; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                View in Admin Dashboard
+              </a>
+            </div>
+            
+            <p style="color: #666; font-size: 14px;">Please log in to the admin panel to review and reply to this message.</p>
+            
+            <p style="color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;">
+              <strong>System Generated Email</strong> - Please do not reply to this email. Use the admin dashboard to respond.
+            </p>
+          </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`Admin notification email sent to ${adminEmail}`);
+    return true;
+  } catch (error) {
+    console.error(`Failed to send admin notification email:`, error.message);
+    return false;
+  }
+}
+
+async function sendContactReplyEmail(replyData) {
+  if (!transporter) {
+    console.warn(`Contact reply email not sent to ${replyData.email}: Email service not configured`);
+    return false;
+  }
+
+  try {
+    const mailOptions = {
+      from: `${process.env.EMAIL_FROM_NAME || "Nursery Management"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
+      to: replyData.email,
+      subject: "We've Replied to Your Message - Nursery Management",
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+            <h2 style="color: #2d5016;">Reply to Your Message</h2>
+            
+            <p>Hello <strong>${replyData.name}</strong>,</p>
+            
+            <p>Thank you for your inquiry. We have reviewed your message and here is our response:</p>
+            
+            <div style="background-color: #e8f5e9; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #4CAF50;">
+              <p style="white-space: pre-wrap; margin: 0;">${replyData.reply}</p>
+            </div>
+            
+            <p>If you have any further questions, please don't hesitate to reach out to us.</p>
+            
+            <p style="color: #666; font-size: 14px;">
+              <strong>Contact Details:</strong><br/>
+              Phone: <a href="tel:+918085263020">+91 80852 63020</a><br/>
+              Email: <a href="mailto:sales@greennursery.local">sales@greennursery.local</a>
+            </p>
+            
+            <p style="color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;">
+              Best regards,<br/>
+              <strong>Nursery Management Team</strong>
+            </p>
+          </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`Contact reply email sent to ${replyData.email}`);
+    return true;
+  } catch (error) {
+    console.error(`Failed to send contact reply email to ${replyData.email}:`, error.message);
+    return false;
+  }
+}
+
+module.exports = { 
+  initEmailService, 
+  sendPasswordResetEmail, 
+  sendAccountCreationEmail, 
+  sendOrderConfirmationEmail, 
+  sendOrderDeliveredEmail,
+  sendContactConfirmationEmail,
+  sendContactToAdminEmail,
+  sendContactReplyEmail
+};

@@ -13977,6 +13977,7 @@ blockquote.vs-quote .quote-author {
   font-size: 20px;
   color: var(--text-color);
   font-weight: 700;
+  margin-left: 0.5rem;
 }
 
 .product-about .product-text {

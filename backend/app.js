@@ -53,6 +53,7 @@ const {
 const { listUsers, createUser, editUser, toggleUser, deleteUser } = require("./routes/users");
 const { listRoles, createRole, editRole, deleteRole } = require("./routes/roles");
 const { uploadFiles } = require("./routes/upload");
+const { submitContact, listContactMessages, getContactMessage, replyToContact, updateContactStatus, deleteContact, getContactStats } = require("./routes/contact");
 
 const helpers = { readJson, readFormData, sendJson };
 
@@ -148,7 +149,15 @@ const routes = [
   ["POST", "/api/gallery", null, createGalleryItem],
   ["PATCH", "/api/gallery", null, editGalleryItem],
   ["PATCH", "/api/gallery/toggle", null, toggleGalleryItem],
-  ["POST", "/api/gallery/delete", null, deleteGalleryItem]
+  ["POST", "/api/gallery/delete", null, deleteGalleryItem],
+  // Contact Us Routes
+  ["POST", "/api/contact/submit", null, submitContact],
+  ["GET", "/api/contact/messages", "contacts:read", listContactMessages],
+  ["POST", "/api/contact/message", "contacts:read", getContactMessage],
+  ["POST", "/api/contact/reply", "contacts:write", replyToContact],
+  ["PATCH", "/api/contact/status", "contacts:write", updateContactStatus],
+  ["POST", "/api/contact/delete", "contacts:write", deleteContact],
+  ["GET", "/api/contact/stats", "contacts:read", getContactStats]
 ];
 
 // Route matcher that handles path parameters

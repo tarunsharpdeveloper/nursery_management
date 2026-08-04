@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Banknote, BarChart3, Boxes, CalendarCheck, ClipboardList, CreditCard, Factory, Leaf, LogOut, Menu, NotebookTabs, Package, Receipt, Tags, Truck, UserCircle, Users, User, Shield, Image } from "lucide-react";
+import { Banknote, BarChart3, Boxes, CalendarCheck, ClipboardList, CreditCard, Factory, Mail, LogOut, Menu, NotebookTabs, Package, Receipt, Tags, Truck, UserCircle, Users, User, Shield, Image } from "lucide-react";
 import { clearAdminSession, getStoredUser, type AdminUser } from "@/lib/api";
 
 const links = [
@@ -19,6 +19,7 @@ const links = [
   { href: "/admin/ledger", label: "Ledger", icon: NotebookTabs, permission: "ledger:read" },
   { href: "/admin/advance-bookings", label: "Bookings", icon: ClipboardList, permission: "bookings:read" },
   { href: "/admin/dispatch", label: "Dispatch", icon: Truck, permission: "dispatch:read" },
+  { href: "/admin/contacts", label: "Contact Messages", icon: Mail, permission: "contacts:read" },
   { href: "/admin/employees", label: "Employees", icon: Users, permission: "employees:read" },
   { href: "/admin/attendance", label: "Attendance", icon: CalendarCheck, permission: "attendance:read" },
   { href: "/admin/users", label: "Users Management", icon: UserCircle, permission: "users:read" },

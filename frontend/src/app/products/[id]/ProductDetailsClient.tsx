@@ -625,7 +625,7 @@ export default function ProductDetailsClient({
                 </div>
 
                 {/* Countdown */}
-                <span className="counter-title">Limited Time Offer:</span>
+                {/* <span className="counter-title">Limited Time Offer:</span>
                 <div className="counter-style">
                   <ul className="offer-counter">
                     {[
@@ -640,7 +640,7 @@ export default function ProductDetailsClient({
                       </li>
                     ))}
                   </ul>
-                </div>
+                </div> */}
 
                 {/* CTA Buttons */}
                 <div className="pro-btns">

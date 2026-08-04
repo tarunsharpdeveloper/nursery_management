@@ -1,9 +1,114 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { apiRequest } from "@/lib/api";
+import { useToast } from "@/context/ToastContext";
 
 const mapUrl = "https://www.google.com/maps?q=23.180056,75.779583&output=embed";
 const directionsUrl = "https://www.google.com/maps/place/23%C2%B010'48.2%22N+75%C2%B046'46.5%22E";
 
 export default function ContactPage() {
+  const { showToast } = useToast();
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    tel: "",
+    message: ""
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }));
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required";
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = "Name must be at least 2 characters";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    if (!formData.tel.trim()) {
+      newErrors.tel = "Phone number is required";
+    } else if (!/^\d{10}$/.test(formData.tel.replace(/\D/g, ''))) {
+      newErrors.tel = "Phone number must be exactly 10 digits";
+    }
+
+    if (!formData.message.trim()) {
+      newErrors.message = "Message is required";
+    } else if (formData.message.trim().length < 10) {
+      newErrors.message = "Message must be at least 10 characters";
+    } else if (formData.message.trim().length > 5000) {
+      newErrors.message = "Message must be less than 5000 characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      showToast("Please fix the errors in the form", "error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await apiRequest("/api/contact/submit", {
+        method: "POST",
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.tel.replace(/\D/g, ''), // Remove non-digits
+          message: formData.message
+        })
+      });
+
+      setSubmitted(true);
+      setFormData({
+        name: "",
+        email: "",
+        tel: "",
+        message: ""
+      });
+      setErrors({});
+      showToast("Thank you for contacting us! We will get back to you soon.", "success");
+
+      // Reset submitted state after 5 seconds
+      setTimeout(() => {
+        setSubmitted(false);
+      }, 5000);
+    } catch (error: any) {
+      const errorMessage = error?.fieldErrors?.form || error?.message || "Failed to submit the form. Please try again.";
+      showToast(errorMessage, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <main>
       {/* breadcumb */}
@@ -88,28 +193,81 @@ export default function ContactPage() {
                 </div>
               </div>
               <div className="col-lg-7 form-style2">
-                <form className="ajax-contact" action="#" method="POST">
+                <form onSubmit={handleSubmit} className="contact-form">
                   <h3 className="contact-box__title">General Query</h3>
                   <p className="contact-box__text">Share your requirement and our team will help with availability, quantity, price, and pickup or delivery details.</p>
+                  
+                  {submitted && (
+                    <div style={{ backgroundColor: '#d4edda', color: '#155724', padding: '12px', borderRadius: '4px', marginBottom: '20px', border: '1px solid #c3e6cb' }}>
+                      ✓ Thank you for contacting us! We will get back to you soon.
+                    </div>
+                  )}
+
                   <div className="row gx-20">
                     <div className="col-md-6 form-group">
-                      <input className="form-control" type="text" name="name" id="name" placeholder="Your Name" />
+                      <input
+                        className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+                        type="text"
+                        name="name"
+                        id="name"
+                        placeholder="Your Name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        disabled={loading}
+                      />
+                      {errors.name && <div style={{ color: '#dc3545', fontSize: '12px', marginTop: '4px' }}>{errors.name}</div>}
                     </div>
                     <div className="col-md-6 form-group">
-                      <input className="form-control" type="email" name="email" id="email" placeholder="Email Address" />
+                      <input
+                        className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                        type="email"
+                        name="email"
+                        id="email"
+                        placeholder="Email Address"
+                        value={formData.email}
+                        onChange={handleChange}
+                        disabled={loading}
+                      />
+                      {errors.email && <div style={{ color: '#dc3545', fontSize: '12px', marginTop: '4px' }}>{errors.email}</div>}
                     </div>
                     <div className="col-md-12 form-group">
-                      <input className="form-control" type="tel" name="tel" id="tel" placeholder="Phone No" />
+                      <input
+                        className={`form-control ${errors.tel ? 'is-invalid' : ''}`}
+                        type="tel"
+                        name="tel"
+                        id="tel"
+                        placeholder="Phone No (10 digits)"
+                        value={formData.tel}
+                        onChange={handleChange}
+                        disabled={loading}
+                      />
+                      {errors.tel && <div style={{ color: '#dc3545', fontSize: '12px', marginTop: '4px' }}>{errors.tel}</div>}
                     </div>
                     <div className="col-12 form-group">
-                      <textarea className="form-control" name="message" id="message" placeholder="Type Your Message"></textarea>
+                      <textarea
+                        className={`form-control ${errors.message ? 'is-invalid' : ''}`}
+                        name="message"
+                        id="message"
+                        placeholder="Type Your Message"
+                        value={formData.message}
+                        onChange={handleChange}
+                        disabled={loading}
+                        rows={5}
+                      ></textarea>
+                      {errors.message && <div style={{ color: '#dc3545', fontSize: '12px', marginTop: '4px' }}>{errors.message}</div>}
                     </div>
                     <div className="col-12">
-                      <button type="button" className="vs-btn style1">Submit Message<i className="far fa-arrow-right"></i></button>
+                      <button
+                        type="submit"
+                        className="vs-btn style1"
+                        disabled={loading}
+                        style={{ opacity: loading ? 0.6 : 1 }}
+                      >
+                        {loading ? "Submitting..." : "Submit Message"}<i className="far fa-arrow-right"></i>
+                      </button>
                     </div>
                   </div>
                 </form>
-                <p className="form-messages mb-0 mt-3"></p>
               </div>
             </div>
           </div>

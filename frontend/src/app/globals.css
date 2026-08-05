@@ -3070,7 +3070,7 @@ section:has(.product-slider-container) .container {
   display: block;
   font-size: 36px;
   line-height: 1.1;
-  margin-top: 12px;
+  margin-top: 5px;
 }
 
 .table-wrap {
@@ -4910,7 +4910,7 @@ tbody tr:hover {
 .product-variant-option span {
   font-weight: 800;
   color: #1a1a1a;
-  text-transform: capitalize;
+  /* text-transform: capitalize; */
 }
 
 .product-variant-option strong {
@@ -5026,6 +5026,7 @@ tbody tr:hover {
   padding-right: 10px;
   border-radius: 10px;
   overflow: hidden;
+  height: 50px;
 }
 
 .qty-input {
@@ -5425,10 +5426,13 @@ tbody tr:hover {
   background-color: #8cc63f; 
   border-color: #8cc63f; 
   color: #fff;
-  transform: scale(1.15);
+  transform: none !important;
 }
 
-/* Reviews Form */
+/* Ensure no scaling on stars during interactions */
+.rating-select .stars a {
+  transform: none !important;
+}
 .vs-comment-form.reviews-form .form-title {
   display: flex;
   align-items: flex-start;
@@ -6585,8 +6589,7 @@ body.mobile-menu-open {
 
 .rating-select .stars a:hover,
 .rating-select .stars a.active {
-  transform: scale(1.15);
-  filter: drop-shadow(0 2px 4px rgba(140, 198, 63, 0.3));
+  /* Stars stay at the same size on hover */
 }
 
 /* Tighter spacing for stars in displayed reviews */

@@ -7,7 +7,12 @@ import {
   TrendingUp, 
   ShoppingBag, 
   IndianRupee, 
-  BarChart3
+  BarChart3,
+  Package,
+  Package2,
+  ShoppingCart,
+  Users,
+  Bookmark
 } from "lucide-react";
 import { apiRequest } from "@/lib/api";
 
@@ -120,29 +125,59 @@ export function AdminDashboard() {
 
       {/* Main KPI Stat Cards */}
       <div className="stat-grid">
-        <div className="stat">
-          <span className="meta">Products</span>
-          <strong>{stats?.total_products ?? 0}</strong>
+        <div className="stat" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", color: "#16a34a", flexShrink: 0 }}>
+            <Package size={24} />
+          </div>
+          <div>
+            <span className="meta">Products</span>
+            <strong style={{ fontSize: "28px" }}>{stats?.total_products ?? 0}</strong>
+          </div>
         </div>
-        <div className="stat">
-          <span className="meta">Available Stock</span>
-          <strong>{stats?.total_stock ?? 0}</strong>
+        <div className="stat" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", color: "#d97706", flexShrink: 0 }}>
+            <Package2 size={24} />
+          </div>
+          <div>
+            <span className="meta">Available Stock</span>
+            <strong style={{ fontSize: "28px" }}>{stats?.total_stock ?? 0}</strong>
+          </div>
         </div>
-        <div className="stat">
-          <span className="meta">Total Orders</span>
-          <strong>{stats?.total_orders ?? 0}</strong>
+        <div className="stat" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb", flexShrink: 0 }}>
+            <ShoppingCart size={24} />
+          </div>
+          <div>
+            <span className="meta">Total Orders</span>
+            <strong style={{ fontSize: "28px" }}>{stats?.total_orders ?? 0}</strong>
+          </div>
         </div>
-        <div className="stat">
-          <span className="meta">Total Order Value</span>
-          <strong>Rs. {Number(stats?.order_value ?? 0).toLocaleString("en-IN")}</strong>
+        <div className="stat" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#fecaca", display: "flex", alignItems: "center", justifyContent: "center", color: "#dc2626", flexShrink: 0 }}>
+            <IndianRupee size={24} />
+          </div>
+          <div>
+            <span className="meta">Total Order Value</span>
+            <strong style={{ fontSize: "20px" }}>₹ {Number(stats?.order_value ?? 0).toLocaleString("en-IN")}</strong>
+          </div>
         </div>
-        <div className="stat">
-          <span className="meta">Advance Bookings</span>
-          <strong>{stats?.total_bookings ?? 0}</strong>
+        <div className="stat" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#e0e7ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#6366f1", flexShrink: 0 }}>
+            <Bookmark size={24} />
+          </div>
+          <div>
+            <span className="meta">Advance Bookings</span>
+            <strong style={{ fontSize: "28px" }}>{stats?.total_bookings ?? 0}</strong>
+          </div>
         </div>
-        <div className="stat">
-          <span className="meta">Total Employees</span>
-          <strong>{stats?.total_employees ?? 0}</strong>
+        <div className="stat" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#f3e8ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#9333ea", flexShrink: 0 }}>
+            <Users size={24} />
+          </div>
+          <div>
+            <span className="meta">Total Employees</span>
+            <strong style={{ fontSize: "28px" }}>{stats?.total_employees ?? 0}</strong>
+          </div>
         </div>
       </div>
 

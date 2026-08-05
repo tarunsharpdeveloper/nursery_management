@@ -49,7 +49,7 @@ export function ProductReviewSummary({
               key={index}
               style={{
                 color: filled ? "#f0a500" : "#d0d0d0",
-                fontSize: "13px",
+                fontSize: "20px",
                 lineHeight: "1",
                 display: "inline-block"
               }}

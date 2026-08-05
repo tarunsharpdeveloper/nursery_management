@@ -236,6 +236,22 @@ export default function ProductDetailsClient({
     }
   };
 
+  // Helper function to abbreviate unit names
+  const getUnitAbbreviation = (unit: string | null): string => {
+    if (!unit) return "";
+    const abbreviations: { [key: string]: string } = {
+      "Piece": "pc",
+      "Packet": "pkt",
+      "Kg": "kg",
+      "Gram": "gm",
+      "MiliLitre": "ml",
+      "Litre": "l",
+      "Bag": "bag",
+      "Bundle": "bdl"
+    };
+    return abbreviations[unit] || unit;
+  };
+
   // ── Related products (exclude current, show up to 8 for slider) ──────────────────
   const relatedBackend = (Array.isArray(allProducts) ? allProducts : [])
     .filter((p) => p.id !== Number(id) && p.is_active)
@@ -472,6 +488,14 @@ export default function ProductDetailsClient({
                   </span>
                   <ProductReviewSummary productId={Number(id)} rating={product.average_rating} totalReviews={product.total_reviews} />
                   <span className="product-rating__total">(Verified)</span>
+                   <button
+                    type="button"
+                    className="icon-btn"
+                    aria-label={product && isFavorite(product.id) ? "Remove from Favorites" : "Add to Favorites"}
+                    onClick={(e) => product && toggleFavorite({ id: product.id, name: product.name }, e)}
+                  >
+                    <i className={product && isFavorite(product.id) ? "fas fa-heart" : "far fa-heart"} style={{ color: product && isFavorite(product.id) ? "#dc2626" : "#666666" }}></i>
+                  </button>
                 </div>
 
                 {/* Title */}
@@ -500,10 +524,11 @@ export default function ProductDetailsClient({
                     </div>
                     <div className="product-variant-options">
                       {variants.map((variant) => {
-                        const label =
-                          [variant.unit_value, variant.unit].filter(Boolean).join(" ") ||
-                          variant.unit ||
-                          "Default";
+                        const unitValue = variant.unit_value || "";
+                        const unitAbbr = getUnitAbbreviation(variant.unit);
+                        const label = unitValue && unitAbbr 
+                          ? `${unitValue}${unitAbbr ? "/" + unitAbbr : ""}`
+                          : unitValue || unitAbbr || "Default";
                         const stock = Number(variant.available_quantity);
 
                         return (
@@ -516,9 +541,12 @@ export default function ProductDetailsClient({
                               setQuantity(1);
                             }}
                           >
+                            <div style={{display:'flex' ,gap:'0.5rem'}}>
                             <span>{label}</span>
+                            <small>({stock > 0 ? `${stock} in stock` : "Out of stock"})</small>
+                            </div>
                             <strong>Rs.&nbsp;{Number(variant.selling_price).toFixed(2)}</strong>
-                            <small>{stock > 0 ? `${stock} in stock` : "Out of stock"}</small>
+                            
                           </button>
                         );
                       })}
@@ -668,14 +696,7 @@ export default function ProductDetailsClient({
                   >
                     Add to Cart
                   </button>
-                  <button
-                    type="button"
-                    className="icon-btn"
-                    aria-label={product && isFavorite(product.id) ? "Remove from Favorites" : "Add to Favorites"}
-                    onClick={(e) => product && toggleFavorite({ id: product.id, name: product.name }, e)}
-                  >
-                    <i className={product && isFavorite(product.id) ? "fas fa-heart" : "far fa-heart"} style={{ color: product && isFavorite(product.id) ? "#dc2626" : "#666666" }}></i>
-                  </button>
+                 
                 </div>
 
                 {/* Payment image */}
@@ -722,7 +743,7 @@ export default function ProductDetailsClient({
           </div>
 
           {/* Benefits & Care */}
-          <div>
+          {/* <div>
             <div className="row gx-50">
               <div className="col-lg-6 mb-50">
                 <div className="pros">
@@ -753,7 +774,7 @@ export default function ProductDetailsClient({
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Additional Information */}
           <div className="mb-30">
@@ -806,7 +827,7 @@ export default function ProductDetailsClient({
                           color: "#555",
                         }}
                       >
-                        {v.unit_value ? `${v.unit_value} ${v.unit || ""}`.trim() : v.unit || "Default"} — Rs. {Number(v.selling_price).toFixed(2)}
+                        {v.unit_value ? `${v.unit_value}${getUnitAbbreviation(v.unit) ? "/" + getUnitAbbreviation(v.unit) : ""}` : getUnitAbbreviation(v.unit) || "Default"} — Rs. {Number(v.selling_price).toFixed(2)}
                       </span>
                     ))}
                   </div>

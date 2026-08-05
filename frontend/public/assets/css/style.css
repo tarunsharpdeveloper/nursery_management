@@ -11720,6 +11720,7 @@ blockquote.vs-quote .quote-author {
 .reviews-form .form-title .rating-select .stars a {
   height: 16px;
   width: 18px;
+  margin-right: 8px;
 }
 
 .reviews-form .form-title .rating-select .stars a::after {
@@ -11729,7 +11730,7 @@ blockquote.vs-quote .quote-author {
 
 .reviews-form .form-title .rating-select .stars a::before {
   color: var(--text-color);
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .reviews-form .form-title .rating-select label {
@@ -12208,6 +12209,7 @@ blockquote.vs-quote .quote-author {
   text-indent: -999em;
   display: inline-block;
   text-decoration: none;
+  margin-right: 8px;
 }
 
 .rating-select .stars a::before {
@@ -12232,12 +12234,12 @@ blockquote.vs-quote .quote-author {
 
 .rating-select .stars:hover a::before {
   content: "\f005";
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .rating-select .stars.selected a.active::before {
   content: "\f005";
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .rating-select .stars.selected a.active~a::before {
@@ -12247,7 +12249,7 @@ blockquote.vs-quote .quote-author {
 
 .rating-select .stars.selected a:not(.active)::before {
   content: "\f005";
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .woocommerce-reviews .vs-post-comment:first-child {
@@ -14015,8 +14017,8 @@ blockquote.vs-quote .quote-author {
   color: var(--black-color);
   border: 1px solid var(--vs-border-color);
   font-size: 20px;
-  width: var(--btn-size, 54px);
-  height: var(--btn-size, 54px);
+  width: var(--btn-size, 47px);
+  height: var(--btn-size, 47px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -14182,15 +14184,17 @@ blockquote.vs-quote .quote-author {
   display: flex;
   align-items: center;
   border: 2px solid var(--theme-color2);
-  min-width: 144px;
+  min-width: 130px;
   padding-right: 25px;
   border-radius: 10px;
   overflow: hidden;
+  height: 50px;
 }
 
 @media (max-width: 991px) {
   .quantity__field {
     min-width: 130px;
+    height: 50px;
   }
 }
 
@@ -14306,7 +14310,7 @@ blockquote.vs-quote .quote-author {
 
 .product-information__item span {
   color: var(--text-color);
-  font-size: 18px;
+  font-size: 15px;
 }
 
 @media (max-width: 767px) {
@@ -15293,6 +15297,7 @@ blockquote.vs-quote .quote-author {
 .rating-select .stars a:hover {
   color: #ffc107 !important;
   background: transparent !important;
+  transform: none !important;
 }
 
 .rating-select .stars a:hover ~ a {

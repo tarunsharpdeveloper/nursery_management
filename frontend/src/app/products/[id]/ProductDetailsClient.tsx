@@ -646,8 +646,8 @@ export default function ProductDetailsClient({
                         <i className="fal fa-plus"></i>
                       </button>
                     </div>
-                    <span style={{ color: "var(--muted)", fontSize: "14px", marginLeft: '12px' }}>
-                      {displayStock} in stock
+                    <span style={{ color: "var(--muted)", fontSize: "14px" }}>
+                      ({displayStock} in stock)
                     </span>
                   </div>
                 </div>

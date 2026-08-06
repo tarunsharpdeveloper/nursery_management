@@ -14016,9 +14016,9 @@ blockquote.vs-quote .quote-author {
   background-color: transparent;
   color: var(--black-color);
   border: 1px solid var(--vs-border-color);
-  font-size: 20px;
-  width: var(--btn-size, 47px);
-  height: var(--btn-size, 47px);
+  font-size: 18px;
+  width: var(--btn-size, 40px);
+  height: var(--btn-size, 40px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -14168,7 +14168,7 @@ blockquote.vs-quote .quote-author {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 21px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 

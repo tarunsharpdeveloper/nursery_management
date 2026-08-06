@@ -4891,7 +4891,7 @@ tbody tr:hover {
 
 .product-variant-options {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(151px, 1fr));
   gap: 10px;
 }
 
@@ -4951,7 +4951,7 @@ tbody tr:hover {
   background-color: transparent;
   color: #1a1a1a;
   border: 1px solid #ccc;
-  font-size: 20px;
+  font-size: 17px;
   width: 54px;
   height: 54px;
   display: inline-flex;
@@ -5014,7 +5014,7 @@ tbody tr:hover {
 .quantity {
   display: flex;
   align-items: center;
-  gap: 21px;
+  gap: 18px;
   flex-wrap: wrap;
 }
 
@@ -7875,6 +7875,7 @@ body.mobile-menu-open {
 
 @media (max-width: 480px) {
   /* Extra small text adjustments for very small screens */
+  
   .hero-style1 .hero-title {
     font-size: 24px !important;
     line-height: 1.2 !important;

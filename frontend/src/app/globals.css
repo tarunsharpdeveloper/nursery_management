@@ -2772,6 +2772,7 @@ p {
   .admin-user-profile {
     gap: 0;
   }
+  
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -3024,7 +3025,7 @@ section:has(.product-slider-container) .container {
   }
   
   .product-slider-wrapper {
-    padding: 0 12px !important; /* Reduced extra space */
+    padding: 0 1px !important; /* Reduced extra space */
   }
 }
 
@@ -9115,7 +9116,7 @@ body.mobile-menu-open {
 
   .modern-card .product-content,
   .product-style1 .product-content {
-    padding: 8px 8px 10px 8px !important;
+    padding: 8px 6px 10px 6px !important;
     display: flex !important;
     flex-direction: column !important;
     flex: 1 !important;
@@ -9747,3 +9748,16 @@ body.mobile-menu-open {
 }
 
 
+
+
+/* Responsive star size for product review summary */
+.review-star-responsive {
+  font-size: 20px;
+
+}
+
+@media (max-width: 480px) {
+  .review-star-responsive {
+    font-size: 12px;
+  }
+}

@@ -570,7 +570,7 @@ export default function ProductsPage() {
                                 <i className={isFavorite(product.id) ? "fas fa-heart" : "far fa-heart"} style={{ color: isFavorite(product.id) ? "#dc2626" : "#666666" }}></i>
                               </button>
                               <Link href={`/products/${product.id}`}>
-                                <img src={product.image} alt={product.name} className="img w-100" />
+                                <img src={product.image} alt={product.name} loading="lazy" className="img w-100" />
                               </Link>
                               {product.stock <= 0 && <span className="product-tag2" style={{ background: "var(--danger)" }}>Out of Stock</span>}
                               {product.stock > 0 && product.stock < 100 && <span className="product-tag2" style={{ background: "#d4a516" }}>Limited Stock</span>}

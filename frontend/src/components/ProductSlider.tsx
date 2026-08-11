@@ -164,6 +164,7 @@ export function ProductSlider({ products, itemsPerView = 5 }: ProductSliderProps
                       <img
                         src={prod.image}
                         alt={prod.name}
+                        loading="lazy"
                         className="img w-100"
                       />
                     </Link>

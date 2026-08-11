@@ -27,7 +27,7 @@ export function ProductReviewSummary({
         display: "inline-flex",
         flexDirection: "row",
         alignItems: "center",
-        gap: "6px",
+        gap: "3px",
         whiteSpace: "nowrap",
         flexWrap: "nowrap",
         margin: "3px 0"
@@ -47,9 +47,9 @@ export function ProductReviewSummary({
           return (
             <span
               key={index}
+              className="review-star-responsive"
               style={{
                 color: filled ? "#f0a500" : "#d0d0d0",
-                fontSize: "20px",
                 lineHeight: "1",
                 display: "inline-block"
               }}

@@ -177,9 +177,9 @@ export default function HomePage() {
   const [heroPaused, setHeroPaused] = useState(false);
 
   const heroSlides = [
-    { src: "/slider-4.png", alt: "Awantika Seeds Slider 1" },
-    { src: "/slider-5.png", alt: "Awantika Seeds Slider 2" },
-    { src: "/slider-6.png", alt: "Awantika Seeds Slider 3" }
+    { src: "/slider-4.avif", alt: "Awantika Seeds Slider 1" },
+    { src: "/slider-5.avif", alt: "Awantika Seeds Slider 2" },
+    { src: "/slider-6.avif", alt: "Awantika Seeds Slider 3" }
   ];
 
   const handleHeroNext = () => {
@@ -298,6 +298,12 @@ export default function HomePage() {
       try {
         const data = await apiRequest<any[]>("/api/categories");
         if (Array.isArray(data)) {
+          console.log("📦 Loaded categories from database:", data.length);
+          console.table(data.map(cat => ({
+            name: cat.name,
+            hasPhoto: !!cat.photo_urls,
+            photoUrls: cat.photo_urls ? cat.photo_urls.substring(0, 50) + '...' : 'null'
+          })));
           setDbCategories(data);
         }
       } catch (error) {
@@ -308,31 +314,66 @@ export default function HomePage() {
   }, []);
 
   const getCategoryImageUrl = (categoryName: string, index: number = 0) => {
-    const lowerName = categoryName.toLowerCase();
+    const lowerName = categoryName.toLowerCase().trim();
 
-    // Prioritize explicit item-1.png / item-2.png mapping
-    if (categoryArt[categoryName]) {
-      return categoryArt[categoryName];
-    }
-    if (lowerName.includes("seed")) {
-      return "/item-2.png";
-    }
-    if (lowerName.includes("plant") || lowerName.includes("fruit") || lowerName.includes("flower") || lowerName.includes("tree")) {
-      return "/item-1.png";
-    }
-
-    const dbCat = dbCategories.find(c => c.name.toLowerCase() === categoryName.toLowerCase());
+    // Priority 1: Check if category has actual images from database
+    // IMPORTANT: Trim both sides to handle trailing/leading spaces in database
+    const dbCat = dbCategories.find(c => c.name.toLowerCase().trim() === categoryName.toLowerCase().trim());
+    
+    console.log(`[Category: ${categoryName}]`, {
+      foundInDB: !!dbCat,
+      hasPhotoUrls: dbCat?.photo_urls ? true : false,
+      photoUrlsValue: dbCat?.photo_urls,
+      searchingFor: categoryName.trim(),
+      dbMatch: dbCat?.name
+    });
+    
     if (dbCat && dbCat.photo_urls) {
       try {
         const urls = JSON.parse(dbCat.photo_urls);
-        if (Array.isArray(urls) && urls.length > 0 && urls[0]) return getMediaUrl(urls[0]);
-        if (typeof urls === 'string' && urls) return getMediaUrl(urls);
-      } catch {
-        if (dbCat.photo_urls) return getMediaUrl(dbCat.photo_urls);
+        if (Array.isArray(urls) && urls.length > 0 && urls[0]) {
+          const finalUrl = getMediaUrl(urls[0]);
+          console.log(`  ✅ Using DB image (array):`, finalUrl);
+          return finalUrl;
+        }
+        if (typeof urls === 'string' && urls) {
+          const finalUrl = getMediaUrl(urls);
+          console.log(`  ✅ Using DB image (string):`, finalUrl);
+          return finalUrl;
+        }
+      } catch (e) {
+        if (dbCat.photo_urls) {
+          const finalUrl = getMediaUrl(dbCat.photo_urls);
+          console.log(`  ✅ Using DB image (raw):`, finalUrl);
+          return finalUrl;
+        }
       }
     }
+
+    // Priority 2: If no DB image, check if any product in this category has an image
+    const categoryProducts = products.filter(p => p.category.toLowerCase().trim() === lowerName);
+    if (categoryProducts.length > 0 && categoryProducts[0].image) {
+      console.log(`  ⚠️ Using product image:`, categoryProducts[0].image);
+      return categoryProducts[0].image;
+    }
+
+    // Priority 3 (Fallback): Use static placeholder based on category type
+    if (categoryArt[categoryName]) {
+      console.log(`  ❌ Using categoryArt placeholder:`, categoryArt[categoryName]);
+      return categoryArt[categoryName];
+    }
+    if (lowerName.includes("seed")) {
+      console.log(`  ❌ Using seed placeholder: /item-2.png`);
+      return "/item-2.png";
+    }
+    if (lowerName.includes("plant") || lowerName.includes("fruit") || lowerName.includes("flower") || lowerName.includes("tree")) {
+      console.log(`  ❌ Using plant placeholder: /item-1.png`);
+      return "/item-1.png";
+    }
     
-    return index % 2 === 0 ? "/item-1.png" : "/item-2.png";
+    const placeholder = index % 2 === 0 ? "/item-1.png" : "/item-2.png";
+    console.log(`  ❌ Using index placeholder:`, placeholder);
+    return placeholder;
   };
 
   const categoryList = useMemo(() => {
@@ -489,7 +530,7 @@ export default function HomePage() {
           <div className="row">
             <div className="col-lg-8 mx-auto">
               <div className="title-area text-center">
-                <div className="sec-icon"><img src="/assets/img/icons/s-1-1.png" alt="icon" /></div>
+                <div className="sec-icon"><img src="/assets/img/icons/s-1-1.png" alt="icon" loading="lazy" /></div>
                 <span className="sec-subtitle">Browse Category</span>
                 <h2 className="sec-title">Pick Your Product Type</h2>
               </div>
@@ -533,7 +574,7 @@ export default function HomePage() {
                       }}
                     >
                       <div style={{ position: "relative", width: "100%", height: "165px", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
-                        <img src={cat.image} alt={cat.name} className="category-img" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }} />
+                        <img src={cat.image} alt={cat.name} className="category-img" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }} />
                         <div className="category-overlay" style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(45, 80, 22, 0) 0%, rgba(45, 80, 22, 0.6) 100%)", opacity: 0, transition: "opacity 0.5s ease", zIndex: 1 }} />
                         <div className="category-item-badge">
                           {cat.count} {cat.count === 1 ? "Item" : "Items"}
@@ -563,7 +604,7 @@ export default function HomePage() {
 
       {/* ── About Area (Awantika Seeds Video & Checklist) ── */}
       <section className="about-layout1 z-index-common space-extra-bottom">
-        <img src="/assets/img/about/about-ele1-1.png" alt="about element" className="about-ele1" />
+        <img src="/assets/img/about/about-ele1-1.png" alt="about element" className="about-ele1" loading="lazy" />
         <div className="container">
           <div className="row">
             <div className="col-lg-6 mb-30">
@@ -587,9 +628,9 @@ export default function HomePage() {
                   <p className="about-text">Cultivated locally in Ujjain, Madhya Pradesh, we specialize in high-survival saplings, high-germination flower and vegetable seeds, and certified organic compost. Supporting commercial orchards, local farmers, and gardening enthusiasts with robust stock and seamless billing records.</p>
                   <div className="list-style1">
                     <ul>
-                      <li><i><img src="/assets/img/icons/shield.png" alt="shield" /></i>100% Quality Checked Saplings</li>
-                      <li><i><img src="/assets/img/icons/marijuana.png" alt="saplings" /></i>Natural &amp; Organic Soil Mixes</li>
-                      <li><i><img src="/assets/img/icons/microscope.png" alt="microscope" /></i>Horticultural Expert Checked</li>
+                      <li><i><img src="/assets/img/icons/shield.png" alt="shield" loading="lazy" /></i>100% Quality Checked Saplings</li>
+                      <li><i><img src="/assets/img/icons/marijuana.png" alt="saplings" loading="lazy" /></i>Natural &amp; Organic Soil Mixes</li>
+                      <li><i><img src="/assets/img/icons/microscope.png" alt="microscope" loading="lazy" /></i>Horticultural Expert Checked</li>
                     </ul>
                   </div>
                 </div>
@@ -603,7 +644,7 @@ export default function HomePage() {
               <div className="col-6 col-lg-3">
                 <div className="stat-card">
                   <div className="stat-icon-wrapper">
-                    <img src="/assets/img/icons/feature-1-1.png" alt="saplings" />
+                    <img src="/assets/img/icons/feature-1-1.png" alt="saplings" loading="lazy" />
                   </div>
                   <div className="stat-number-wrap">
                     <AnimatedCounter end={50000} suffix="+" />
@@ -616,7 +657,7 @@ export default function HomePage() {
               <div className="col-6 col-lg-3">
                 <div className="stat-card">
                   <div className="stat-icon-wrapper">
-                    <img src="/assets/img/icons/feature-1-3.png" alt="germination" />
+                    <img src="/assets/img/icons/feature-1-3.png" alt="germination" loading="lazy" />
                   </div>
                   <div className="stat-number-wrap">
                     <AnimatedCounter end={98} suffix="%" />
@@ -629,7 +670,7 @@ export default function HomePage() {
               <div className="col-6 col-lg-3">
                 <div className="stat-card">
                   <div className="stat-icon-wrapper">
-                    <img src="/assets/img/icons/feature-1-4.png" alt="experience" />
+                    <img src="/assets/img/icons/feature-1-4.png" alt="experience" loading="lazy" />
                   </div>
                   <div className="stat-number-wrap">
                     <AnimatedCounter end={15} suffix="+ Yrs" />
@@ -642,7 +683,7 @@ export default function HomePage() {
               <div className="col-6 col-lg-3">
                 <div className="stat-card">
                   <div className="stat-icon-wrapper">
-                    <img src="/assets/img/icons/feature-1-2.png" alt="organic" />
+                    <img src="/assets/img/icons/feature-1-2.png" alt="organic" loading="lazy" />
                   </div>
                   <div className="stat-number-wrap">
                     <AnimatedCounter end={100} suffix="%" />
@@ -682,7 +723,7 @@ export default function HomePage() {
                 <div className="col-lg-8">
                   <div className="review-content">
                     <div className="review-content__left">
-                      <div className="review-logo"><img src="/assets/img/logos/l-1-2.png" alt="logo" /></div>
+                      <div className="review-logo"><img src="/assets/img/logos/l-1-2.png" alt="logo" loading="lazy" /></div>
                     </div>
                     <div className="review-content__right">
                       <h2 className="review-title h3">No.1 Nursery &amp; Seeds Specialist</h2>
@@ -692,9 +733,9 @@ export default function HomePage() {
                 </div>
                 <div className="col-auto text-center text-lg-end">
                   <span className="review-subtitle">Rated 4.9 / 5</span>
-                  <img src="/assets/img/others/ot-1-1.png" alt="stars" className="review-star" />
+                  <img src="/assets/img/others/ot-1-1.png" alt="stars" className="review-star" loading="lazy" />
                   <p className="review-subtitle2">Based on 848 reviews</p>
-                  <img src="/assets/img/logos/l-1-3.png" alt="trust logo" className="review-trust" />
+                  <img src="/assets/img/logos/l-1-3.png" alt="trust logo" className="review-trust" loading="lazy" />
                 </div>
               </div>
             </div>
@@ -709,7 +750,7 @@ export default function HomePage() {
           <div className="row">
             <div className="col-lg-6 mx-auto">
               <div className="title-area text-center">
-                <div className="sec-icon"><img src="/assets/img/icons/s-1-2.png" alt="icon" /></div>
+                <div className="sec-icon"><img src="/assets/img/icons/s-1-2.png" alt="icon" loading="lazy" /></div>
                 <span className="sec-subtitle">Quality Products</span>
                 <h2 className="sec-title">Trending Products</h2>
               </div>
@@ -764,7 +805,7 @@ export default function HomePage() {
                     <div className="feature-item">
                       <div className="feature-header">
                         <img src="/assets/img/features/feature-1-1.png" alt="bg" className="feature-icon-bg" />
-                        <div className="feature-icon"><img src={feat.img} alt="icon" /></div>
+                        <div className="feature-icon"><img src={feat.img} alt="icon" loading="lazy" /></div>
                       </div>
                       <h3 className="feature-title"><a href="#">{feat.title}</a></h3>
                       <p className="feature-text">{feat.text}</p>
@@ -800,7 +841,7 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
-                <div className="banner-img"><img src="/assets/img/banner/banner-1-1.png" alt="banner" /></div>
+                <div className="banner-img"><img src="/assets/img/banner/banner-1-1.png" alt="banner" loading="lazy" /></div>
               </div>
             </div>
             <div className="col-lg-6">
@@ -816,7 +857,7 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
-                <div className="banner-img"><img src="/assets/img/banner/banner-1-2.png" alt="banner" /></div>
+                <div className="banner-img"><img src="/assets/img/banner/banner-1-2.png" alt="banner" loading="lazy" /></div>
               </div>
             </div>
           </div>
@@ -837,7 +878,7 @@ export default function HomePage() {
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div className="col-auto" key={i}>
                 <div className="brand-style">
-                  <Link href="/about"><img src={`/assets/img/brand/brand-1-${i}.png`} alt="brand" /></Link>
+                  <Link href="/about"><img src={`/assets/img/brand/brand-1-${i}.png`} alt="brand" loading="lazy" /></Link>
                 </div>
               </div>
             ))}
@@ -1010,7 +1051,7 @@ export default function HomePage() {
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div className="instagram-feed" key={i} style={{ flex: "1 1 120px", maxWidth: "180px" }}>
-                <img src={`/assets/img/instagram/insta-1-${i}.jpg`} alt="instagram feed" />
+                <img src={`/assets/img/instagram/insta-1-${i}.jpg`} alt="instagram feed" loading="lazy" />
                 <a className="instagram-icon" href="https://www.instagram.com/"><i className="fab fa-instagram"></i></a>
               </div>
             ))}

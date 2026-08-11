@@ -88,6 +88,7 @@ export default function CartPage() {
                                     height={91}
                                     src={getMediaUrl(item.photo_url) || DEFAULT_IMG}
                                     alt={item.name}
+                                    loading="lazy"
                                     style={{ objectFit: "cover", borderRadius: "10px" }}
                                   />
                                 </Link>

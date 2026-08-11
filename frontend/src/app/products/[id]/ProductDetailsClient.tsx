@@ -431,6 +431,7 @@ export default function ProductDetailsClient({
                     <img
                       src={displayImage}
                       alt={product.name}
+                      loading="lazy"
                       style={{ width: "100%", height: "450px", objectFit: "contain" }}
                     />
                   </div>
@@ -468,6 +469,7 @@ export default function ProductDetailsClient({
                         <img
                           src={src}
                           alt={`View ${i + 1}`}
+                          loading="lazy"
                           style={{ width: "100%", height: "120px", objectFit: "contain", padding: "4px" }}
                         />
                       </div>
@@ -647,7 +649,7 @@ export default function ProductDetailsClient({
                       </button>
                     </div>
                     <span style={{ color: "var(--muted)", fontSize: "14px" }}>
-                      ({displayStock} in stock)
+                      ({Math.max(0, displayStock)} in stock)
                     </span>
                   </div>
                 </div>
@@ -782,7 +784,7 @@ export default function ProductDetailsClient({
             <div className="product-information">
               <div className="product-information__item">
                 <span className="product-information__name">Stock Available</span>
-                <span>{displayStock} units</span>
+                <span>{Math.max(0, displayStock)} units</span>
               </div>
               {displayUnit && (
                 <div className="product-information__item">
@@ -921,6 +923,7 @@ export default function ProductDetailsClient({
                             <img
                               src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80"
                               alt="Comment Author"
+                              loading="lazy"
                             />
                           </div>
                           <div className="comment-content">
@@ -957,6 +960,7 @@ export default function ProductDetailsClient({
                             <img
                               src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80"
                               alt="Comment Author"
+                              loading="lazy"
                             />
                           </div>
                           <div className="comment-content">

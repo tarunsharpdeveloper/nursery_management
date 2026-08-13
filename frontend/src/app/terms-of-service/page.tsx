@@ -353,7 +353,7 @@ export default function TermsOfServicePage() {
                   <div style={{ marginTop: "20px", fontSize: "16px", lineHeight: "1.8", color: "#666" }}>
                     <p><strong>Awantika Seeds</strong></p>
                     <p>📍 Ujjain, Madhya Pradesh, India</p>
-                    <p>📧 Email: NurseryUjjain@gmail.com</p>
+                    <p>📧 Email: awantikaseeds118@gmail.com</p>
                     <p>📞 Phone: 8085263020</p>
                   </div>
                 </div>

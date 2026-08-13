@@ -138,7 +138,7 @@ export default function RefundPolicyPage() {
                     Step 1: Contact Us
                   </h3>
                   <p style={{ fontSize: "16px", lineHeight: "1.8", color: "#666" }}>
-                    Email us at <strong>NurseryUjjain@gmail.com</strong> or call us at [Your Phone Number] with:
+                    Email us at <strong>awantikaseeds118@gmail.com</strong> or call us at <strong>8085263020</strong> with:
                   </p>
                   <ul style={{ fontSize: "16px", lineHeight: "1.8", color: "#666", paddingLeft: "30px", marginTop: "15px" }}>
                     <li>Your order number</li>
@@ -247,7 +247,7 @@ export default function RefundPolicyPage() {
                     Before Shipping:
                   </h3>
                   <p style={{ fontSize: "16px", lineHeight: "1.8", color: "#666" }}>
-                    You may cancel your order before it ships. Contact us immediately at NurseryUjjain@gmail.com or call us. 
+                    You may cancel your order before it ships. Contact us immediately at awantikaseeds118@gmail.com or call 8085263020. 
                     Full refund will be issued within 5-7 business days.
                   </p>
 
@@ -334,7 +334,7 @@ export default function RefundPolicyPage() {
                   <div style={{ marginTop: "20px", fontSize: "16px", lineHeight: "1.8", color: "#666" }}>
                     <p><strong>Awantika Seeds</strong></p>
                     <p>📍 Ujjain, Madhya Pradesh, India</p>
-                    <p>📧 Email: NurseryUjjain@gmail.com</p>
+                    <p>📧 Email: awantikaseeds118@gmail.com</p>
                     <p>📞 Phone: 8085263020</p>
                     <p style={{ marginTop: "20px" }}>
                       <strong>Customer Service Hours:</strong><br />

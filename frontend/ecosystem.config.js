@@ -3,8 +3,8 @@ module.exports = {
     {
       name: 'nursery-frontend',
       script: 'node_modules/next/dist/bin/next',
-      args: 'start -p 3000',
-      cwd: '/home/jyada/public_html/nursery.jyada.in',
+      args: 'start -p 3001',
+      cwd: '/home/jyada/public_html/awantikaseeds.jyada.in',
       instances: 1,
       exec_mode: 'fork',
       autorestart: true,

@@ -162,7 +162,7 @@ export default function ContactPage() {
                   <div className="media-body">
                     <h4 className="contact-box__label">Phone No:</h4>
                     <p className="contact-box__info">
-                      <a href="tel:+918085263020">+91 80852 63020</a>
+                      <a href="tel:+918085263020">+91 8085263020</a>
                     </p>
                   </div>
                 </div>
@@ -171,7 +171,7 @@ export default function ContactPage() {
                   <div className="media-body">
                     <h4 className="contact-box__label">Email Address:</h4>
                     <p className="contact-box__info">
-                      <a href="mailto:sales@greennursery.local">sales@greennursery.local</a>
+                      <a href="mailto:awantikaseeds118@gmail.com">awantikaseeds118@gmail.com</a>
                     </p>
                   </div>
                 </div>

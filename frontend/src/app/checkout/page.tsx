@@ -683,7 +683,7 @@ export default function CheckoutPage() {
                     }}>
                       If you have any questions about your order, please contact our support team at{" "}
                       <a href="tel:+918085263020" style={{ color: "#2d5016", fontWeight: "600", textDecoration: "none" }}>
-                        +91 80852 63020
+                        +91 8085263020
                       </a>
                       {" "}or email us.
                     </p>

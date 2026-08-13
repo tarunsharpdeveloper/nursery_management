@@ -50,9 +50,9 @@ async function sendPasswordResetEmail(userEmail, userName, resetToken, resetUrl)
 
   try {
     const mailOptions = {
-      from: `${process.env.EMAIL_FROM_NAME || "Nursery Management"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
+      from: `${process.env.EMAIL_FROM_NAME || "Awantika Seeds"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
       to: userEmail,
-      subject: "Password Reset Request - Nursery Management",
+      subject: "Password Reset Request - Awantika Seeds",
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
@@ -85,7 +85,7 @@ async function sendPasswordResetEmail(userEmail, userName, resetToken, resetUrl)
             
             <p style="color: #999; font-size: 12px;">
               Best regards,<br/>
-              <strong>Nursery Management Team</strong>
+              <strong>Awantika Seeds Team</strong>
             </p>
           </div>
         </div>
@@ -111,13 +111,13 @@ async function sendAccountCreationEmail(userEmail, userName, password) {
     const loginUrl = `${process.env.CORS_ORIGIN || "http://localhost:3000"}/login`;
     
     const mailOptions = {
-      from: `${process.env.EMAIL_FROM_NAME || "Nursery Management"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
+      from: `${process.env.EMAIL_FROM_NAME || "Awantika Seeds"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
       to: userEmail,
-      subject: "Welcome! Your Account Has Been Created - Nursery Management",
+      subject: "Welcome! Your Account Has Been Created - Awantika Seeds",
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-            <h2 style="color: #2d5016;">Welcome to Nursery Management!</h2>
+            <h2 style="color: #2d5016;">Welcome to Awantika Seeds!</h2>
             
             <p>Hello <strong>${userName}</strong>,</p>
             
@@ -150,7 +150,7 @@ async function sendAccountCreationEmail(userEmail, userName, password) {
             
             <p style="color: #999; font-size: 12px;">
               Best regards,<br/>
-              <strong>Nursery Management Team</strong>
+              <strong>Awantika Seeds Team</strong>
             </p>
           </div>
         </div>
@@ -183,7 +183,7 @@ async function sendOrderConfirmationEmail(orderData) {
     `).join('');
 
     const mailOptions = {
-      from: `${process.env.EMAIL_FROM_NAME || "Nursery Management"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
+      from: `${process.env.EMAIL_FROM_NAME || "Awantika Seeds"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
       to: orderData.email,
       subject: `Order Confirmation - ${orderData.orderNumber}`,
       html: `
@@ -231,7 +231,7 @@ async function sendOrderConfirmationEmail(orderData) {
             
             <p style="color: #999; font-size: 12px;">
               Best regards,<br/>
-              <strong>Nursery Management Team</strong>
+              <strong>Awantika Seeds Team</strong>
             </p>
           </div>
         </div>
@@ -255,7 +255,7 @@ async function sendOrderDeliveredEmail(orderData) {
 
   try {
     const mailOptions = {
-      from: `${process.env.EMAIL_FROM_NAME || "Nursery Management"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
+      from: `${process.env.EMAIL_FROM_NAME || "Awantika Seeds"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
       to: orderData.email,
       subject: `Your Order ${orderData.orderNumber} has been Delivered`,
       html: `
@@ -283,7 +283,7 @@ async function sendOrderDeliveredEmail(orderData) {
             
             <p style="color: #999; font-size: 12px;">
               Best regards,<br/>
-              <strong>Nursery Management Team</strong>
+              <strong>Awantika Seeds Team</strong>
             </p>
           </div>
         </div>
@@ -307,9 +307,9 @@ async function sendContactConfirmationEmail(contactData) {
 
   try {
     const mailOptions = {
-      from: `${process.env.EMAIL_FROM_NAME || "Nursery Management"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
+      from: `${process.env.EMAIL_FROM_NAME || "Awantika Seeds"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
       to: contactData.email,
-      subject: "We Received Your Message - Nursery Management",
+      subject: "We Received Your Message - Awantika Seeds",
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
@@ -335,7 +335,7 @@ async function sendContactConfirmationEmail(contactData) {
             
             <p style="color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;">
               Best regards,<br/>
-              <strong>Nursery Management Team</strong>
+              <strong>Awantika Seeds Team</strong>
             </p>
           </div>
         </div>
@@ -367,7 +367,7 @@ async function sendContactToAdminEmail(contactData) {
     const dashboardUrl = `${process.env.CORS_ORIGIN || "http://localhost:3000"}/admin/contacts`;
 
     const mailOptions = {
-      from: `${process.env.EMAIL_FROM_NAME || "Nursery Management"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
+      from: `${process.env.EMAIL_FROM_NAME || "Awantika Seeds"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
       to: adminEmail,
       subject: `New Contact Form Submission from ${contactData.name}`,
       html: `
@@ -423,9 +423,9 @@ async function sendContactReplyEmail(replyData) {
 
   try {
     const mailOptions = {
-      from: `${process.env.EMAIL_FROM_NAME || "Nursery Management"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
+      from: `${process.env.EMAIL_FROM_NAME || "Awantika Seeds"} <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
       to: replyData.email,
-      subject: "We've Replied to Your Message - Nursery Management",
+      subject: "We've Replied to Your Message - Awantika Seeds",
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
@@ -449,7 +449,7 @@ async function sendContactReplyEmail(replyData) {
             
             <p style="color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;">
               Best regards,<br/>
-              <strong>Nursery Management Team</strong>
+              <strong>Awantika Seeds Team</strong>
             </p>
           </div>
         </div>

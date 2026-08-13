@@ -62,11 +62,11 @@ export function Footer() {
         <ul className="footer-contact">
           <li>
             <Phone size={16} className="text-accent" />
-            <a href="tel:+918085263020">+91 80852 63020</a>
+            <a href="tel:+918085263020">+91 8085263020</a>
           </li>
           <li>
             <Mail size={16} className="text-accent" />
-            <a href="mailto:sales@greennursery.local">sales@greennursery.local</a>
+            <a href="mailto:awantikaseeds118@gmail.com">awantikaseeds118@gmail.com</a>
           </li>
           <li>
             <MapPin size={16} className="text-accent" style={{ flexShrink: 0 }} />

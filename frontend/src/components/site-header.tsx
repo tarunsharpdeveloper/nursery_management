@@ -32,7 +32,7 @@ export function SiteHeader() {
         <div className="promo-inner">
           <div className="promo-content">
             <Leaf size={14} />
-            <span>Fresh plants &amp; seeds delivered to your doorstep — Ujjain, MP | Call: +91 80852 63020</span>
+            <span>Fresh plants &amp; seeds delivered to your doorstep — Ujjain, MP | Call: +91 8085263020</span>
           </div>
           <div className="social-links">
             <a

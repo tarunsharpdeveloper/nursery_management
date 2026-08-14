@@ -786,7 +786,7 @@ export default function HomePage() {
               <div className="call-card">
                 <div className="call-card__content">
                   <span className="call-card__title">Need Help?</span>
-                  <a className="call-card__number" href="tel:+918085263020">+91 80852 63020</a>
+                  <a className="call-card__number" href="tel:+918085263020">+91 8085263020</a>
                 </div>
                 <div className="call-card__icon"><img src="/assets/img/icons/phone-1-1.png" alt="icon" /></div>
               </div>

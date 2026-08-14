@@ -430,7 +430,7 @@ export default function ShippingPolicyPage() {
                     <li>Check with neighbors and building security</li>
                     <li>Verify the delivery address in your order confirmation</li>
                     <li>Wait 24 hours (sometimes tracking updates are delayed)</li>
-                    <li>Contact us at NurseryUjjain@gmail.com with your order number</li>
+                    <li>Contact us at awantikaseeds118@gmail.com with your order number</li>
                   </ol>
                   <p style={{ fontSize: "16px", lineHeight: "1.8", color: "#666", marginTop: "15px" }}>
                     We will investigate with the courier and provide a replacement or refund if the package is confirmed lost.
@@ -444,7 +444,7 @@ export default function ShippingPolicyPage() {
                   </p>
                   <ul style={{ fontSize: "16px", lineHeight: "1.8", color: "#666", paddingLeft: "30px", marginTop: "15px" }}>
                     <li>Take photos of the damaged packaging and contents</li>
-                    <li>Contact us within 48 hours at manaspathak2107@gmail.com</li>
+                    <li>Contact us within 48 hours at awantikaseeds118@gmail.com</li>
                     <li>Include your order number and damage photos</li>
                     <li>We will arrange for a replacement or refund</li>
                   </ul>
@@ -515,7 +515,7 @@ export default function ShippingPolicyPage() {
                   <div style={{ marginTop: "20px", fontSize: "16px", lineHeight: "1.8", color: "#666" }}>
                     <p><strong>Awantika Seeds</strong></p>
                     <p>📍 Ujjain, Madhya Pradesh, India</p>
-                    <p>📧 Email: NurseryUjjain@gmail.com</p>
+                    <p>📧 Email: awantikaseeds118@gmail.com</p>
                     <p>📞 Phone: 8085263020</p>
                     <p style={{ marginTop: "20px" }}>
                       <strong>Customer Service Hours:</strong><br />

@@ -4,7 +4,8 @@ const { pool } = require("../db");
 const initiateSchema = z.object({
   orderId: z.union([z.number(), z.string().min(1)]),
   amount: z.number().positive(),
-  paymentMethod: z.enum(["upi", "credit_card", "debit_card", "net_banking", "cash"])
+  paymentMethod: z.enum(["upi", "credit_card", "debit_card", "net_banking", "cash"]),
+  transactionId: z.string().optional().nullable()
 });
 
 const webhookSchema = z.object({
@@ -35,10 +36,26 @@ async function initiatePayment(req, res, { readJson, sendJson }) {
 
   const [result] = await pool.query(
     `INSERT INTO payments
-      (order_id, payment_gateway, payment_method, payment_status, amount, remarks)
-     VALUES (:realOrderId, :provider, :paymentMethod, 'pending', :amount, 'Payment initiated')`,
-    { realOrderId, provider, paymentMethod: payload.paymentMethod, amount: payload.amount }
+      (order_id, payment_gateway, payment_method, payment_status, amount, gateway_payment_id, paid_at, remarks)
+     VALUES (:realOrderId, :provider, :paymentMethod, :paymentStatus, :amount, :gatewayPaymentId, :paidAt, 'Payment initiated')`,
+    {
+      realOrderId,
+      provider,
+      paymentMethod: payload.paymentMethod,
+      amount: payload.amount,
+      gatewayPaymentId: payload.transactionId || null,
+      paymentStatus: payload.transactionId ? "paid" : "pending",
+      paidAt: payload.transactionId ? new Date() : null
+    }
   );
+
+  // If transaction ID provided, mark the order as paid too
+  if (payload.transactionId) {
+    await pool.query(
+      "UPDATE orders SET payment_status = 'paid' WHERE id = :realOrderId",
+      { realOrderId }
+    );
+  }
 
   sendJson(res, 201, {
     paymentId: Number(result.insertId),

@@ -82,7 +82,7 @@ async function ensureAdminSchema() {
 
   for (const [roleName, perms] of Object.entries(rolePermissions)) {
     await pool.query(
-      "UPDATE roles SET permissions = COALESCE(permissions, :perms) WHERE name = :roleName",
+      "UPDATE roles SET permissions = :perms WHERE name = :roleName",
       { perms: JSON.stringify(perms), roleName }
     );
   }

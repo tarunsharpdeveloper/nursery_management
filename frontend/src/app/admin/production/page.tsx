@@ -108,12 +108,21 @@ export default function ProductionPage() {
         apiRequest<Product[]>("/api/products"),
         apiRequest<any>(`/api/admin/data-list?model=inventory&${searchParams.toString()}`)
       ]);
+      
+      console.log("📦 Loaded data:", { 
+        categories: Array.isArray(cats) ? cats.length : 0,
+        products: Array.isArray(prods) ? prods.length : 0,
+        inventory: inv && inv.data && Array.isArray(inv.data) ? inv.data.length : 0
+      });
+      console.log("🛒 Products sample:", Array.isArray(prods) ? prods.slice(0, 3) : prods);
+      
       setCategories(Array.isArray(cats) ? cats : []);
       setProducts(Array.isArray(prods) ? prods : []);
       setInventory(inv && inv.data && Array.isArray(inv.data) ? inv.data : (Array.isArray(inv) ? inv : []));
       setTotalPages(inv?.totalPages || 1);
       setStatus(`Loaded inventory records`);
     } catch (error) {
+      console.error("❌ Error loading data:", error);
       setStatus(error instanceof Error ? error.message : "Could not load records");
     } finally {
       setBusy(false);
@@ -145,10 +154,59 @@ export default function ProductionPage() {
   }, [activeCategories, categoryPath]);
 
   const filteredProducts = useMemo(() => {
-    const targetCategoryId = categoryPath.length > 0 ? categoryPath[categoryPath.length - 1] : null;
-    if (!targetCategoryId) return products;
-    return products.filter(p => p.category_id === Number(targetCategoryId));
-  }, [products, categoryPath]);
+    console.log("🔍 filteredProducts calculation:", { categoryPath, productsLength: products.length, categoriesLength: categories.length });
+    
+    // If no category selected, show all products
+    if (categoryPath.length === 0) {
+      console.log("✅ No category selected, showing all products:", products.length);
+      return products;
+    }
+    
+    const targetCategoryId = categoryPath[categoryPath.length - 1];
+    if (!targetCategoryId) return [];
+
+    console.log("🔎 Filtering for targetCategoryId:", targetCategoryId);
+
+    // Get all selected category IDs in the path
+    const selectedCategoryIds = new Set(categoryPath);
+    
+    // Filter products that belong to the selected leaf category or any of its children
+    const filtered = products.filter(p => {
+      if (!p.category_id) {
+        console.log("❌ Product has no category_id:", p.name);
+        return false;
+      }
+      
+      // Check if the product's category is the selected leaf category
+      if (p.category_id === Number(targetCategoryId)) {
+        console.log("✅ Product matched target category:", p.name, "category_id:", p.category_id);
+        return true;
+      }
+      
+      // Also check if the product's category is a child of any selected category
+      const productCategory = categories.find(c => c.id === p.category_id);
+      if (!productCategory) {
+        console.log("⚠️ Product category not found:", p.name, "category_id:", p.category_id);
+        return false;
+      }
+      
+      // Walk up the category tree to see if it's under the selected path
+      let current = productCategory;
+      while (current) {
+        if (selectedCategoryIds.has(current.id)) {
+          console.log("✅ Product found in category tree:", p.name, "path:", current.name);
+          return true;
+        }
+        if (!current.parent_id) break;
+        current = categories.find(c => c.id === current.parent_id) || null;
+      }
+      
+      return false;
+    });
+    
+    console.log("📊 Filtered products count:", filtered.length);
+    return filtered;
+  }, [products, categoryPath, categories]);
 
   async function submitForm() {
     if (!form.productId || !form.quantityProduced || !form.productionDate) {
@@ -241,15 +299,45 @@ export default function ProductionPage() {
             <label className="field">
               <span>Product</span>
               <Select
-                options={filteredProducts.map(p => ({ value: String(p.id), label: p.name }))}
-                value={form.productId ? { value: form.productId, label: filteredProducts.find(p => String(p.id) === form.productId)?.name } : null}
-                onChange={(option: any) => setForm(f => ({ ...f, productId: option ? option.value : "" }))}
+                options={filteredProducts.map(p => {
+                  console.log("🎨 Creating option:", { id: p.id, name: p.name });
+                  return { value: String(p.id), label: p.name };
+                })}
+                value={form.productId ? { value: form.productId, label: filteredProducts.find(p => String(p.id) === form.productId)?.name || "Unknown" } : null}
+                onChange={(option: any) => {
+                  console.log("✅ Product selected:", option);
+                  setForm(f => ({ ...f, productId: option ? option.value : "" }));
+                }}
                 isClearable
                 placeholder="Select Product"
-                styles={selectStyles}
-                menuPortalTarget={typeof document !== "undefined" ? document.body : null}
-                menuPosition="fixed"
+                isSearchable
+                isMulti={false}
+                styles={{
+                  ...selectStyles,
+                  menu: (base: any) => ({
+                    ...base,
+                    zIndex: 99999
+                  }),
+                  menuList: (base: any) => ({
+                    ...base,
+                    maxHeight: '250px',
+                    overflowY: 'auto',
+                    padding: '4px 0'
+                  }),
+                  option: (base: any, state: any) => ({
+                    ...base,
+                    background: state.isFocused ? '#e6f3e0' : state.isSelected ? '#2d5016' : '#ffffff',
+                    color: state.isSelected ? '#ffffff' : '#333333',
+                    padding: '10px 12px',
+                    cursor: 'pointer'
+                  })
+                }}
               />
+              {filteredProducts.length === 0 && categoryPath.length > 0 && (
+                <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>
+                  No products found for selected category
+                </p>
+              )}
             </label>
 
             <label className="field">

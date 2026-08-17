@@ -140,8 +140,8 @@ export default function AdminCategoriesPage() {
         method: "POST",
         body: JSON.stringify({
           name: form.name,
-          description: form.description,
-          categoryType: form.categoryType || undefined,
+          description: form.description || null,
+          categoryType: form.categoryType || null,
           photoUrls
         })
       });
@@ -177,8 +177,8 @@ export default function AdminCategoriesPage() {
         body: JSON.stringify({
           categoryId: editing.id,
           name: form.name,
-          description: form.description,
-          categoryType: form.categoryType || undefined,
+          description: form.description || null,
+          categoryType: form.categoryType || null,
           photoUrls
         })
       });

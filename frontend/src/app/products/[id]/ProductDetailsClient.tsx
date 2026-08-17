@@ -8,6 +8,7 @@ import { apiRequest, getMediaUrl } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { useFavorites } from "@/context/FavoritesContext";
+import { useToast } from "@/context/ToastContext";
 import { ProductSlider } from "@/components/ProductSlider";
 import { ProductReviewSummary } from "@/components/ProductReviewSummary";
 
@@ -95,6 +96,7 @@ export default function ProductDetailsClient({
   const { addToCart } = useCart();
   const { user } = useCustomerAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { showToast } = useToast();
 
   const [product, setProduct] = useState<BackendProduct | null>(null);
   const [allProducts, setAllProducts] = useState<BackendProduct[]>([]);
@@ -426,7 +428,7 @@ export default function ProductDetailsClient({
             <div className="col-lg-6 mb-30">
               <div className="product-slide-row">
                 {/* Main image */}
-                <div className="product-big-img">
+                <div className="product-big-img" style={{ position: "relative" }}>
                   <div className="img">
                     <img
                       src={displayImage}
@@ -435,6 +437,44 @@ export default function ProductDetailsClient({
                       style={{ width: "100%", height: "450px", objectFit: "contain" }}
                     />
                   </div>
+                  {displayStock <= 0 && (
+                    <span 
+                      className="product-tag2" 
+                      style={{ 
+                        position: "absolute",
+                        top: "15px",
+                        right: "15px",
+                        background: "var(--danger)",
+                        padding: "8px 15px",
+                        borderRadius: "8px",
+                        color: "white",
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        zIndex: 10
+                      }}
+                    >
+                      Out of Stock
+                    </span>
+                  )}
+                  {displayStock > 0 && displayStock < 100 && (
+                    <span 
+                      className="product-tag2" 
+                      style={{ 
+                        position: "absolute",
+                        top: "15px",
+                        right: "15px",
+                        background: "#d4a516",
+                        padding: "8px 15px",
+                        borderRadius: "8px",
+                        color: "white",
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        zIndex: 10
+                      }}
+                    >
+                      Limited Stock
+                    </span>
+                  )}
                 </div>
 
                 {/* Product Info Below Image */}
@@ -677,8 +717,12 @@ export default function ProductDetailsClient({
                   <button
                     type="button"
                     className="vs-btn"
-                    disabled={displayStock <= 0}
+                    style={displayStock <= 0 ? { opacity: 0.6, cursor: "not-allowed" } : {}}
                     onClick={() => {
+                      if (displayStock <= 0) {
+                        showToast("Product is out of stock", "error");
+                        return;
+                      }
                       addToCart(
                         {
                           ...product,

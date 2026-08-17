@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { X, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiRequest, getMediaUrl, getStoredUser } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
-import { ProductSlider } from "@/components/ProductSlider";
+import { useToast } from "@/context/ToastContext";
 import type { Product } from "@/lib/types";
 
 interface BackendProduct {
@@ -125,6 +125,7 @@ function AnimatedCounter({ end, duration = 2200, suffix = "" }: { end: number; d
 export default function HomePage() {
   const router = useRouter();
   const { addToCart } = useCart();
+  const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>(fallbackProducts);
   const [loading, setLoading] = useState(true);
   const [activeSlide, setActiveSlide] = useState(0);
@@ -432,6 +433,10 @@ export default function HomePage() {
   }, [products, dbCategories]);
 
   const handleAddToCart = (product: Product) => {
+    if (product.stock <= 0) {
+      showToast("Product is out of stock", "error");
+      return;
+    }
     addToCart(
       {
         id: product.id,
@@ -756,10 +761,75 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          
-          {/* Product Slider with 3 items on desktop */}
-          <div style={{ marginTop: "30px" }}>
-            <ProductSlider products={products} itemsPerView={3} />
+
+          {/* Product Grid - 3 per row on desktop, 2 on tablet, 1 on mobile */}
+          <div className="row g-4" style={{ marginTop: "30px" }}>
+            {products.slice(0, 6).map((prod) => (
+              <div className="col-lg-4 col-md-6 col-12" key={prod.id}>
+                <div className="vs-product product-style1 modern-card" style={{ height: "100%" }}>
+                  <div className="product-img">
+                    <button
+                      type="button"
+                      className="card-favorite-btn"
+                      aria-label="Add to Favorites"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
+                      <i className="far fa-heart" style={{ color: "#666666" }}></i>
+                    </button>
+                    <Link href={`/products/${prod.id}`}>
+                      <img
+                        src={prod.image}
+                        alt={prod.name}
+                        loading="lazy"
+                        className="img w-100"
+                      />
+                    </Link>
+                    {prod.stock <= 0 && <span className="product-tag2" style={{ background: "var(--danger)" }}>Out of Stock</span>}
+                    {prod.stock > 0 && prod.stock < 100 && <span className="product-tag2" style={{ background: "#d4a516" }}>Limited Stock</span>}
+                  </div>
+                  <div className="product-content">
+                    <h3 className="product-title" style={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      marginBottom: "6px"
+                    }}>
+                      <Link href={`/products/${prod.id}`}>{prod.name}</Link>
+                    </h3>
+                    <p style={{
+                      fontSize: "13px",
+                      color: "#777777",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      marginBottom: "12px",
+                      lineHeight: "1.4"
+                    }}>
+                      {prod.description || "No description available."}
+                    </p>
+                    <span className="product-cate" style={{ margin: 0, fontSize: "11px", fontWeight: 700, marginBottom: "8px", display: "block" }}>
+                      SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{prod.category}</span>
+                    </span>
+                    <span className="product-price">Rs. {prod.price}</span>
+                    <div className="product-actions">
+                      <button type="button" className="vs-btn" onClick={() => handleAddToCart(prod)}>
+                        Add to Cart
+                      </button>
+                      <button type="button" className="cart-btn" onClick={() => handleAddToCart(prod)} aria-label={`Add ${prod.name} to cart`}>
+                        <i className="fas fa-shopping-basket"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
           <div className="row justify-content-center">

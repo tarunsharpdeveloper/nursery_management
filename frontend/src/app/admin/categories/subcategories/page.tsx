@@ -143,8 +143,8 @@ function SubCategoriesContent() {
         body: JSON.stringify({
           parentId,
           name: form.name,
-          description: form.description,
-          categoryType: form.categoryType || undefined,
+          description: form.description || null,
+          categoryType: form.categoryType || null,
           photoUrls
         })
       });
@@ -180,12 +180,11 @@ function SubCategoriesContent() {
         body: JSON.stringify({
           categoryId: editing.id,
           name: form.name,
-          description: form.description,
-          categoryType: form.categoryType || undefined,
+          description: form.description || null,
+          categoryType: form.categoryType || null,
           photoUrls
         })
       });
-      setEditing(null);
       setEditing(null);
       setForm({ name: "", description: "", categoryType: "" });
       setCreatePreview([]);

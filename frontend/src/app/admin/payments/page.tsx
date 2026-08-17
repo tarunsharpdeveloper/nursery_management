@@ -8,7 +8,8 @@ export default function PaymentsPage() {
   const [values, setValues] = useState<Record<string, any>>({
     orderId: "",
     amount: "",
-    paymentMethod: "cash"
+    paymentMethod: "cash",
+    transactionId: ""
   });
   const [orderIdError, setOrderIdError] = useState<string>("");
 
@@ -73,14 +74,23 @@ export default function PaymentsPage() {
         { label: "Debit Card", value: "debit_card" },
         { label: "Net Banking", value: "net_banking" }
       ]
-    }
+    },
+    ...(values.paymentMethod === "upi" ? [{
+      name: "transactionId",
+      label: "UPI Transaction ID",
+      type: "text",
+      valueType: "string",
+      required: true,
+      placeholder: "Enter UPI transaction reference number"
+    }] : [])
   ];
 
   const handleReset = () => {
     setValues({
       orderId: "",
       amount: "",
-      paymentMethod: "cash"
+      paymentMethod: "cash",
+      transactionId: ""
     });
     setOrderIdError("");
   };
@@ -121,6 +131,9 @@ export default function PaymentsPage() {
           }
           if (!v.paymentMethod) {
             errors.paymentMethod = "Payment method is required";
+          }
+          if (v.paymentMethod === "upi" && !v.transactionId?.trim()) {
+            errors.transactionId = "UPI Transaction ID is required";
           }
           return Object.keys(errors).length > 0 ? errors : null;
         }}

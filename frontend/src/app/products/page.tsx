@@ -6,6 +6,7 @@ import { apiRequest, getMediaUrl } from "@/lib/api";
 import type { Product, ProductType } from "@/lib/types";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
+import { useToast } from "@/context/ToastContext";
 import { ProductReviewSummary } from "@/components/ProductReviewSummary";
 
 interface BackendProduct {
@@ -80,6 +81,7 @@ function isCategoryMatch(a: string | null | undefined, b: string | null | undefi
 export default function ProductsPage() {
   const { addToCart } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [dbCategories, setDbCategories] = useState<{ id: number; name: string; product_count: number }[]>([]);
@@ -287,6 +289,14 @@ export default function ProductsPage() {
 
   const loadMoreProducts = () => {
     setVisibleCount((prev) => prev + 6);
+  };
+
+  const handleAddToCart = (product: Product) => {
+    if (product.stock <= 0) {
+      showToast("Product is out of stock", "error");
+      return;
+    }
+    addToCart(product, 1);
   };
 
   return (
@@ -542,10 +552,10 @@ export default function ProductsPage() {
                               </span>
                               
                               <div className="product-actions" style={{ right: "30px", bottom: "16px", position: "absolute" }}>
-                                <button type="button" className="vs-btn" onClick={() => addToCart(product, 1)}>
+                                <button type="button" className="vs-btn" onClick={() => handleAddToCart(product)}>
                                   Add to Cart
                                 </button>
-                                <button type="button" className="cart-btn" onClick={() => addToCart(product, 1)} aria-label={`Add ${product.name} to cart`}>
+                                <button type="button" className="cart-btn" onClick={() => handleAddToCart(product)} aria-label={`Add ${product.name} to cart`}>
                                   <i className="fas fa-shopping-basket"></i>
                                 </button>
                               </div>
@@ -605,10 +615,10 @@ export default function ProductsPage() {
                               </span>
                               <span className="product-price">Rs. {product.price}</span>
                               <div className="product-actions">
-                                <button type="button" className="vs-btn" onClick={() => addToCart(product, 1)}>
+                                <button type="button" className="vs-btn" onClick={() => handleAddToCart(product)}>
                                   Add to Cart
                                 </button>
-                                <button type="button" className="cart-btn" onClick={() => addToCart(product, 1)} aria-label={`Add ${product.name} to cart`}>
+                                <button type="button" className="cart-btn" onClick={() => handleAddToCart(product)} aria-label={`Add ${product.name} to cart`}>
                                   <i className="fas fa-shopping-basket"></i>
                                 </button>
                               </div>

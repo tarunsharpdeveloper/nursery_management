@@ -12,8 +12,8 @@ type LoginResponse = {
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("owner@nursery.local");
-  const [password, setPassword] = useState("owner123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [status, setStatus] = useState("Use the role credentials assigned by the owner.");
   const [busy, setBusy] = useState(false);
 

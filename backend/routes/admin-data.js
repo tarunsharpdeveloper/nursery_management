@@ -82,10 +82,10 @@ async function listCategories(req, res, { sendJson }) {
 
 const categorySchema = z.object({
   parentId: z.number().int().positive().nullable().optional(),
-  categoryType: z.enum(["plant", "seed"]).optional(),
+  categoryType: z.enum(["plant", "seed"]).nullable().optional(),
   name: z.string().min(2),
-  description: z.string().optional(),
-  photoUrls: z.string().optional()
+  description: z.string().optional().nullable(),
+  photoUrls: z.string().optional().nullable()
 });
 
 async function createCategory(req, res, { readJson, sendJson }) {
@@ -110,7 +110,7 @@ const editCategorySchema = z.object({
   name: z.string().min(2),
   description: z.string().optional().nullable(),
   photoUrls: z.string().optional().nullable(),
-  categoryType: z.enum(["plant", "seed"]).optional().nullable()
+  categoryType: z.enum(["plant", "seed"]).nullable().optional()
 });
 
 async function editCategory(req, res, { readJson, sendJson }) {
@@ -119,7 +119,7 @@ async function editCategory(req, res, { readJson, sendJson }) {
     `UPDATE categories 
         SET name = :name, 
             description = :description,
-            category_type = :categoryType,
+            category_type = :categoryTypeValue,
             photo_urls = CASE WHEN :photoUrls IS NOT NULL THEN :photoUrls ELSE photo_urls END
       WHERE id = :categoryId`,
     {
@@ -127,7 +127,7 @@ async function editCategory(req, res, { readJson, sendJson }) {
       name: payload.name,
       description: payload.description || null,
       photoUrls: payload.photoUrls || null,
-      categoryType: payload.categoryType || null
+      categoryTypeValue: payload.categoryType || null
     }
   );
   sendJson(res, 200, { updated: true });

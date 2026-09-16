@@ -138,7 +138,7 @@ const routes = [
   ["GET", "/api/favorites", null, getFavorites],
   ["POST", "/api/favorites/toggle", null, toggleFavorite],
   ["POST", "/api/ndps/initiate", null, initiateNDPSPayment],
-  ["POST", "/api/ndps/respon  se", null, handleNDPSResponse],
+  ["POST", "/api/ndps/response", null, handleNDPSResponse],
   ["POST", "/Response", null, handleNDPSPopupResponse],
   ["GET", "/api/ndps/status/:paymentId", null, checkPaymentStatus],
   ["POST", "/api/ndps/requery", null, requeryTransactionStatus],

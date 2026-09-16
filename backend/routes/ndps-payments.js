@@ -24,22 +24,23 @@ const NDPS_CONFIG = {
     responseHashKey: process.env.NDPS_RESPONSE_HASH_KEY || "KEYRESP123657234"
   },
   PROD: {
-    merchId: process.env.NDPS_MERCH_ID || "446442",
-    userId: process.env.NDPS_USER_ID || "",
-    password: process.env.NDPS_PASSWORD || "Test@123",
-    apiUrl: process.env.NDPS_API_URL || "https://paynetz.atomtech.in/ots/aipay/auth",
+    merchId: process.env.NDPS_MERCH_ID || "856377",
+    userId: process.env.NDPS_USER_ID || "856377",
+    password: process.env.NDPS_PASSWORD || "856377_titan@123",
+    apiUrl: process.env.NDPS_API_URL || "https://payment1.atomtech.in/ots/aipay/auth",
     responseUrl: process.env.NDPS_RESPONSE_URL,
     returnUrl: process.env.NDPS_RETURN_URL,
     version: "OTSv1.1",
     api: "AUTH",
     platform: "FLASH",
-    product: "NSE",
-    requestKey: process.env.NDPS_REQUEST_KEY,
-    requestSalt: process.env.NDPS_REQUEST_KEY,
-    responseKey: process.env.NDPS_RESPONSE_KEY,
-    responseSalt: process.env.NDPS_RESPONSE_KEY,
-    requestHashKey: process.env.NDPS_REQUEST_HASH_KEY,
-    responseHashKey: process.env.NDPS_RESPONSE_HASH_KEY
+    product: process.env.NDPS_PRODUCT_ID || "AWANT",
+    // Use AES Salt/IV keys for encryption in production
+    requestKey: process.env.NDPS_REQUEST_KEY || "74ABEA4102D67FD3491F23AB9D4636AB",
+    requestSalt: process.env.NDPS_REQUEST_KEY || "74ABEA4102D67FD3491F23AB9D4636AB",
+    responseKey: process.env.NDPS_RESPONSE_KEY || "9B130849756D796521AC4DBEC26D3B2B",
+    responseSalt: process.env.NDPS_RESPONSE_KEY || "9B130849756D796521AC4DBEC26D3B2B",
+    requestHashKey: process.env.NDPS_REQUEST_HASH_KEY || "27786aad29c63b6a3a",
+    responseHashKey: process.env.NDPS_RESPONSE_HASH_KEY || "9f9153a2a8671ae683"
   }
 };
 
@@ -452,11 +453,15 @@ async function handleNDPSResponse(req, res, helpers) {
       `UPDATE payments 
        SET payment_status = ?, 
            paid_at = CASE WHEN ? = 'paid' THEN NOW() ELSE paid_at END,
+           merchant_transaction_id = ?,
+           atom_transaction_id = ?,
            remarks = ?
        WHERE id = ?`,
       [
         newStatus, 
-        newStatus, 
+        newStatus,
+        merchTxnId,
+        atomTxnId || null,
         `Status: ${statusCode} - ${statusMessage}. Atom Txn: ${atomTxnId || 'N/A'}. Bank Txn: ${bankTxnId || 'N/A'}`,
         payment.id
       ]
@@ -513,7 +518,9 @@ async function checkPaymentStatus(req, res, helpers) {
       status: payment.payment_status,
       amount: payment.amount,
       paidAt: payment.paid_at,
-      gatewayPaymentId: payment.gateway_payment_id
+      gatewayPaymentId: payment.gateway_payment_id,
+      merchantTransactionId: payment.merchant_transaction_id,
+      atomTransactionId: payment.atom_transaction_id
     });
 
   } catch (error) {
@@ -811,7 +818,15 @@ async function handleNDPSPopupResponse(req, res, helpers) {
     // Map status code to payment status
     if (statusCode === 'OTS0000') {
       newStatus = 'paid';
-      redirectUrl = `${frontendUrl}/checkout?orderNumber=${payment.order_number}&success=true`;
+      // Create transaction details for frontend
+      const transactionParams = new URLSearchParams({
+        orderNumber: payment.order_number,
+        success: 'true',
+        merchantTxnId: merchTxnId,
+        atomTxnId: atomTxnId || 'N/A',
+        amount: totalAmount?.toString() || payment.amount.toString()
+      });
+      redirectUrl = `${frontendUrl}/checkout?${transactionParams.toString()}`;
       console.log('✅ Payment successful');
     } else {
       newStatus = 'failed';
@@ -824,11 +839,15 @@ async function handleNDPSPopupResponse(req, res, helpers) {
       `UPDATE payments 
        SET payment_status = ?, 
            paid_at = CASE WHEN ? = 'paid' THEN NOW() ELSE paid_at END,
+           merchant_transaction_id = ?,
+           atom_transaction_id = ?,
            remarks = ?
        WHERE id = ?`,
       [
         newStatus, 
-        newStatus, 
+        newStatus,
+        merchTxnId,
+        atomTxnId || null,
         `Status: ${statusCode} - ${statusMessage}. Atom Txn: ${atomTxnId || 'N/A'}. Bank Txn: ${bankTxnId || 'N/A'}`,
         payment.id
       ]

@@ -67,7 +67,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       if (user.role === "billing_user" && link.href === "/admin/orders") {
         return false;
       }
-      return user.permissions.includes("*") || user.permissions.includes(link.permission);
+      return user.permissions && (user.permissions.includes("*") || user.permissions.includes(link.permission));
     });
   }, [user]);
 

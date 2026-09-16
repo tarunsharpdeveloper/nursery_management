@@ -255,24 +255,62 @@ function CustomerLoginContent() {
     setFormData((prev) => ({ ...prev, [event.target.name]: event.target.value }));
   };
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setBusy(true);
+    
+    // Clear previous errors first
     setError("");
+    
+    // Validate form
+    if (!isLoginView) {
+      if (!formData.name.trim()) {
+        setError("Full Name is required");
+        setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
+        return;
+      }
+      if (!formData.phone.trim()) {
+        setError("Phone Number is required");
+        setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
+        return;
+      }
+      if (!/^\d{10}$/.test(formData.phone)) {
+        setError("Phone number must be exactly 10 digits");
+        setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
+        return;
+      }
+    }
+    
+    if (!formData.email.trim()) {
+      setError("Email Address is required");
+      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
+      return;
+    }
+    
+    if (!formData.password.trim()) {
+      setError("Password is required");
+      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
+      return;
+    }
+    
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters");
+      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
+      return;
+    }
+    
+    setBusy(true);
 
     try {
       if (isLoginView) {
         await login(formData.email, formData.password);
       } else {
-        if (!/^\d{10}$/.test(formData.phone)) {
-          throw new Error("Phone number must be exactly 10 digits.");
-        }
         await register(formData.name, formData.email, formData.phone, formData.password);
       }
       router.push(redirect);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       setBusy(false);
+      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
     }
   };
 
@@ -302,21 +340,47 @@ function CustomerLoginContent() {
               : "Register once and use the same account for orders."}
           </p>
 
-          {error && <div className="login-error">{error}</div>}
+          {error && (
+            <div 
+              className="login-error" 
+              style={{ 
+                marginBottom: '20px', 
+                animation: 'slideDown 0.3s ease-out',
+                display: 'block',
+                opacity: 1,
+                visibility: 'visible'
+              }}
+            >
+              {error}
+            </div>
+          )}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} onInvalid={(e) => {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}>
             {!isLoginView && (
               <>
                 <label className="field icon-field">
-                  <span>Full Name</span>
+                  <span>Full Name <span style={{ color: '#dc2626', fontWeight: 700 }}>*</span></span>
                   <div>
                     <User size={18} />
-                    <input type="text" name="name" value={formData.name} onChange={handleChange} required placeholder="Enter Your Name" />
+                    <input 
+                      type="text" 
+                      name="name" 
+                      value={formData.name} 
+                      onChange={handleChange} 
+                      placeholder="Enter Your Name"
+                      style={{
+                        borderColor: error?.includes('Full Name') ? '#dc2626' : undefined,
+                        backgroundColor: error?.includes('Full Name') ? '#fff5f5' : undefined
+                      }}
+                    />
                   </div>
                 </label>
 
                 <label className="field icon-field">
-                  <span>Phone Number</span>
+                  <span>Phone Number <span style={{ color: '#dc2626', fontWeight: 700 }}>*</span></span>
                   <div>
                     <Phone size={18} />
                     <input
@@ -324,12 +388,15 @@ function CustomerLoginContent() {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      required
                       inputMode="numeric"
                       pattern="[0-9]{10}"
                       maxLength={10}
                       title="Phone number must be exactly 10 digits."
                       placeholder="Enter Your 10 Digit Phone Number"
+                      style={{
+                        borderColor: error?.includes('Phone') ? '#dc2626' : undefined,
+                        backgroundColor: error?.includes('Phone') ? '#fff5f5' : undefined
+                      }}
                     />
                   </div>
                 </label>
@@ -337,15 +404,25 @@ function CustomerLoginContent() {
             )}
 
             <label className="field icon-field">
-              <span>Email Address</span>
+              <span>Email Address <span style={{ color: '#dc2626', fontWeight: 700 }}>*</span></span>
               <div>
                 <Mail size={18} />
-                <input type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="Enter your email address" />
+                <input 
+                  type="email" 
+                  name="email" 
+                  value={formData.email} 
+                  onChange={handleChange} 
+                  placeholder="Enter your email address"
+                  style={{
+                    borderColor: error?.includes('Email') ? '#dc2626' : undefined,
+                    backgroundColor: error?.includes('Email') ? '#fff5f5' : undefined
+                  }}
+                />
               </div>
             </label>
 
             <label className="field icon-field">
-              <span>Password</span>
+              <span>Password <span style={{ color: '#dc2626', fontWeight: 700 }}>*</span></span>
               <div>
                 <Lock size={18} />
                 <input
@@ -353,9 +430,11 @@ function CustomerLoginContent() {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  required
-                  minLength={6}
                   placeholder="Enter your password"
+                  style={{
+                    borderColor: error?.includes('Password') ? '#dc2626' : undefined,
+                    backgroundColor: error?.includes('Password') ? '#fff5f5' : undefined
+                  }}
                 />
               </div>
             </label>

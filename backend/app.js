@@ -188,7 +188,15 @@ function matchRoute(method, pathname, routeMethod, routePath) {
 
 const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") {
-    sendNoContent(res);
+    // Handle preflight CORS requests - must include all CORS headers
+    res.writeHead(204, {
+      "Access-Control-Allow-Origin": process.env.CORS_ORIGIN || "*",
+      "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Max-Age": "86400",
+      "Vary": "Origin"
+    });
+    res.end();
     return;
   }
 

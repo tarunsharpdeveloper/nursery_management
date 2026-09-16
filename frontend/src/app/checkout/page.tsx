@@ -22,7 +22,7 @@ export default function CheckoutPage() {
   const { user, isLoaded, login } = useCustomerAuth();
   const { showToast } = useToast();
 
-  const [paymentMethod, setPaymentMethod] = useState("cod"); // Default to COD for testing
+  const [paymentMethod, setPaymentMethod] = useState("ndps"); // Default to NDPS
   const [sameAddress, setSameAddress] = useState(true);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [orderId, setOrderId] = useState("");
@@ -39,6 +39,12 @@ export default function CheckoutPage() {
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [isTermsAccepted, setIsTermsAccepted] = useState(false);
+  const [paymentTransactionIds, setPaymentTransactionIds] = useState<{
+    merchantTxnId: string;
+    atomTxnId: string;
+    orderNumber?: string;
+    amount?: number;
+  } | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -56,11 +62,36 @@ export default function CheckoutPage() {
       const orderNumber = searchParams.get('orderNumber');
       const success = searchParams.get('success');
       const failed = searchParams.get('payment');
+      const merchantTxnId = searchParams.get('merchantTxnId');
+      const atomTxnId = searchParams.get('atomTxnId');
+      const amount = searchParams.get('amount');
 
       if (success === 'true' && orderNumber) {
         setPaymentSuccess(true);
         setOrderId(orderNumber);
         setIsSubmitted(true);
+        
+        // Check for transaction IDs from URL parameters first, then localStorage
+        if (merchantTxnId || atomTxnId) {
+          setPaymentTransactionIds({
+            merchantTxnId: merchantTxnId || 'N/A',
+            atomTxnId: atomTxnId || 'N/A',
+            orderNumber: orderNumber,
+            amount: amount ? parseFloat(amount) : undefined
+          });
+        } else {
+          // Fallback to localStorage
+          const storedTxnIds = localStorage.getItem('payment_transaction_ids');
+          if (storedTxnIds) {
+            try {
+              const txnData = JSON.parse(storedTxnIds);
+              setPaymentTransactionIds(txnData);
+              localStorage.removeItem('payment_transaction_ids'); // Clean up
+            } catch (e) {
+              console.error('Error parsing transaction IDs:', e);
+            }
+          }
+        }
         
         // Clear cart and localStorage
         clearCart();
@@ -85,10 +116,15 @@ export default function CheckoutPage() {
         existingScript.remove();
       }
 
+      // Use production CDN URL from environment, fallback to UAT for development
+      const atomCdnUrl = process.env.NEXT_PUBLIC_NDPS_CDN_URL || 'https://psa.atomtech.in/staticdata/ots/js/atomcheckout.js';
+      
       // Create new script with timestamp to prevent caching
       const script = document.createElement('script');
-      script.src = `https://pgtest.atomtech.in/staticdata/ots/js/atomcheckout.js?v=${Date.now()}`;
+      script.src = `${atomCdnUrl}?v=${Date.now()}`;
       script.async = true;
+      
+      console.log(`Loading AtomPaynetz from: ${atomCdnUrl}`);
       
       script.onload = () => {
         console.log('✅ AtomPaynetz script loaded successfully');
@@ -96,7 +132,7 @@ export default function CheckoutPage() {
       };
       
       script.onerror = () => {
-        console.error('❌ Failed to load AtomPaynetz script');
+        console.error('❌ Failed to load AtomPaynetz script from:', atomCdnUrl);
         setStatus('Failed to load payment system');
       };
 
@@ -231,10 +267,54 @@ export default function CheckoutPage() {
       console.log('AtomPaynetz available:', typeof window.AtomPaynetz);
 
       // Create AtomPaynetz instance (as per working implementation)
-      new window.AtomPaynetz(atomConfig, response.env);
+      const atomInstance = new window.AtomPaynetz(atomConfig, response.env);
       
       console.log('✅ AtomPaynetz instance created');
       console.log('Popup should open automatically...');
+      
+      // Add payment cancellation detection
+      // The AtomPaynetz popup will either:
+      // 1. Complete payment (redirects to returnUrl)
+      // 2. Get cancelled/closed (stays on same page)
+      
+      // Set a timeout to detect if user is still on checkout page after popup should have opened
+      setTimeout(() => {
+        // If we're still on the checkout page and haven't been redirected,
+        // it likely means the payment was cancelled or failed to open
+        if (window.location.pathname === '/checkout' && busy) {
+          console.log('Payment popup appears to have been cancelled or closed');
+          setBusy(false);
+          setStatus('Payment was cancelled. You can try again or choose a different payment method.');
+        }
+      }, 3000); // Wait 3 seconds for popup to process
+      
+      // Alternative: Listen for window focus (when popup closes, parent window gets focus)
+      const handleWindowFocus = () => {
+        setTimeout(() => {
+          if (window.location.pathname === '/checkout' && busy) {
+            console.log('Window regained focus - payment popup likely cancelled');
+            setBusy(false);
+            setStatus('Payment was cancelled. Please try again if needed.');
+          }
+        }, 1000); // Small delay to ensure popup had time to redirect if successful
+      };
+      
+      // Also listen for visibility change (when user switches back to the tab)
+      const handleVisibilityChange = () => {
+        if (!document.hidden && window.location.pathname === '/checkout' && busy) {
+          setTimeout(() => {
+            if (window.location.pathname === '/checkout' && busy) {
+              console.log('Tab became visible - payment popup likely cancelled');
+              setBusy(false);
+              setStatus('Payment was cancelled. Please try again if needed.');
+            }
+          }, 1000);
+        }
+      };
+      
+      window.addEventListener('focus', handleWindowFocus, { once: true });
+      document.addEventListener('visibilitychange', handleVisibilityChange, { once: true });
+      
       // The popup will open automatically
       // After payment, user will be redirected to returnUrl
       
@@ -360,8 +440,15 @@ export default function CheckoutPage() {
       if (paymentMethod === "ndps") {
         // Call handlePayment directly to open payment popup
         // DON'T clear cart yet - wait for payment success
-        await handlePayment(response.orderId, total, formData.email, formData.phone);
-        // Cart will be cleared on successful payment return
+        try {
+          await handlePayment(response.orderId, total, formData.email, formData.phone);
+          // Cart will be cleared on successful payment return
+          // Note: setBusy(false) is handled within handlePayment's success/error cases
+        } catch (paymentError) {
+          console.error('Payment handling failed:', paymentError);
+          setBusy(false); // Ensure button is not stuck
+          setStatus('Payment initiation failed. Please try again or use Cash on Delivery.');
+        }
       } else {
         // For other payment methods (COD, bank transfer, etc.)
         setOrderId(response.orderNumber);
@@ -599,6 +686,102 @@ export default function CheckoutPage() {
                     </p>
                   </div>
 
+                  {/* Transaction IDs Section - Only show if available and payment was successful */}
+                  {paymentSuccess && paymentTransactionIds && (
+                    <div style={{
+                      background: "linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%)",
+                      border: "2px solid #b8daff",
+                      borderRadius: "12px",
+                      padding: "20px",
+                      margin: "20px 0",
+                      textAlign: "left",
+                      maxWidth: "500px",
+                      marginLeft: "auto",
+                      marginRight: "auto"
+                    }}>
+                      <div style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        marginBottom: "15px"
+                      }}>
+                        <i className="fal fa-receipt" style={{ color: "#0056b3", fontSize: "18px" }}></i>
+                        <h4 style={{ 
+                          color: "#0056b3", 
+                          margin: 0,
+                          fontSize: "16px",
+                          fontWeight: "700"
+                        }}>
+                          Payment Transaction Details
+                        </h4>
+                      </div>
+                      
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ 
+                            fontSize: "13px", 
+                            color: "#555", 
+                            fontWeight: "600",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px"
+                          }}>
+                            Merchant Transaction ID:
+                          </span>
+                          <span style={{ 
+                            fontSize: "14px", 
+                            fontWeight: "700", 
+                            color: "#0056b3",
+                            fontFamily: "monospace",
+                            background: "#ffffff",
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            border: "1px solid #b8daff"
+                          }}>
+                            {paymentTransactionIds.merchantTxnId}
+                          </span>
+                        </div>
+                        
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ 
+                            fontSize: "13px", 
+                            color: "#555", 
+                            fontWeight: "600",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px"
+                          }}>
+                            Atom Transaction ID:
+                          </span>
+                          <span style={{ 
+                            fontSize: "14px", 
+                            fontWeight: "700", 
+                            color: "#0056b3",
+                            fontFamily: "monospace",
+                            background: "#ffffff",
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            border: "1px solid #b8daff"
+                          }}>
+                            {paymentTransactionIds.atomTxnId}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{
+                        marginTop: "12px",
+                        padding: "10px 12px",
+                        background: "#ffffff",
+                        borderRadius: "6px",
+                        border: "1px solid #b8daff",
+                        fontSize: "11px",
+                        color: "#666",
+                        textAlign: "center"
+                      }}>
+                        <i className="fal fa-info-circle" style={{ marginRight: "6px", color: "#0056b3" }}></i>
+                        Keep these transaction IDs for your records and future reference
+                      </div>
+                    </div>
+                  )}
+
                   {/* Description */}
                   <p style={{ 
                     color: "#666", 
@@ -779,41 +962,130 @@ export default function CheckoutPage() {
           <form action="#" className="woocommerce-checkout mt-40" onSubmit={handlePlaceOrder}>
               <div className="row">
                 <div className="col-lg-7">
-                  <div className="woocommerce-checkout__form">
-                    <h2 className="h4 summary-title">Billing Details</h2>
+                  <div className="woocommerce-checkout__form" style={{
+                    background: 'linear-gradient(135deg, #ffffff 0%, #f9faf7 100%)',
+                    borderRadius: '16px',
+                    padding: '40px',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
+                    border: '1px solid #e8f5e3'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      marginBottom: '30px',
+                      paddingBottom: '20px',
+                      borderBottom: '2px solid #e8f5e3'
+                    }}>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #2d5016 0%, #4a7c2e 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 12px rgba(45, 80, 22, 0.2)'
+                      }}>
+                        <i className="fas fa-box" style={{ color: '#ffffff', fontSize: '18px' }}></i>
+                      </div>
+                      <div>
+                        <h2 className="h4 summary-title" style={{ margin: '0 0 4px 0', color: '#2d5016' }}>Billing Details</h2>
+                        <p style={{ margin: 0, fontSize: '13px', color: '#6b8e23' }}>Please enter your delivery address</p>
+                      </div>
+                    </div>
+
                     <div className="row gx-20">
+                      {/* Full Name */}
                       <div className="col-12 form-group">
+                        <label style={{ 
+                          marginBottom: '10px', 
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '15px', 
+                          fontWeight: '600',
+                          color: '#2d5016'
+                        }}>
+                          <i className="fas fa-user" style={{ fontSize: '13px', color: '#6b8e23' }}></i>
+                          Complete Name <span style={{ color: '#dc3545', fontSize: '16px' }}>*</span>
+                        </label>
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Complete Name"
+                          placeholder="Enter your full name"
                           required
                           name="name"
                           value={formData.name}
                           onChange={handleInputChange}
+                          style={{
+                            padding: '12px 16px',
+                            fontSize: '14px',
+                            border: '2px solid #e8f5e3',
+                            borderRadius: '10px',
+                            transition: 'all 0.3s ease',
+                            background: '#ffffff'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = '#6b8e23';
+                            e.target.style.boxShadow = '0 0 0 3px rgba(107, 142, 35, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = '#e8f5e3';
+                            e.target.style.boxShadow = 'none';
+                          }}
                         />
                       </div>
+
+                      {/* Email */}
                       <div className="col-12 form-group">
+                        <label style={{ 
+                          marginBottom: '10px', 
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '15px', 
+                          fontWeight: '600',
+                          color: '#2d5016'
+                        }}>
+                          <i className="fas fa-envelope" style={{ fontSize: '13px', color: '#6b8e23' }}></i>
+                          Email Address <span style={{ color: '#dc3545', fontSize: '16px' }}>*</span>
+                        </label>
                         <input
                           type="email"
                           className="form-control"
-                          placeholder="Email Address"
+                          placeholder="Enter your email address"
                           required
                           name="email"
                           value={formData.email}
                           onChange={handleInputChange}
                           style={{
-                            borderColor: emailExists ? '#dc3545' : formData.email && !checkingEmail ? '#28a745' : undefined
+                            padding: '12px 16px',
+                            fontSize: '14px',
+                            borderRadius: '10px',
+                            transition: 'all 0.3s ease',
+                            background: '#ffffff',
+                            border: formData.email && !checkingEmail ? '2px solid #28a745' : '2px solid #e8f5e3'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = e.target.style.borderColor === 'rgb(40, 167, 69)' ? '#28a745' : '#6b8e23';
+                            e.target.style.boxShadow = '0 0 0 3px rgba(107, 142, 35, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.boxShadow = 'none';
                           }}
                         />
                         {checkingEmail && formData.email && (
                           <div style={{ 
                             fontSize: '12px', 
                             color: '#6c757d', 
-                            marginTop: '5px',
+                            marginTop: '8px',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '5px'
+                            gap: '6px',
+                            padding: '8px 12px',
+                            background: '#f8f9fa',
+                            borderRadius: '8px'
                           }}>
                             <i className="fas fa-spinner fa-spin"></i> Checking email...
                           </div>
@@ -821,74 +1093,214 @@ export default function CheckoutPage() {
                         {!checkingEmail && emailExists && (
                           <div style={{ 
                             fontSize: '12px', 
-                            color: '#dc3545', 
-                            marginTop: '5px',
+                            color: '#155724', 
+                            marginTop: '8px',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '5px'
+                            gap: '6px',
+                            padding: '10px 12px',
+                            background: '#d4edda',
+                            borderRadius: '8px',
+                            border: '1px solid #c3e6cb'
                           }}>
-                            <i className="fas fa-exclamation-circle"></i> This email is already registered. <Link href="/login" style={{ color: '#dc3545', textDecoration: 'underline' }}>Login here</Link>
+                            <i className="fas fa-check-circle"></i> This email is registered. Your order will be linked to the existing account.
                           </div>
                         )}
                         {!checkingEmail && !emailExists && formData.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
                           <div style={{ 
                             fontSize: '12px', 
                             color: '#28a745', 
-                            marginTop: '5px',
+                            marginTop: '8px',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '5px'
+                            gap: '6px',
+                            padding: '10px 12px',
+                            background: '#d4edda',
+                            borderRadius: '8px',
+                            border: '1px solid #c3e6cb'
                           }}>
                             <i className="fas fa-check-circle"></i> Email available
                           </div>
                         )}
                       </div>
+
+                      {/* Country */}
                       <div className="col-12 form-group">
-                        <select className="form-select" defaultValue="IN">
-                          <option value="IN">India (IN)</option>
-                          <option value="US">United States (US)</option>
-                          <option value="AU">Australia (AU)</option>
-                          <option value="GB">United Kingdom (UK)</option>
+                        <label style={{ 
+                          marginBottom: '10px', 
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '15px', 
+                          fontWeight: '600',
+                          color: '#2d5016'
+                        }}>
+                          <i className="fas fa-globe" style={{ fontSize: '13px', color: '#6b8e23' }}></i>
+                          Country / Region
+                        </label>
+                        <select className="form-select" defaultValue="IN" style={{
+                          padding: '12px 16px',
+                          fontSize: '14px',
+                          border: '2px solid #e8f5e3',
+                          borderRadius: '10px',
+                          background: '#ffffff',
+                          transition: 'all 0.3s ease',
+                          cursor: 'pointer'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#6b8e23';
+                          e.target.style.boxShadow = '0 0 0 3px rgba(107, 142, 35, 0.1)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e8f5e3';
+                          e.target.style.boxShadow = 'none';
+                        }}>
+                          <option value="IN">🇮🇳 India (IN)</option>
+                          <option value="US">🇺🇸 United States (US)</option>
+                          <option value="AU">🇦🇺 Australia (AU)</option>
+                          <option value="GB">🇬🇧 United Kingdom (UK)</option>
                         </select>
                       </div>
+
+                      {/* City and Address Row */}
                       <div className="col-md-6 form-group">
+                        <label style={{ 
+                          marginBottom: '10px', 
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '15px', 
+                          fontWeight: '600',
+                          color: '#2d5016'
+                        }}>
+                          <i className="fas fa-city" style={{ fontSize: '13px', color: '#6b8e23' }}></i>
+                          City / Town <span style={{ color: '#dc3545', fontSize: '16px' }}>*</span>
+                        </label>
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Town / City"
+                          placeholder="e.g., Mumbai, Delhi"
                           required
                           name="city"
                           value={formData.city}
                           onChange={handleInputChange}
+                          style={{
+                            padding: '12px 16px',
+                            fontSize: '14px',
+                            border: '2px solid #e8f5e3',
+                            borderRadius: '10px',
+                            transition: 'all 0.3s ease',
+                            background: '#ffffff'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = '#6b8e23';
+                            e.target.style.boxShadow = '0 0 0 3px rgba(107, 142, 35, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = '#e8f5e3';
+                            e.target.style.boxShadow = 'none';
+                          }}
                         />
                       </div>
+
                       <div className="col-md-6 form-group">
+                        <label style={{ 
+                          marginBottom: '10px', 
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '15px', 
+                          fontWeight: '600',
+                          color: '#2d5016'
+                        }}>
+                          <i className="fas fa-road" style={{ fontSize: '13px', color: '#6b8e23' }}></i>
+                          Street Address <span style={{ color: '#dc3545', fontSize: '16px' }}>*</span>
+                        </label>
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Street Address"
+                          placeholder="Street name and number"
                           required
                           name="address"
                           value={formData.address}
                           onChange={handleInputChange}
+                          style={{
+                            padding: '12px 16px',
+                            fontSize: '14px',
+                            border: '2px solid #e8f5e3',
+                            borderRadius: '10px',
+                            transition: 'all 0.3s ease',
+                            background: '#ffffff'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = '#6b8e23';
+                            e.target.style.boxShadow = '0 0 0 3px rgba(107, 142, 35, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = '#e8f5e3';
+                            e.target.style.boxShadow = 'none';
+                          }}
                         />
                       </div>
+
+                      {/* Postal Code and Phone Row */}
                       <div className="col-md-6 form-group">
+                        <label style={{ 
+                          marginBottom: '10px', 
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '15px', 
+                          fontWeight: '600',
+                          color: '#2d5016'
+                        }}>
+                          <i className="fas fa-mailbox" style={{ fontSize: '13px', color: '#6b8e23' }}></i>
+                          Postal Code <span style={{ color: '#dc3545', fontSize: '16px' }}>*</span>
+                        </label>
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Postcode / Zip"
+                          placeholder="e.g., 400001"
                           required
                           name="zip"
                           value={formData.zip}
                           onChange={handleInputChange}
+                          style={{
+                            padding: '12px 16px',
+                            fontSize: '14px',
+                            border: '2px solid #e8f5e3',
+                            borderRadius: '10px',
+                            transition: 'all 0.3s ease',
+                            background: '#ffffff'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = '#6b8e23';
+                            e.target.style.boxShadow = '0 0 0 3px rgba(107, 142, 35, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = '#e8f5e3';
+                            e.target.style.boxShadow = 'none';
+                          }}
                         />
                       </div>
+
                       <div className="col-md-6 form-group">
+                        <label style={{ 
+                          marginBottom: '10px', 
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '15px', 
+                          fontWeight: '600',
+                          color: '#2d5016'
+                        }}>
+                          <i className="fas fa-phone" style={{ fontSize: '13px', color: '#6b8e23' }}></i>
+                          Phone Number <span style={{ color: '#dc3545', fontSize: '16px' }}>*</span>
+                        </label>
                         <input
                           type="tel"
                           className="form-control"
-                          placeholder="Phone number"
+                          placeholder="10-digit phone number"
                           required
                           name="phone"
                           value={formData.phone}
@@ -897,59 +1309,145 @@ export default function CheckoutPage() {
                           pattern="[0-9]{10}"
                           maxLength={10}
                           title="Phone number must be exactly 10 digits."
+                          style={{
+                            padding: '12px 16px',
+                            fontSize: '14px',
+                            border: '2px solid #e8f5e3',
+                            borderRadius: '10px',
+                            transition: 'all 0.3s ease',
+                            background: '#ffffff'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = '#6b8e23';
+                            e.target.style.boxShadow = '0 0 0 3px rgba(107, 142, 35, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = '#e8f5e3';
+                            e.target.style.boxShadow = 'none';
+                          }}
                         />
                       </div>
                       
                       {/* Only show account creation checkbox if user is NOT logged in */}
                       {!user && (
                         <div className="col-12 form-group">
-                          <input
-                            type="checkbox"
-                            id="accountNewCreate"
-                            checked={createAccount}
-                            disabled={emailExists}
-                            onChange={(event) => setCreateAccount(event.target.checked)}
-                          />
-                          <label htmlFor="accountNewCreate">
-                            Send login credentials to my email
-                          </label>
+                          <div style={{
+                            background: 'linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%)',
+                            border: '2px solid #b8daff',
+                            borderRadius: '12px',
+                            padding: '20px',
+                            marginTop: '20px'
+                          }}>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: '12px'
+                            }}>
+                              <input
+                                type="checkbox"
+                                id="accountNewCreate"
+                                checked={createAccount}
+                                disabled={emailExists}
+                                onChange={(event) => setCreateAccount(event.target.checked)}
+                                style={{
+                                  width: '20px',
+                                  height: '20px',
+                                  marginTop: '2px',
+                                  cursor: emailExists ? 'not-allowed' : 'pointer',
+                                  accentColor: '#6b8e23'
+                                }}
+                              />
+                              <div style={{ flex: 1 }}>
+                                <label htmlFor="accountNewCreate" style={{
+                                  cursor: emailExists ? 'not-allowed' : 'pointer',
+                                  fontSize: '15px',
+                                  fontWeight: '600',
+                                  color: '#2d5016',
+                                  margin: 0,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px'
+                                }}>
+                                  <i className="fas fa-envelope-open-text" style={{ color: '#6b8e23' }}></i>
+                                  Send login credentials to my email
+                                  <i 
+                                    className={createAccount ? "fas fa-check-circle" : "far fa-circle"} 
+                                    style={{ 
+                                      color: createAccount ? '#28a745' : '#ccc', 
+                                      marginLeft: 'auto' 
+                                    }}
+                                  ></i>
+                                </label>
+                                <p style={{
+                                  fontSize: '12px',
+                                  color: '#555',
+                                  marginTop: '6px',
+                                  margin: '6px 0 0 0'
+                                }}>
+                                  Receive a password via email for easy account access
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
                           {emailExists && (
                             <div style={{
-                              marginTop: '8px',
-                              padding: '10px',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                              backgroundColor: '#f8d7da',
-                              color: '#721c24',
-                              border: '1px solid #f5c6cb'
+                              marginTop: '16px',
+                              padding: '14px 16px',
+                              borderRadius: '10px',
+                              fontSize: '13px',
+                              backgroundColor: '#d4edda',
+                              color: '#155724',
+                              border: '2px solid #c3e6cb',
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: '10px'
                             }}>
-                              ⚠️ Email already registered. Account creation is disabled. Please <Link href="/login" style={{ color: '#721c24', textDecoration: 'underline', fontWeight: 'bold' }}>login</Link> or use a different email.
+                              <i className="fas fa-check-circle" style={{ marginTop: '2px', flexShrink: 0, color: '#28a745' }}></i>
+                              <div>
+                                <strong>Welcome back!</strong><br />
+                                Your order will be linked to your existing account. You can login later to view order history.
+                              </div>
                             </div>
                           )}
                           {!emailExists && createAccount && (
                             <div style={{
-                              marginTop: '8px',
-                              padding: '10px',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                              backgroundColor: '#e7f3ff',
+                              marginTop: '16px',
+                              padding: '14px 16px',
+                              borderRadius: '10px',
+                              fontSize: '13px',
+                              backgroundColor: '#f0f7ff',
                               color: '#004085',
-                              border: '1px solid #b8daff'
+                              border: '2px solid #b8daff',
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: '10px'
                             }}>
-                              ℹ️ A random password will be generated and sent to your email after placing the order.
+                              <i className="fas fa-circle-info" style={{ marginTop: '2px', flexShrink: 0, color: '#0056b3' }}></i>
+                              <div>
+                                <strong>Secure Password Generation</strong><br />
+                                A random secure password will be generated and sent to your email after placing the order.
+                              </div>
                             </div>
                           )}
                           {!emailExists && !createAccount && (
                             <div style={{
-                              marginTop: '8px',
-                              padding: '10px',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                              backgroundColor: '#fff3cd',
+                              marginTop: '16px',
+                              padding: '14px 16px',
+                              borderRadius: '10px',
+                              fontSize: '13px',
+                              backgroundColor: '#fffbf0',
                               color: '#856404',
-                              border: '1px solid #ffeaa7'
+                              border: '2px solid #ffeaa7',
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: '10px'
                             }}>
-                              ℹ️ Your phone number will be used as the password.
+                              <i className="fas fa-lightbulb" style={{ marginTop: '2px', flexShrink: 0, color: '#ffc107' }}></i>
+                              <div>
+                                <strong>Password Hint</strong><br />
+                                Your phone number will be used as the password for account access.
+                              </div>
                             </div>
                           )}
                           {accountCreationMessage && (
@@ -967,6 +1465,7 @@ export default function CheckoutPage() {
                           )}
                         </div>
                       )}
+                      
                       <p id="ship-to-different-address">
                         <input
                           id="ship-to-different-address-checkbox"
@@ -1086,8 +1585,9 @@ export default function CheckoutPage() {
                             value="cod"
                             checked={paymentMethod === "cod"}
                             onChange={() => setPaymentMethod("cod")}
+                            disabled
                           />
-                          <label htmlFor="payment_method_cod">💰 Cash on Delivery</label>
+                          <label htmlFor="payment_method_cod" style={{ opacity: 0.5, cursor: 'not-allowed' }}>💰 Cash on Delivery (Unavailable)</label>
                           {paymentMethod === "cod" && (
                             <div style={{ 
                               fontSize: '12px', 
@@ -1099,7 +1599,7 @@ export default function CheckoutPage() {
                             </div>
                           )}
                         </li>
-                        <li className="wc_payment_method payment_method_bacs">
+                        {/* <li className="wc_payment_method payment_method_bacs">
                           <input
                             id="payment_method_bacs"
                             type="radio"
@@ -1108,8 +1608,9 @@ export default function CheckoutPage() {
                             value="bacs"
                             checked={paymentMethod === "bacs"}
                             onChange={() => setPaymentMethod("bacs")}
+                            disabled
                           />
-                          {/* <label htmlFor="payment_method_bacs">🏦 Direct Bank Transfer</label> */}
+                          <label htmlFor="payment_method_bacs" style={{ opacity: 0.5, cursor: 'not-allowed' }}>🏦 Direct Bank Transfer (Unavailable)</label>
                           {paymentMethod === "bacs" && (
                             <div style={{ 
                               fontSize: '12px', 
@@ -1120,11 +1621,15 @@ export default function CheckoutPage() {
                               Transfer payment directly to our bank account
                             </div>
                           )}
-                        </li>
+                        </li> */}
                       </ul>
                       <div className="form-row place-order">
                         {status && <p style={{ color: "#ffd6d6", marginBottom: 12 }}>{status}</p>}
-                        <button type="submit" className="vs-btn style2" disabled={busy || (paymentMethod === "ndps" && !scriptLoaded)}>
+                        <button 
+                          type="submit" 
+                          className="vs-btn style2" 
+                          disabled={busy || (paymentMethod === "ndps" && !scriptLoaded)}
+                        >
                           {busy ? "Placing Order..." : paymentMethod === "ndps" && !scriptLoaded ? "Loading Payment..." : "Place Order"}
                         </button>
                       </div>

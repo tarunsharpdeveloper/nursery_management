@@ -723,9 +723,32 @@ export default function ProductDetailsClient({
                         showToast("Product is out of stock", "error");
                         return;
                       }
+                      
+                      // Determine the image URL - prefer media_urls first, fallback to photo_url
+                      let imageUrl = null;
+                      
+                      if (product.media_urls) {
+                        try {
+                          const parsed = JSON.parse(product.media_urls);
+                          if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]) {
+                            imageUrl = parsed[0];
+                          }
+                        } catch {
+                          imageUrl = product.media_urls;
+                        }
+                      }
+                      
+                      // Fallback to photo_url if no media_urls
+                      if (!imageUrl && product.photo_url) {
+                        imageUrl = product.photo_url;
+                      }
+                      
+                      console.log('📦 Adding to cart - Product:', { photo_url: product.photo_url, media_urls: product.media_urls, imageUrl, name: product.name });
+                      
                       addToCart(
                         {
                           ...product,
+                          photo_url: imageUrl ? getMediaUrl(imageUrl) : null,
                           cartKey: selectedVariant ? `${product.id}:${selectedVariant.id}` : String(product.id),
                           variant_id: selectedVariant?.id || null,
                           variant_label: selectedVariantLabel || null,

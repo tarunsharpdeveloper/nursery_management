@@ -82,14 +82,33 @@ export default function CartPage() {
                           <tr className="cart_item" key={cartKey}>
                             <td data-title="Name">
                               <div className="d-flex flex-column flex-md-row align-items-center gap-3 gap-md-4">
-                                <Link className="cart-productimage" href={`/products/${item.id}`}>
+                                <Link 
+                                  className="cart-productimage" 
+                                  href={`/products/${item.id}`}
+                                  style={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'center', 
+                                    alignItems: 'center', 
+                                    width: '100px',
+                                    height: '100px',
+                                    flexShrink: 0,
+                                    overflow: 'hidden',
+                                    borderRadius: '10px',
+                                    backgroundColor: '#f8f9f6'
+                                  }}
+                                >
                                   <img
                                     width={91}
                                     height={91}
-                                    src={getMediaUrl(item.photo_url) || DEFAULT_IMG}
+                                    src={item.photo_url ? getMediaUrl(item.photo_url) : DEFAULT_IMG}
                                     alt={item.name}
                                     loading="lazy"
-                                    style={{ objectFit: "cover", borderRadius: "10px" }}
+                                    style={{ 
+                                      objectFit: "contain", 
+                                      borderRadius: "10px",
+                                      maxWidth: '100%',
+                                      maxHeight: '100%'
+                                    }}
                                   />
                                 </Link>
                                 <div className="cart_item__des text-center text-md-start">
@@ -400,9 +419,11 @@ export default function CartPage() {
 
               </form>
 
+              
               <div className="cart-footer d-flex flex-wrap gap-4 align-items-center justify-content-center justify-content-md-between">
-                <Link href="/checkout" className="vs-btn style2">PROCEED TO CHECKOUT</Link>
                 <Link href="/products" className="vs-btn style2">Continue Shopping</Link>
+                <Link href="/checkout" className="vs-btn style2">PROCEED TO CHECKOUT</Link>
+                
               </div>
 
               <div className="cart-summary-totals">

@@ -36,6 +36,25 @@ export default function AdminLoginPage() {
   }, [router]);
 
   async function login() {
+    // Validate form
+    if (!email.trim()) {
+      setStatus("Email is required");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    
+    if (!password.trim()) {
+      setStatus("Password is required");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    
+    if (password.length < 6) {
+      setStatus("Password must be at least 6 characters");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    
     setBusy(true);
     try {
       const response = await apiRequest<LoginResponse>("/api/auth/login", {
@@ -46,7 +65,7 @@ export default function AdminLoginPage() {
       router.replace("/admin/dashboard");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Login failed");
-    } finally {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       setBusy(false);
     }
   }
@@ -69,15 +88,52 @@ export default function AdminLoginPage() {
         <div className="login-card">
           <p className="eyebrow">Admin Login</p>
           <h2>Welcome back</h2>
-          <p className="meta">{status}</p>
-          <form>
+          <p 
+            className="meta" 
+            style={{
+              color: status !== "Use the role credentials assigned by the owner." ? '#b42318' : 'inherit',
+              background: status !== "Use the role credentials assigned by the owner." ? '#fff0f0' : 'transparent',
+              padding: status !== "Use the role credentials assigned by the owner." ? '12px 14px' : '0',
+              borderRadius: status !== "Use the role credentials assigned by the owner." ? '8px' : '0',
+              border: status !== "Use the role credentials assigned by the owner." ? '1px solid #ffd0d0' : 'none',
+              fontWeight: status !== "Use the role credentials assigned by the owner." ? 700 : 400,
+              marginBottom: status !== "Use the role credentials assigned by the owner." ? '20px' : '0',
+              animation: status !== "Use the role credentials assigned by the owner." ? 'slideDown 0.3s ease-out' : 'none'
+            }}
+          >
+            {status}
+          </p>
+          <form onInvalid={(e) => {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}>
             <label className="field">
-              <span>Email</span>
-              <input value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" />
+              <span>Email <span style={{ color: '#dc2626', fontWeight: 700 }}>*</span></span>
+              <input 
+                value={email} 
+                onChange={(event) => setEmail(event.target.value)} 
+                autoComplete="email" 
+                required
+                style={{
+                  borderColor: status?.includes('Email') ? '#dc2626' : undefined,
+                  backgroundColor: status?.includes('Email') ? '#fff5f5' : undefined
+                }}
+              />
             </label>
             <label className="field">
-              <span>Password</span>
-              <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" />
+              <span>Password <span style={{ color: '#dc2626', fontWeight: 700 }}>*</span></span>
+              <input 
+                type="password" 
+                value={password} 
+                onChange={(event) => setPassword(event.target.value)} 
+                autoComplete="current-password" 
+                required
+                minLength={6}
+                style={{
+                  borderColor: status?.includes('Password') ? '#dc2626' : undefined,
+                  backgroundColor: status?.includes('Password') ? '#fff5f5' : undefined
+                }}
+              />
             </label>
             <button className="button login-button" type="button" onClick={login} disabled={busy}>
               <LogIn size={18} />

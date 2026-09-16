@@ -29,6 +29,9 @@ type OrderDetail = {
   email: string;
   address: string;
   order_source?: string;
+  merchant_transaction_id?: string;
+  atom_transaction_id?: string;
+  payment_gateway?: string;
   items: OrderItem[];
 };
 
@@ -110,7 +113,14 @@ function ViewOrderContent() {
         </Link>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: order.payment_gateway === 'ndps' && (order.merchant_transaction_id || order.atom_transaction_id) 
+          ? 'repeat(auto-fit, minmax(280px, 1fr))' 
+          : 'repeat(auto-fit, minmax(300px, 1fr))', 
+        gap: '20px', 
+        marginBottom: '24px' 
+      }}>
 
         {/* Customer Details Card */}
         <div className="card" style={{ padding: '24px' }}>
@@ -181,6 +191,78 @@ function ViewOrderContent() {
             </div>
           </div>
         </div>
+
+        {/* Payment Transaction Details Card - Only show if payment is NDPS and has transaction IDs */}
+        {order.payment_gateway === 'ndps' && (order.merchant_transaction_id || order.atom_transaction_id) && (
+          <div className="card" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '1.1rem', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid #e4e4e7', color: '#18181b' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>Payment Transaction Details</span>
+                <span style={{ 
+                  background: '#3b82f615', 
+                  color: '#3b82f6', 
+                  padding: '2px 8px', 
+                  borderRadius: '999px', 
+                  fontSize: '0.7rem', 
+                  fontWeight: 600 
+                }}>
+                  NDPS
+                </span>
+              </span>
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.95rem' }}>
+              {order.merchant_transaction_id && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ color: '#71717a', fontSize: '0.85rem' }}>Merchant Transaction ID:</span>
+                  <div style={{ 
+                    background: '#f4f4f5', 
+                    padding: '8px 12px', 
+                    borderRadius: '6px', 
+                    fontFamily: 'monospace', 
+                    fontSize: '0.9rem',
+                    color: '#3f3f46',
+                    wordBreak: 'break-all',
+                    border: '1px solid #e4e4e7'
+                  }}>
+                    {order.merchant_transaction_id}
+                  </div>
+                </div>
+              )}
+              {order.atom_transaction_id && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ color: '#71717a', fontSize: '0.85rem' }}>Atom Transaction ID:</span>
+                  <div style={{ 
+                    background: '#ecfdf515', 
+                    padding: '8px 12px', 
+                    borderRadius: '6px', 
+                    fontFamily: 'monospace', 
+                    fontSize: '0.9rem',
+                    color: '#059669',
+                    wordBreak: 'break-all',
+                    border: '1px solid #a7f3d015',
+                    backgroundColor: '#f0fdf4'
+                  }}>
+                    {order.atom_transaction_id}
+                  </div>
+                </div>
+              )}
+              <div style={{ 
+                fontSize: '0.8rem', 
+                color: '#71717a', 
+                marginTop: '8px', 
+                padding: '8px 10px',
+                background: '#fafafa',
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <span style={{ color: '#3b82f6' }}>ℹ</span>
+                Keep these transaction IDs for payment reference and reconciliation
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Items Table */}

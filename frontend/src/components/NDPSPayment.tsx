@@ -34,6 +34,8 @@ export default function NDPSPayment({
 
   // Load AtomPaynetz script dynamically (like working implementation)
   useEffect(() => {
+    let hasErrored = false; // Track if error has already been reported
+
     const loadAtomScript = () => {
       // Remove existing script if any
       const existingScript = document.querySelector('script[src*="atomcheckout.js"]');
@@ -41,19 +43,49 @@ export default function NDPSPayment({
         existingScript.remove();
       }
 
+      const primaryUrl = `https://pgtest.atomtech.in/staticdata/ots/js/atomcheckout.js?v=${Date.now()}`;
+      const altUrl = `https://atomtech.in/ots/atomcheckout.js?v=${Date.now()}`;
+
+      console.log('🔄 Attempting to load AtomPaynetz script from primary URL:', primaryUrl);
+
       // Create new script with timestamp to prevent caching
       const script = document.createElement('script');
-      script.src = `https://pgtest.atomtech.in/staticdata/ots/js/atomcheckout.js?v=${Date.now()}`;
+      script.src = primaryUrl;
       script.async = true;
+      script.crossOrigin = 'anonymous';
       
       script.onload = () => {
-        console.log('✅ AtomPaynetz script loaded successfully');
+        console.log('✅ AtomPaynetz script loaded successfully from primary URL');
         setScriptLoaded(true);
       };
       
-      script.onerror = () => {
-        console.error('❌ Failed to load AtomPaynetz script');
-        onError('Failed to load payment system');
+      script.onerror = (error) => {
+        console.error('❌ Primary URL failed:', primaryUrl, error);
+        console.log('⚠️ Attempting alternate URL:', altUrl);
+        
+        // Try alternate URL
+        const altScript = document.createElement('script');
+        altScript.src = altUrl;
+        altScript.async = true;
+        altScript.crossOrigin = 'anonymous';
+        
+        altScript.onload = () => {
+          console.log('✅ AtomPaynetz script loaded successfully from alternate URL');
+          setScriptLoaded(true);
+        };
+        
+        altScript.onerror = (altError) => {
+          console.error('❌ Alternate URL also failed:', altUrl, altError);
+          if (!hasErrored) {
+            hasErrored = true;
+            console.error('⛔ Payment gateway unreachable from both URLs.');
+            console.log('Primary URL tried:', primaryUrl);
+            console.log('Alternate URL tried:', altUrl);
+            onError('Payment gateway is temporarily unavailable. Please try again in a few moments or use a different payment method if available.');
+          }
+        };
+        
+        document.head.appendChild(altScript);
       };
 
       document.head.appendChild(script);

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { X } from "lucide-react";
 
 const processSteps = [
   {
@@ -67,6 +68,8 @@ function AnimatedCounter({ end, duration = 2200, suffix = "" }: { end: number; d
 }
 
 export default function AboutPage() {
+  const [videoOpen, setVideoOpen] = useState(false);
+
   return (
     <main>
       {/* breadcumb */}
@@ -100,8 +103,8 @@ export default function AboutPage() {
                   <img className="img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRj64W6Yhp2BLcBoHVPk2pQeqJx-HbiJXtTpWPoQpkATQ&s=10" alt="about 1 1" />
                 </div>
                 <div className="video-thumb1">
-                  <img className="img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLvX2WV6_Uck7fxt9yiwYPUV43XfKB_o_FGI74BTJAualpPZ-yEvrP7TF9&s=10" alt="about 2 2" />
-                  <a href="#" className="play-btn style7 popup-video" tabIndex={0}><i className="fas fa-play"></i></a>
+                  <img className="img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTl7kdWHnXRizaPcg9GxZAUElrzcQzG-i4kGv1SuQLRqBh-tdamMc3gyZ8&s=10" alt="about 2 2" />
+                  <button onClick={() => setVideoOpen(true)} className="play-btn style7 popup-video" style={{ background: "transparent", border: "none", cursor: "pointer" }}><i className="fas fa-play"></i></button>
                 </div>
               </div>
             </div>
@@ -158,8 +161,8 @@ export default function AboutPage() {
             </div>
             <div className="col-xl-6 col-lg-auto mb-30">
               <div className="img-box7">
-                <img src="https://static.vecteezy.com/system/resources/thumbnails/080/863/023/small/vibrant-foliage-of-a-peperomia-plant-also-known-as-a-baby-rubber-plant-or-green-succulent-showing-shiny-textured-surfaces-this-indoor-greenery-thrives-in-bright-light-photo.jpg" alt="feature-img" className="img1" />
-                <a href="#" className="play-btn style5 popup-video"><i className="fas fa-play"></i></a>
+                <img src="https://puspitanursery.com/wp-content/uploads/2025/11/Marigold-12-Masi.png  " alt="feature-img" className="img1" />
+                <button onClick={() => setVideoOpen(true)} className="play-btn style5 popup-video" style={{ background: "transparent", border: "none", cursor: "pointer" }}><i className="fas fa-play"></i></button>
               </div>
             </div>
           </div>
@@ -301,6 +304,35 @@ export default function AboutPage() {
         </div>
       </section>
       {/* Services Area End */}
+
+      {/* Video Modal */}
+      {videoOpen && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.8)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+          padding: "20px",
+          backdropFilter: "blur(4px)"
+        }} onClick={() => setVideoOpen(false)}>
+          <div className="video-modal-container" onClick={(e) => e.stopPropagation()}>
+            <button className="video-close-btn" onClick={() => setVideoOpen(false)} style={{ background: "transparent", border: "none", cursor: "pointer", position: "absolute", top: "10px", right: "10px", zIndex: 10000 }}><X size={20} color="white" /></button>
+            <iframe 
+              width="560" 
+              height="315" 
+              src="https://www.youtube.com/embed/KeqXc5rGVV4?si=eMdA6HGXib3FrPWK" 
+              title="YouTube video player" 
+              frameBorder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+              referrerPolicy="strict-origin-when-cross-origin" 
+              allowFullScreen
+            ></iframe>
+          </div>
+        </div>
+      )}
 
     </main>
   );

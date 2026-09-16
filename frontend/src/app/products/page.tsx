@@ -128,6 +128,8 @@ export default function ProductsPage() {
         }
       } catch (err) {
         console.error("Failed to load categories:", err);
+        // Don't show fallback categories on error - show empty list
+        setDbCategories([]);
       }
     }
     loadCategories();
@@ -204,7 +206,8 @@ export default function ProductsPage() {
         setAllProducts(transformed);
       } catch (error) {
         console.error("Failed to load products:", error);
-        if (mounted) setAllProducts(fallbackProducts);
+        // Don't show fallback data on error - show empty state instead
+        if (mounted) setAllProducts([]);
       } finally {
         if (mounted) setLoading(false);
       }

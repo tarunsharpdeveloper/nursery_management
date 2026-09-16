@@ -126,8 +126,10 @@ export default function HomePage() {
   const router = useRouter();
   const { addToCart } = useCart();
   const { showToast } = useToast();
-  const [products, setProducts] = useState<Product[]>(fallbackProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [productsError, setProductsError] = useState(false);
+  const [categoriesError, setCategoriesError] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const [videoOpen, setVideoOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 12, hours: 23, minutes: 59, seconds: 59 });
@@ -138,13 +140,38 @@ export default function HomePage() {
   const [categoryIndex, setCategoryIndex] = useState(0);
 
   // Testimonials slider data
-  const testimonials = [
-    { name: "Suresh R. (Farmer)", title: "Excellent Grafted Mango Plants", avatar: "/assets/img/testimonials/testi-1-1.png", text: "I ordered Alphonso Mango grafts for my orchard. They were dispatched quickly. The root health was incredible, and they are adapting very well." },
-    { name: "Preeti S. (Gardener)", title: "High Germination Flower Seeds", avatar: "/assets/img/testimonials/testi-1-2.png", text: "The germination rate of the Marigold and Petunia seeds was close to 90%. My garden is completely transformed. Highly recommended nursery!" },
-    { name: "Rajesh K. (Landscaper)", title: "Smooth Billing & Dispatch Log", avatar: "/assets/img/testimonials/testi-1-3.png", text: "For commercial landscaping projects, we need clear billing logs. Their system generates invoice receipts, orders, and dispatch slips in one place." },
-    { name: "Anita M. (Home Gardener)", title: "Lush & Healthy Indoor Plants", avatar: "/assets/img/testimonials/testi-1-1.png", text: "The indoor plants I received were lush, healthy, and beautifully packaged. The care instructions were spot-on. My living room feels like a green oasis now!" },
-    { name: "Vikram P. (Nursery Owner)", title: "Reliable Wholesale Supply", avatar: "/assets/img/testimonials/testi-1-2.png", text: "As a retail nursery, we need consistent wholesale supply. Their production logs and dispatch tracking make bulk ordering seamless and transparent." }
-  ];
+ const testimonials = [
+  {
+    name: "Suresh R. (Farmer)",
+    title: "Healthy & High-Quality Flower Plants",
+    avatar: "/assets/img/testimonials/testi-1-1.jpg",
+    text: "The flower plants I ordered arrived fresh, healthy, and well-packed. They established quickly in my garden and are now blooming beautifully. Excellent quality!"
+  },
+  {
+    name: "Preeti S. (Gardener)",
+    title: "Excellent Flower Seed Germination",
+    avatar: "/assets/img/testimonials/testi-1-2.jpg",
+    text: "I purchased Marigold and Petunia seeds, and the germination rate was excellent. The seedlings grew strong and healthy, giving my garden beautiful colors."
+  },
+  {
+    name: "Rajesh K. (Landscaper)",
+    title: "Great Variety of Flower Seeds",
+    avatar: "/assets/img/testimonials/testi-1-3.jpg",
+    text: "They have a great collection of flower seeds suitable for landscaping projects. The seeds were fresh, properly packed, and delivered on time."
+  },
+  {
+    name: "Anita M. (Home Gardener)",
+    title: "Beautiful Flowering Plants",
+    avatar: "/assets/img/testimonials/testi-3-1.jpg",
+    text: "The flowering plants I received were lush, vibrant, and very healthy. With proper care, they started blooming beautifully and added a wonderful touch to my home garden."
+  },
+  {
+    name: "Vikram P. (Nursery Owner)",
+    title: "Reliable Flower Seed Supply",
+    avatar: "/assets/img/testimonials/testi-3-2.jpg",
+    text: "The flower seeds are consistently fresh and of good quality. Their reliable supply and wide variety make them a great choice for nursery and bulk requirements."
+  }
+];
 
   // Responsive: 1 per view on mobile, 2 on desktop
   useEffect(() => {
@@ -248,7 +275,7 @@ export default function HomePage() {
   useEffect(() => {
     async function loadProducts() {
       try {
-        const res = await apiRequest<BackendProduct[] | { data: BackendProduct[] }>("/api/products?page=1&limit=6");
+        const res = await apiRequest<BackendProduct[] | { data: BackendProduct[] }>("/api/products?page=1&limit=9");
         const data = Array.isArray(res) ? res : (res.data || []);
         const transformedProducts: Product[] = data.map((product) => {
           // Resolve best image: first from media_urls JSON array, then photo_url, then fallback
@@ -286,6 +313,7 @@ export default function HomePage() {
         }
       } catch (error) {
         console.error("Failed to load products:", error);
+        setProductsError(true);
       } finally {
         setLoading(false);
       }
@@ -309,6 +337,9 @@ export default function HomePage() {
         }
       } catch (error) {
         console.error("Failed to load categories:", error);
+        setCategoriesError(true);
+        // Don't show fallback categories on error - show empty list
+        setDbCategories([]);
       }
     }
     loadCategories();
@@ -542,67 +573,81 @@ export default function HomePage() {
             </div>
           </div>
           <div style={{ marginTop: "30px" }}>
-            <div className="row g-3 g-md-4 justify-content-center">
-              {categoryList.map((cat) => (
-                <div className="col-lg-3 col-md-4 col-sm-6 col-6" key={cat.name}>
-                  <Link href={`/products?category=${encodeURIComponent(cat.name)}`} style={{ textDecoration: "none" }}>
-                    <div
-                      className="category-card"
-                      style={{
-                        position: "relative",
-                        borderRadius: "20px",
-                        overflow: "hidden",
-                        backgroundColor: "#fff",
-                        boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
-                        transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-                        cursor: "pointer",
-                        height: "100%",
-                        border: "2px solid transparent"
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "translateY(-8px) scale(1.02)";
-                        e.currentTarget.style.boxShadow = "0 20px 50px rgba(45, 80, 22, 0.2)";
-                        e.currentTarget.style.borderColor = "var(--brand)";
-                        const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
-                        if (img) img.style.transform = "scale(1.1) rotate(1deg)";
-                        const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
-                        if (overlay) overlay.style.opacity = "1";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "translateY(0) scale(1)";
-                        e.currentTarget.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.08)";
-                        e.currentTarget.style.borderColor = "transparent";
-                        const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
-                        if (img) img.style.transform = "scale(1) rotate(0deg)";
-                        const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
-                        if (overlay) overlay.style.opacity = "0";
-                      }}
-                    >
-                      <div style={{ position: "relative", width: "100%", height: "165px", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
-                        <img src={cat.image} alt={cat.name} className="category-img" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }} />
-                        <div className="category-overlay" style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(45, 80, 22, 0) 0%, rgba(45, 80, 22, 0.6) 100%)", opacity: 0, transition: "opacity 0.5s ease", zIndex: 1 }} />
-                        <div className="category-item-badge">
-                          {cat.count} {cat.count === 1 ? "Item" : "Items"}
+            {categoriesError ? (
+              <div style={{
+                textAlign: "center",
+                padding: "60px 20px",
+                background: "#f8f9fa",
+                borderRadius: "16px",
+                border: "2px solid #e8f5e3"
+              }}>
+                <i className="fas fa-inbox" style={{ fontSize: "48px", color: "#6b8e23", marginBottom: "20px", display: "block" }}></i>
+                <h3 style={{ fontSize: "20px", color: "#2d5016", marginBottom: "10px", fontWeight: "600" }}>No Categories Found</h3>
+                <p style={{ fontSize: "14px", color: "#666", marginBottom: "0" }}>We're having trouble loading categories. Please try again later.</p>
+              </div>
+            ) : (
+              <div className="row g-3 g-md-4 justify-content-center">
+                {categoryList.map((cat) => (
+                  <div className="col-lg-3 col-md-4 col-sm-6 col-6" key={cat.name}>
+                    <Link href={`/products?category=${encodeURIComponent(cat.name)}`} style={{ textDecoration: "none" }}>
+                      <div
+                        className="category-card"
+                        style={{
+                          position: "relative",
+                          borderRadius: "20px",
+                          overflow: "hidden",
+                          backgroundColor: "#fff",
+                          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
+                          transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                          cursor: "pointer",
+                          height: "100%",
+                          border: "2px solid transparent"
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = "translateY(-8px) scale(1.02)";
+                          e.currentTarget.style.boxShadow = "0 20px 50px rgba(45, 80, 22, 0.2)";
+                          e.currentTarget.style.borderColor = "var(--brand)";
+                          const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
+                          if (img) img.style.transform = "scale(1) rotate(0deg)";
+                          const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
+                          if (overlay) overlay.style.opacity = "1";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = "translateY(0) scale(1)";
+                          e.currentTarget.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.08)";
+                          e.currentTarget.style.borderColor = "transparent";
+                          const img = e.currentTarget.querySelector('.category-img') as HTMLElement;
+                          if (img) img.style.transform = "scale(1.1) rotate(1deg)";
+                          const overlay = e.currentTarget.querySelector('.category-overlay') as HTMLElement;
+                          if (overlay) overlay.style.opacity = "0";
+                        }}
+                      >
+                        <div style={{ position: "relative", width: "100%", height: "165px", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
+                          <img src={cat.image} alt={cat.name} className="category-img" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)", transform: "scale(1.1) rotate(1deg)" }} />
+                          <div className="category-overlay" style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(45, 80, 22, 0) 0%, rgba(45, 80, 22, 0.6) 100%)", opacity: 0, transition: "opacity 0.5s ease", zIndex: 1 }} />
+                          <div className="category-item-badge">
+                            {cat.count} {cat.count === 1 ? "Item" : "Items"}
+                          </div>
                         </div>
-                      </div>
-                      <div style={{ padding: "16px 12px", background: "linear-gradient(180deg, #ffffff 0%, #fafbfa 100%)" }}>
-                        <h3 style={{ fontSize: "16px", fontWeight: "800", color: "#2d5016", marginBottom: "6px", textAlign: "center", lineHeight: "1.3", letterSpacing: "-0.3px", textTransform: "capitalize" }}>
-                          {cat.name}
-                        </h3>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", marginTop: "6px" }}>
-                          <div style={{ width: "24px", height: "2px", background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)" }}></div>
-                          <span style={{ fontSize: "11px", color: "#6b8e23", fontWeight: "600", textTransform: "uppercase", letterSpacing: "1px" }}>
-                            Explore
-                          </span>
-                          <div style={{ width: "24px", height: "2px", background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)" }}></div>
+                        <div style={{ padding: "16px 12px", background: "linear-gradient(180deg, #ffffff 0%, #fafbfa 100%)" }}>
+                          <h3 style={{ fontSize: "16px", fontWeight: "800", color: "#2d5016", marginBottom: "6px", textAlign: "center", lineHeight: "1.3", letterSpacing: "-0.3px", textTransform: "capitalize" }}>
+                            {cat.name}
+                          </h3>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", marginTop: "6px" }}>
+                            <div style={{ width: "24px", height: "2px", background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)" }}></div>
+                            <span style={{ fontSize: "11px", color: "#6b8e23", fontWeight: "600", textTransform: "uppercase", letterSpacing: "1px" }}>
+                              Explore
+                            </span>
+                            <div style={{ width: "24px", height: "2px", background: "linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%)" }}></div>
+                          </div>
                         </div>
+                        <div style={{ position: "absolute", bottom: 0, left: 0, width: "60px", height: "60px", background: "linear-gradient(135deg, var(--brand) 0%, transparent 100%)", opacity: 0.05, borderRadius: "0 60px 0 0" }}></div>
                       </div>
-                      <div style={{ position: "absolute", bottom: 0, left: 0, width: "60px", height: "60px", background: "linear-gradient(135deg, var(--brand) 0%, transparent 100%)", opacity: 0.05, borderRadius: "0 60px 0 0" }}></div>
-                    </div>
-                  </Link>
-                </div>
-              ))}
-            </div>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -618,7 +663,7 @@ export default function HomePage() {
                   <img className="img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRj64W6Yhp2BLcBoHVPk2pQeqJx-HbiJXtTpWPoQpkATQ&s=10" alt="about 1" />
                 </div>
                 <div className="video-thumb1">
-                  <img className="img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLvX2WV6_Uck7fxt9yiwYPUV43XfKB_o_FGI74BTJAualpPZ-yEvrP7TF9&s=10" alt="about 2" />
+                  <img className="img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTl7kdWHnXRizaPcg9GxZAUElrzcQzG-i4kGv1SuQLRqBh-tdamMc3gyZ8&s=10" alt="about 2" />
                   <button onClick={() => setVideoOpen(true)} className="play-btn style7 popup-video" style={{ background: "transparent", border: "none" }}><i className="fas fa-play"></i></button>
                 </div>
               </div>
@@ -707,14 +752,16 @@ export default function HomePage() {
         <div className="video-modal-overlay" onClick={() => setVideoOpen(false)}>
           <div className="video-modal-container" onClick={(e) => e.stopPropagation()}>
             <button className="video-close-btn" onClick={() => setVideoOpen(false)}><X size={20} /></button>
-            <iframe
-              width="100%"
-              height="100%"
-              src="https://www.youtube.com/embed/zX-jSCDsJ8E?autoplay=1"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            <iframe 
+              width="560" 
+              height="315" 
+              src="https://www.youtube.com/embed/KeqXc5rGVV4?si=eMdA6HGXib3FrPWK" 
+              title="YouTube video player" 
+              frameBorder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+              referrerPolicy="strict-origin-when-cross-origin" 
               allowFullScreen
-            />
+            ></iframe>
           </div>
         </div>
       )}
@@ -764,7 +811,22 @@ export default function HomePage() {
 
           {/* Product Grid - 3 per row on desktop, 2 on tablet, 1 on mobile */}
           <div className="row g-4" style={{ marginTop: "30px" }}>
-            {products.slice(0, 6).map((prod) => (
+            {productsError ? (
+              <div className="col-12">
+                <div style={{
+                  textAlign: "center",
+                  padding: "80px 20px",
+                  background: "#f8f9fa",
+                  borderRadius: "16px",
+                  border: "2px solid #e8f5e3"
+                }}>
+                  <i className="fas fa-box-open" style={{ fontSize: "64px", color: "#6b8e23", marginBottom: "20px", display: "block" }}></i>
+                  <h3 style={{ fontSize: "24px", color: "#2d5016", marginBottom: "10px", fontWeight: "600" }}>No Products Found</h3>
+                  <p style={{ fontSize: "14px", color: "#666", marginBottom: "0" }}>We're having trouble loading products. Please try again later.</p>
+                </div>
+              </div>
+            ) : (
+              products.slice(0, 9).map((prod) => (
               <div className="col-lg-4 col-md-6 col-12" key={prod.id}>
                 <div className="vs-product product-style1 modern-card" style={{ height: "100%" }}>
                   <div className="product-img">
@@ -791,6 +853,46 @@ export default function HomePage() {
                     {prod.stock > 0 && prod.stock < 100 && <span className="product-tag2" style={{ background: "#d4a516" }}>Limited Stock</span>}
                   </div>
                   <div className="product-content">
+                    {/* Rating and Reviews - TOP */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      marginBottom: '6px',
+                      marginTop:'5px'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        gap: '2px'
+                      }}>
+                        {[...Array(5)].map((_, i) => (
+                          <i
+                            key={i}
+                            className={i < Math.round(prod.average_rating || 0) ? "fas fa-star" : "far fa-star"}
+                            style={{
+                              fontSize: '13px',
+                              color: i < Math.round(prod.average_rating || 0) ? '#ffc107' : '#ddd',
+                              transition: 'color 0.2s ease'
+                            }}
+                          ></i>
+                        ))}
+                      </div>
+                      <span style={{
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        color: '#2d5016'
+                      }}>
+                        {prod.average_rating ? prod.average_rating.toFixed(1) : '0'}
+                      </span>
+                      <span style={{
+                        fontSize: '11px',
+                        color: '#999',
+                        fontWeight: '500'
+                      }}>
+                        ({prod.total_reviews || 0})
+                      </span>
+                    </div>
+
                     <h3 className="product-title" style={{
                       display: "-webkit-box",
                       WebkitLineClamp: 2,
@@ -817,6 +919,7 @@ export default function HomePage() {
                     <span className="product-cate" style={{ margin: 0, fontSize: "11px", fontWeight: 700, marginBottom: "8px", display: "block" }}>
                       SUBCATEGORY: <span style={{ fontWeight: 500, color: "var(--title-color)" }}>{prod.category}</span>
                     </span>
+                    
                     <span className="product-price">Rs. {prod.price}</span>
                     <div className="product-actions">
                       <button type="button" className="vs-btn" onClick={() => handleAddToCart(prod)}>
@@ -829,7 +932,8 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-            ))}
+            ))
+            )}
           </div>
 
           <div className="row justify-content-center">

@@ -122,7 +122,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("awantika_cart"); // Also clear from localStorage
   };
 
-  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const cartCount = cartItems.length; // Count unique products, not total quantities
   const subtotal = cartItems.reduce((sum, item) => sum + item.selling_price * item.quantity, 0);
   const shipping = 0; // No delivery charges
   const total = subtotal; // Total equals subtotal (no shipping)

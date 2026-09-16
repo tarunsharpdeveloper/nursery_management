@@ -330,7 +330,7 @@ async function sendContactConfirmationEmail(contactData) {
             <p style="color: #666; font-size: 14px;">
               <strong>Contact Details:</strong><br/>
               Phone: <a href="tel:+918085263020">+91 80852 63020</a><br/>
-              Email: <a href="mailto:sales@greennursery.local">sales@greennursery.local</a>
+              Email: <a href="mailto:awantikaseeds118@gmail.com">awantikaseeds118@gmail.com</a>
             </p>
             
             <p style="color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;">
@@ -444,7 +444,7 @@ async function sendContactReplyEmail(replyData) {
             <p style="color: #666; font-size: 14px;">
               <strong>Contact Details:</strong><br/>
               Phone: <a href="tel:+918085263020">+91 80852 63020</a><br/>
-              Email: <a href="mailto:sales@greennursery.local">sales@greennursery.local</a>
+              Email: <a href="mailto:awantikaseeds118@gmail.com">awantikaseeds118@gmail.com</a>
             </p>
             
             <p style="color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;">

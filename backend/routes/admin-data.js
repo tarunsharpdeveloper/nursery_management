@@ -198,11 +198,13 @@ async function listInventory(_req, res, { sendJson }) {
 async function listOrders(_req, res, { sendJson }) {
   const [rows] = await pool.query(
     `SELECT o.id, o.order_number, c.name AS customer, o.status, o.payment_status, o.total_amount, o.created_at,
-            GROUP_CONCAT(p.name SEPARATOR ', ') AS products
+            p.merchant_transaction_id, p.atom_transaction_id,
+            GROUP_CONCAT(prod.name SEPARATOR ', ') AS products
        FROM orders o
        JOIN customers c ON c.id = o.customer_id
+       LEFT JOIN payments p ON p.order_id = o.id AND p.payment_gateway = 'ndps'
        LEFT JOIN order_items oi ON oi.order_id = o.id
-       LEFT JOIN products p ON p.id = oi.product_id
+       LEFT JOIN products prod ON prod.id = oi.product_id
       WHERE o.is_deleted = 0
       GROUP BY o.id
       ORDER BY o.created_at DESC`
@@ -255,9 +257,11 @@ async function getOrder(req, res, { readJson, sendJson }) {
 
   const [orderRows] = await pool.query(
     `SELECT o.id, o.order_number, o.order_source, o.status, o.payment_status, o.total_amount, o.created_at,
-            c.name AS customer_name, c.phone, c.email, c.address
+            c.name AS customer_name, c.phone, c.email, c.address,
+            p.merchant_transaction_id, p.atom_transaction_id, p.payment_gateway
        FROM orders o
        LEFT JOIN customers c ON c.id = o.customer_id
+       LEFT JOIN payments p ON p.order_id = o.id AND p.payment_gateway = 'ndps'
       WHERE (o.id = ? OR o.order_number = ? OR o.order_number = ?) AND (o.is_deleted IS NULL OR o.is_deleted = 0)`,
     [searchNum, searchVal, prefVal]
   );
@@ -716,7 +720,7 @@ const modelsConfig = {
     allowedFilters: ["employee_type", "gender", "is_active"]
   },
   orders: {
-    baseSelect: "SELECT o.id, o.order_number, c.name AS customer, o.status, o.payment_status, o.total_amount, o.created_at, GROUP_CONCAT(p.name SEPARATOR ', ') AS products FROM orders o JOIN customers c ON c.id = o.customer_id LEFT JOIN order_items oi ON oi.order_id = o.id LEFT JOIN products p ON p.id = oi.product_id",
+    baseSelect: "SELECT o.id, o.order_number, c.name AS customer, o.status, o.payment_status, o.total_amount, o.created_at, p.merchant_transaction_id, p.atom_transaction_id, GROUP_CONCAT(prod.name SEPARATOR ', ') AS products FROM orders o JOIN customers c ON c.id = o.customer_id LEFT JOIN payments p ON p.order_id = o.id AND p.payment_gateway = 'ndps' LEFT JOIN order_items oi ON oi.order_id = o.id LEFT JOIN products prod ON prod.id = oi.product_id",
     baseWhere: "WHERE o.is_deleted = 0",
     groupBy: "GROUP BY o.id",
     searchFields: ["o.order_number", "c.name", "c.phone"],

@@ -48,6 +48,13 @@ function PaymentReturnContent() {
             if (dbStatus?.status === 'paid') {
               setStatus('success');
               setPaymentDetails(dbStatus);
+              // Store transaction IDs for checkout page display
+              localStorage.setItem('payment_transaction_ids', JSON.stringify({
+                merchantTxnId: dbStatus.merchantTransactionId || dbStatus.gatewayPaymentId,
+                atomTxnId: dbStatus.atomTransactionId || dbStatus.remarks?.match(/Atom Txn: ([^.]+)/)?.[1] || 'N/A',
+                orderNumber: dbStatus.orderNumber,
+                amount: dbStatus.amount
+              }));
               localStorage.removeItem('ndps_payment_id');
               localStorage.removeItem('ndps_merch_txn_id');
               return;
@@ -75,6 +82,13 @@ function PaymentReturnContent() {
             if (gatewayStatus?.statusCode === 'OTS0000') {
               setStatus('success');
               setPaymentDetails(gatewayStatus.transactionData || gatewayStatus);
+              // Store transaction IDs for checkout page display
+              localStorage.setItem('payment_transaction_ids', JSON.stringify({
+                merchantTxnId: merchTxnId,
+                atomTxnId: gatewayStatus.atomTxnId || gatewayStatus.transactionData?.payDetails?.atomTxnId || 'N/A',
+                orderNumber: gatewayStatus.orderNumber,
+                amount: gatewayStatus.totalAmount || gatewayStatus.amount
+              }));
             } else if (gatewayStatus?.statusCode && gatewayStatus.statusCode !== 'OTS0000') {
               setStatus('failed');
               setPaymentDetails(gatewayStatus);

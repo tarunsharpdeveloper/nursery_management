@@ -10,14 +10,28 @@ const nextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "api.awantikaseeds.com",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+      },
     ],
   },
   // reactStrictMode: false,
   async rewrites() {
     return [
+      // Local uploads proxy
       {
         source: '/uploads/:path*',
         destination: `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'}/uploads/:path*`,
+      },
+      // Production images fallback proxy (when local server can't serve them)
+      {
+        source: '/api/production-uploads/:path*',
+        destination: 'https://api.awantikaseeds.com/uploads/:path*',
       },
     ];
   },

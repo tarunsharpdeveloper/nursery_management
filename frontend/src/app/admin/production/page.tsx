@@ -191,14 +191,15 @@ export default function ProductionPage() {
       }
       
       // Walk up the category tree to see if it's under the selected path
-      let current = productCategory;
+      let current: Category | null = productCategory;
       while (current) {
         if (selectedCategoryIds.has(current.id)) {
           console.log("✅ Product found in category tree:", p.name, "path:", current.name);
           return true;
         }
         if (!current.parent_id) break;
-        current = categories.find(c => c.id === current.parent_id) || null;
+        const parentId: number | null = current.parent_id;
+        current = categories.find(c => c.id === parentId) || null;
       }
       
       return false;

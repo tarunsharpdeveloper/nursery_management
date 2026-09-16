@@ -55,9 +55,82 @@ export default function OrdersPage() {
           { key: "customer", label: "Customer" },
           { key: "status", label: "Status" },
           { key: "payment_status", label: "Payment" },
+          { key: "merchant_transaction_id", label: "Merchant Txn ID" },
+          { key: "atom_transaction_id", label: "Atom Txn ID" },
           { key: "total_amount", label: "Amount" },
           { key: "created_at", label: "Created" }
         ]}
+        renderCell={(row, column, reload) => {
+          // Custom rendering for transaction ID columns
+          if (column.key === "merchant_transaction_id") {
+            const value = row.merchant_transaction_id;
+            if (!value) {
+              return <span style={{ color: '#9ca3af', fontSize: '12px' }}>—</span>;
+            }
+            return (
+              <div 
+                title={value}
+                style={{ 
+                  fontSize: '11px', 
+                  fontFamily: 'monospace', 
+                  minWidth: '180px',
+                  maxWidth: '200px', 
+                  overflow: 'hidden', 
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {value}
+              </div>
+            );
+          }
+          
+          if (column.key === "atom_transaction_id") {
+            const value = row.atom_transaction_id;
+            if (!value) {
+              return <span style={{ color: '#9ca3af', fontSize: '12px' }}>—</span>;
+            }
+            return (
+              <div 
+                title={value}
+                style={{ 
+                  fontSize: '11px', 
+                  fontFamily: 'monospace', 
+                  minWidth: '140px',
+                  maxWidth: '160px', 
+                  overflow: 'hidden', 
+                  textOverflow: 'ellipsis',
+                  color: '#059669',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {value}
+              </div>
+            );
+          }
+
+          // Custom rendering for payment status with color coding
+          if (column.key === "payment_status") {
+            const status = row.payment_status as string;
+            const colors: Record<string, string> = {
+              'paid': '#059669',
+              'pending': '#d97706', 
+              'failed': '#dc2626'
+            };
+            return (
+              <span style={{ 
+                color: colors[status] || '#6b7280', 
+                fontSize: '12px',
+                fontWeight: '600' 
+              }}>
+                {status?.toUpperCase() || 'N/A'}
+              </span>
+            );
+          }
+
+          // Default rendering for other columns
+          return null;
+        }}
         // filterContent={
         //   <div style={{ display: 'flex', gap: '16px', background: '#fff', padding: '16px', borderRadius: '12px', border: '1px solid #e4e4e7', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
         //     <div style={{ flex: 1, position: 'relative' }}>

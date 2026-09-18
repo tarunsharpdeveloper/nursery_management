@@ -704,7 +704,9 @@ async function handleNDPSPopupResponse(req, res, helpers) {
     console.log('=== NDPS Popup Response Handler ===');
     
     // NDPS sends form-encoded POST data, not JSON!
-    const body = await helpers.readFormData(req);
+    // Use readFormData function directly from http module to avoid helper dependency issues
+    const { readFormData } = require('../http');
+    const body = await readFormData(req);
     const encryptedResponse = body.encData;
 
     console.log('Received form-encoded data, encData length:', encryptedResponse ? encryptedResponse.length : 0);

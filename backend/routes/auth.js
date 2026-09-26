@@ -551,4 +551,185 @@ async function checkEmailExists(req, res, { readJson, sendJson }) {
   }
 }
 
-module.exports = { login, me, registerCustomer, updateProfile, updatePassword, forgotPassword, resetPassword, verifyResetToken, autoCreateAccount, autoCreateAccountWithPhone, checkEmailExists };
+/**
+ * SECURE ADMIN PASSWORD CHANGE
+ * This endpoint requires a secret key from environment variable
+ * Use this to change admin password via API call
+ * 
+ * POST /api/auth/admin-password-change
+ * Body: { email, newPassword, secretKey }
+ */
+const adminPasswordChangeSchema = z.object({
+  email: z.string().email(),
+  newPassword: z.string().min(6),
+  secretKey: z.string().min(1)
+});
+
+async function adminPasswordChange(req, res, { readJson, sendJson }) {
+  const payload = adminPasswordChangeSchema.parse(await readJson(req));
+
+  // Verify secret key from environment variable
+  const ADMIN_SECRET_KEY = process.env.ADMIN_PASSWORD_CHANGE_SECRET || 'change-this-secret-key-in-production';
+  
+  if (payload.secretKey !== ADMIN_SECRET_KEY) {
+    sendJson(res, 403, { message: "Invalid secret key" });
+    return;
+  }
+
+  try {
+    // Check if user exists
+    const [users] = await pool.query(
+      'SELECT id, name, email FROM users WHERE email = :email AND is_deleted = 0',
+      { email: payload.email }
+    );
+
+    if (users.length === 0) {
+      sendJson(res, 404, { message: `User with email "${payload.email}" not found` });
+      return;
+    }
+
+    const user = users[0];
+
+    // Hash the new password
+    const passwordHash = hashPassword(payload.newPassword);
+
+    // Update the password
+    const [result] = await pool.query(
+      'UPDATE users SET password_hash = :passwordHash WHERE id = :id',
+      { passwordHash, id: user.id }
+    );
+
+    if (result.affectedRows > 0) {
+      console.log(`[ADMIN PASSWORD CHANGE] Password changed for user: ${user.email} (ID: ${user.id})`);
+      
+      sendJson(res, 200, {
+        message: "Password updated successfully",
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email
+        }
+      });
+    } else {
+      sendJson(res, 500, { message: "Failed to update password" });
+    }
+
+  } catch (error) {
+    console.error('[ADMIN PASSWORD CHANGE] Error:', error);
+    throw error;
+  }
+}
+
+/**
+ * SECURE ADMIN EMAIL & PASSWORD CHANGE
+ * This endpoint requires a secret key from environment variable
+ * Use this to change admin email and/or password via API call
+ * 
+ * POST /api/auth/admin-change-email-password
+ * Body: { email, newEmail (optional), newPassword (optional), secretKey }
+ */
+const adminChangeEmailPasswordSchema = z.object({
+  email: z.string().email(),
+  newEmail: z.string().email().optional(),
+  newPassword: z.string().min(6).optional(),
+  secretKey: z.string().min(1)
+});
+
+async function adminChangeEmailPassword(req, res, { readJson, sendJson }) {
+  const payload = adminChangeEmailPasswordSchema.parse(await readJson(req));
+
+  // Verify secret key from environment variable
+  const ADMIN_SECRET_KEY = process.env.ADMIN_PASSWORD_CHANGE_SECRET || 'change-this-secret-key-in-production';
+  
+  if (payload.secretKey !== ADMIN_SECRET_KEY) {
+    sendJson(res, 403, { message: "Invalid secret key" });
+    return;
+  }
+
+  // Check if at least one change is requested
+  if (!payload.newEmail && !payload.newPassword) {
+    sendJson(res, 400, { message: "At least one of newEmail or newPassword must be provided" });
+    return;
+  }
+
+  try {
+    // Check if user exists
+    const [users] = await pool.query(
+      'SELECT id, name, email FROM users WHERE email = :email AND is_deleted = 0',
+      { email: payload.email }
+    );
+
+    if (users.length === 0) {
+      sendJson(res, 404, { message: `User with email "${payload.email}" not found` });
+      return;
+    }
+
+    const user = users[0];
+
+    // Check if new email is already taken (if changing email)
+    if (payload.newEmail && payload.newEmail !== payload.email) {
+      const [existingEmail] = await pool.query(
+        'SELECT id FROM users WHERE email = :email AND id != :id AND is_deleted = 0 LIMIT 1',
+        { email: payload.newEmail, id: user.id }
+      );
+
+      if (existingEmail.length > 0) {
+        sendJson(res, 400, { message: `Email "${payload.newEmail}" is already in use` });
+        return;
+      }
+    }
+
+    // Build update query dynamically
+    const updates = [];
+    const params = { id: user.id };
+
+    if (payload.newEmail) {
+      updates.push('email = :newEmail');
+      params.newEmail = payload.newEmail;
+    }
+
+    if (payload.newPassword) {
+      updates.push('password_hash = :passwordHash');
+      params.passwordHash = hashPassword(payload.newPassword);
+    }
+
+    // Execute update
+    const updateQuery = `UPDATE users SET ${updates.join(', ')} WHERE id = :id`;
+    const [result] = await pool.query(updateQuery, params);
+
+    if (result.affectedRows > 0) {
+      const changes = [];
+      if (payload.newEmail) {
+        changes.push(`email from ${user.email} to ${payload.newEmail}`);
+        // Also update customer table if exists
+        await pool.query(
+          'UPDATE customers SET email = :newEmail WHERE email = :oldEmail',
+          { newEmail: payload.newEmail, oldEmail: user.email }
+        );
+      }
+      if (payload.newPassword) {
+        changes.push('password');
+      }
+
+      console.log(`[ADMIN EMAIL/PASSWORD CHANGE] ${changes.join(' and ')} changed for user: ${user.email} (ID: ${user.id})`);
+      
+      sendJson(res, 200, {
+        message: "User information updated successfully",
+        user: {
+          id: user.id,
+          name: user.name,
+          email: payload.newEmail || user.email
+        },
+        changes
+      });
+    } else {
+      sendJson(res, 500, { message: "Failed to update user information" });
+    }
+
+  } catch (error) {
+    console.error('[ADMIN EMAIL/PASSWORD CHANGE] Error:', error);
+    throw error;
+  }
+}
+
+module.exports = { login, me, registerCustomer, updateProfile, updatePassword, forgotPassword, resetPassword, verifyResetToken, autoCreateAccount, autoCreateAccountWithPhone, checkEmailExists, adminPasswordChange, adminChangeEmailPassword };

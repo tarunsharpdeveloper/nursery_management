@@ -19,7 +19,7 @@ const { getFavorites, toggleFavorite } = require("./routes/favorites");
 const { initiateNDPSPayment, handleNDPSResponse, checkPaymentStatus, requeryTransactionStatus, handleNDPSPopupResponse } = require("./routes/ndps-payments");
 const { ensureAdminSchema } = require("./migrate");
 const { authenticate, hasPermission } = require("./auth");
-const { login, me, registerCustomer, updateProfile, updatePassword, forgotPassword, resetPassword, verifyResetToken, autoCreateAccount, autoCreateAccountWithPhone, checkEmailExists } = require("./routes/auth");
+const { login, me, registerCustomer, updateProfile, updatePassword, forgotPassword, resetPassword, verifyResetToken, autoCreateAccount, autoCreateAccountWithPhone, checkEmailExists, adminPasswordChange, adminChangeEmailPassword } = require("./routes/auth");
 const {
   getDashboard,
   listCustomers,
@@ -67,6 +67,8 @@ const routes = [
   ["POST", "/api/auth/forgot-password", null, forgotPassword],
   ["POST", "/api/auth/reset-password", null, resetPassword],
   ["POST", "/api/auth/verify-reset-token", null, verifyResetToken],
+  ["POST", "/api/auth/admin-password-change", null, adminPasswordChange],
+  ["POST", "/api/auth/admin-change-email-password", null, adminChangeEmailPassword],
   ["GET", "/api/auth/me", null, me],
   ["PATCH", "/api/auth/profile", null, updateProfile],
   ["PATCH", "/api/auth/password", null, updatePassword],
@@ -139,7 +141,7 @@ const routes = [
   ["POST", "/api/favorites/toggle", null, toggleFavorite],
   ["POST", "/api/ndps/initiate", null, initiateNDPSPayment],
   ["POST", "/api/ndps/response", null, handleNDPSResponse],
-  ["POST", "/Response", null, handleNDPSPopupResponse],
+  ["POST", "/api/ndps/popup-response", null, handleNDPSPopupResponse],
   ["GET", "/api/ndps/status/:paymentId", null, checkPaymentStatus],
   ["POST", "/api/ndps/requery", null, requeryTransactionStatus],
   ["GET", "/api/admin/data-list", null, getUnifiedList],

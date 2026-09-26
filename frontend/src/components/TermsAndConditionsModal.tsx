@@ -47,8 +47,18 @@ export function TermsAndConditionsModal({
       className="modal-overlay"
       style={{
         zIndex: 9999,
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         backgroundColor: "rgba(15, 23, 42, 0.65)",
         backdropFilter: "blur(4px)",
+        padding: "clamp(12px, 3vw, 20px)",
+        overflow: "auto",
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget && !isLoading) {
@@ -60,8 +70,8 @@ export function TermsAndConditionsModal({
         className="modal-content"
         style={{
           maxWidth: "560px",
-          width: "92%",
-          maxHeight: "85vh",
+          width: "clamp(85%, 92%, 560px)",
+          maxHeight: "clamp(70vh, 75vh, 80vh)",
           display: "flex",
           flexDirection: "column",
           borderRadius: "18px",
@@ -79,7 +89,7 @@ export function TermsAndConditionsModal({
           style={{
             background: "linear-gradient(135deg, #1e3a10 0%, #2d5016 100%)",
             color: "#ffffff",
-            padding: "20px 24px",
+            padding: "clamp(14px, 3vw, 18px) clamp(14px, 3vw, 20px)",
             position: "relative",
             flexShrink: 0,
           }}
@@ -90,13 +100,13 @@ export function TermsAndConditionsModal({
             disabled={isLoading}
             style={{
               position: "absolute",
-              top: "20px",
-              right: "20px",
+              top: "clamp(10px, 2.5vw, 16px)",
+              right: "clamp(10px, 2.5vw, 16px)",
               background: "rgba(255, 255, 255, 0.15)",
               border: "none",
               borderRadius: "50%",
-              width: "32px",
-              height: "32px",
+              width: "clamp(26px, 6vw, 30px)",
+              height: "clamp(26px, 6vw, 30px)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -106,15 +116,15 @@ export function TermsAndConditionsModal({
             }}
             title="Close"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "clamp(8px, 2vw, 10px)", marginBottom: "6px" }}>
             <div
               style={{
-                width: "38px",
-                height: "38px",
-                borderRadius: "10px",
+                width: "clamp(28px, 6vw, 34px)",
+                height: "clamp(28px, 6vw, 34px)",
+                borderRadius: "8px",
                 backgroundColor: "rgba(140, 198, 63, 0.2)",
                 display: "flex",
                 alignItems: "center",
@@ -122,10 +132,10 @@ export function TermsAndConditionsModal({
                 color: "#8cc63f",
               }}
             >
-              <ShieldAlert size={22} />
+              <ShieldAlert size={18} />
             </div>
             <div>
-              <h3 style={{ margin: 0, color: "#ffffff", fontSize: "18px", fontWeight: "700", letterSpacing: "-0.3px" }}>
+              <h3 style={{ margin: 0, color: "#ffffff", fontSize: "clamp(13px, 3.5vw, 15px)", fontWeight: "700", letterSpacing: "-0.3px" }}>
                 {config.title}
               </h3>
               {amount !== undefined && amount > 0 && (
@@ -133,7 +143,7 @@ export function TermsAndConditionsModal({
                   style={{
                     display: "inline-block",
                     marginTop: "2px",
-                    fontSize: "13px",
+                    fontSize: "clamp(10px, 2.2vw, 12px)",
                     color: "#8cc63f",
                     fontWeight: "600",
                   }}
@@ -143,7 +153,7 @@ export function TermsAndConditionsModal({
               )}
             </div>
           </div>
-          <p style={{ margin: "6px 0 0 0", color: "#d1e7dd", fontSize: "13px", lineHeight: "1.5" }}>
+          <p style={{ margin: "4px 0 0 0", color: "#d1e7dd", fontSize: "clamp(11px, 2.2vw, 12px)", lineHeight: "1.4" }}>
             {config.subtitle}
           </p>
         </div>
@@ -151,7 +161,7 @@ export function TermsAndConditionsModal({
         {/* Content Body */}
         <div
           style={{
-            padding: "20px 24px",
+            padding: "clamp(10px, 2.5vw, 12px) clamp(12px, 2.5vw, 16px)",
             backgroundColor: "#fafdf8",
             flex: "1 1 auto",
             overflowY: "auto",
@@ -163,8 +173,8 @@ export function TermsAndConditionsModal({
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: "12px",
-              marginBottom: "18px",
+              gap: "6px",
+              marginBottom: "10px",
             }}
           >
             {config.points.map((point, index) => (
@@ -172,26 +182,26 @@ export function TermsAndConditionsModal({
                 key={index}
                 style={{
                   display: "flex",
-                  gap: "12px",
+                  gap: "clamp(6px, 1.5vw, 8px)",
                   alignItems: "flex-start",
                   background: "#ffffff",
-                  padding: "12px 14px",
-                  borderRadius: "10px",
+                  padding: "clamp(6px, 1.5vw, 8px) clamp(6px, 1.5vw, 10px)",
+                  borderRadius: "6px",
                   border: "1px solid #e8f3e5",
                   boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
                 }}
               >
                 <div
                   style={{
-                    width: "22px",
-                    height: "22px",
+                    width: "18px",
+                    height: "18px",
                     borderRadius: "50%",
                     backgroundColor: "#e8f5e3",
                     color: "#2d5016",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "11px",
+                    fontSize: "9px",
                     fontWeight: "700",
                     flexShrink: 0,
                     marginTop: "1px",
@@ -199,7 +209,7 @@ export function TermsAndConditionsModal({
                 >
                   {index + 1}
                 </div>
-                <p style={{ margin: 0, fontSize: "13.5px", color: "#334155", lineHeight: "1.5" }}>
+                <p style={{ margin: 0, fontSize: "clamp(11px, 2.3vw, 13px)", color: "#334155", lineHeight: "1.4" }}>
                   {point}
                 </p>
               </div>
@@ -211,8 +221,8 @@ export function TermsAndConditionsModal({
             style={{
               background: isChecked ? "#f0fdf4" : "#ffffff",
               border: isChecked ? "2px solid #22c55e" : "2px solid #cbd5e1",
-              borderRadius: "12px",
-              padding: "14px 16px",
+              borderRadius: "8px",
+              padding: "clamp(8px, 2vw, 10px) clamp(8px, 2vw, 12px)",
               transition: "all 0.2s ease",
             }}
           >
@@ -221,7 +231,7 @@ export function TermsAndConditionsModal({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "12px",
+                gap: "clamp(8px, 2vw, 12px)",
                 cursor: "pointer",
                 userSelect: "none",
                 margin: 0,
@@ -244,10 +254,10 @@ export function TermsAndConditionsModal({
               />
               <span
                 style={{
-                  fontSize: "14px",
+                  fontSize: "clamp(12px, 2.3vw, 13px)",
                   fontWeight: "600",
                   color: isChecked ? "#166534" : "#1e293b",
-                  lineHeight: "1.4",
+                  lineHeight: "1.3",
                 }}
               >
                 {config.checkboxLabel}
@@ -259,14 +269,15 @@ export function TermsAndConditionsModal({
         {/* Footer Actions */}
         <div
           style={{
-            padding: "16px 24px",
+            padding: "clamp(10px, 2.5vw, 14px) clamp(10px, 2.5vw, 18px)",
             backgroundColor: "#ffffff",
             borderTop: "1px solid #f1f5f9",
             display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-            gap: "12px",
+            justifyContent: "center",
+            gap: "clamp(6px, 1.5vw, 10px)",
             flexShrink: 0,
+            flexWrap: "wrap",
+            rowGap: "clamp(8px, 2vw, 10px)",
           }}
         >
           <button
@@ -275,14 +286,18 @@ export function TermsAndConditionsModal({
             disabled={isLoading}
             className="vs-btn style2"
             style={{
-              padding: "10px 20px",
-              fontSize: "14px",
+              padding: "clamp(8px, 2vw, 10px) clamp(12px, 3vw, 18px)",
+              fontSize: "clamp(11px, 2.2vw, 13px)",
               fontWeight: "600",
               borderRadius: "8px",
               border: "1px solid #cbd5e1",
               backgroundColor: "#ffffff",
               color: "#475569",
               cursor: isLoading ? "not-allowed" : "pointer",
+              flex: "1 1 auto",
+              minWidth: "clamp(75px, 30%, 110px)",
+              whiteSpace: "nowrap",
+              transition: "all 0.2s ease",
             }}
           >
             {config.cancelButtonText}
@@ -293,8 +308,8 @@ export function TermsAndConditionsModal({
             onClick={handleAcceptClick}
             disabled={!isChecked || isLoading}
             style={{
-              padding: "10px 24px",
-              fontSize: "14px",
+              padding: "clamp(8px, 2vw, 10px) clamp(12px, 3vw, 18px)",
+              fontSize: "clamp(11px, 2.2vw, 13px)",
               fontWeight: "700",
               borderRadius: "8px",
               border: "none",
@@ -308,8 +323,12 @@ export function TermsAndConditionsModal({
                 : "none",
               display: "flex",
               alignItems: "center",
-              gap: "8px",
+              justifyContent: "center",
+              gap: "clamp(4px, 1vw, 6px)",
               transition: "all 0.2s ease",
+              flex: "1 1 auto",
+              minWidth: "clamp(90px, 35%, 120px)",
+              whiteSpace: "nowrap",
             }}
           >
             {isLoading ? (
@@ -339,11 +358,19 @@ export function TermsAndConditionsModal({
           }
         }
 
-        @media (max-width: 576px) {
+        @media (max-width: 768px) {
           .modal-content {
             width: 95% !important;
             max-height: 90vh !important;
             border-radius: 14px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .modal-content {
+            width: 96% !important;
+            max-height: 92vh !important;
+            border-radius: 12px !important;
           }
         }
       `}</style>

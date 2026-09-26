@@ -272,48 +272,14 @@ export default function CheckoutPage() {
       console.log('✅ AtomPaynetz instance created');
       console.log('Popup should open automatically...');
       
-      // Add payment cancellation detection
-      // The AtomPaynetz popup will either:
-      // 1. Complete payment (redirects to returnUrl)
-      // 2. Get cancelled/closed (stays on same page)
-      
-      // Set a timeout to detect if user is still on checkout page after popup should have opened
+      // ⚡ ULTRA-SIMPLE SOLUTION: Automatic 2-second button reset
+      // If payment is successful → User gets redirected before timeout triggers
+      // If payment is cancelled → Button automatically resets after 2 seconds
+      // No complex detection needed - simple timeout handles all cases
       setTimeout(() => {
-        // If we're still on the checkout page and haven't been redirected,
-        // it likely means the payment was cancelled or failed to open
-        if (window.location.pathname === '/checkout' && busy) {
-          console.log('Payment popup appears to have been cancelled or closed');
-          setBusy(false);
-          setStatus('Payment was cancelled. You can try again or choose a different payment method.');
-        }
-      }, 3000); // Wait 3 seconds for popup to process
-      
-      // Alternative: Listen for window focus (when popup closes, parent window gets focus)
-      const handleWindowFocus = () => {
-        setTimeout(() => {
-          if (window.location.pathname === '/checkout' && busy) {
-            console.log('Window regained focus - payment popup likely cancelled');
-            setBusy(false);
-            setStatus('Payment was cancelled. Please try again if needed.');
-          }
-        }, 1000); // Small delay to ensure popup had time to redirect if successful
-      };
-      
-      // Also listen for visibility change (when user switches back to the tab)
-      const handleVisibilityChange = () => {
-        if (!document.hidden && window.location.pathname === '/checkout' && busy) {
-          setTimeout(() => {
-            if (window.location.pathname === '/checkout' && busy) {
-              console.log('Tab became visible - payment popup likely cancelled');
-              setBusy(false);
-              setStatus('Payment was cancelled. Please try again if needed.');
-            }
-          }, 1000);
-        }
-      };
-      
-      window.addEventListener('focus', handleWindowFocus, { once: true });
-      document.addEventListener('visibilitychange', handleVisibilityChange, { once: true });
+        setBusy(false);
+        console.log('Button automatically reset after 2 seconds');
+      }, 2000);
       
       // The popup will open automatically
       // After payment, user will be redirected to returnUrl
@@ -513,15 +479,15 @@ export default function CheckoutPage() {
         <section className="space space-extra-bottom" style={{ background: "linear-gradient(180deg, #f8fef5 0%, #ffffff 100%)" }}>
           <div className="container">
             <div className="row justify-content-center">
-              <div className="col-lg-8 col-xl-7">
+              <div className="col-lg-8 col-xl-7 col-12">
                 {/* Success Card Container */}
                 <div style={{
                   background: "#ffffff",
                   borderRadius: "20px",
                   boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
-                  padding: "50px 40px",
                   textAlign: "center",
-                  border: "1px solid #e8f5e3"
+                  border: "1px solid #e8f5e3",
+                  margin: "0 12px"
                 }}>
                   
                   {/* Payment Success Banner */}
@@ -530,15 +496,15 @@ export default function CheckoutPage() {
                       background: "linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)",
                       border: "2px solid #28a745",
                       borderRadius: "12px",
-                      padding: "20px 25px",
-                      marginBottom: "35px",
+                      padding: "clamp(16px, 4vw, 20px) clamp(16px, 4vw, 25px)",
+                      marginBottom: "clamp(24px, 5vw, 35px)",
                       textAlign: "left",
                       boxShadow: "0 4px 12px rgba(40, 167, 69, 0.15)"
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'clamp(12px, 3vw, 15px)', flexWrap: 'wrap' }}>
                         <div style={{
-                          width: "50px",
-                          height: "50px",
+                          width: "clamp(45px, 10vw, 50px)",
+                          height: "clamp(45px, 10vw, 50px)",
                           borderRadius: "50%",
                           background: "#28a745",
                           display: "flex",
@@ -549,19 +515,19 @@ export default function CheckoutPage() {
                         }}>
                           <i 
                             className="fal fa-check" 
-                            style={{ fontSize: '24px', color: '#ffffff' }}
+                            style={{ fontSize: 'clamp(18px, 4vw, 24px)', color: '#ffffff' }}
                           ></i>
                         </div>
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: 1, minWidth: '200px' }}>
                           <h4 style={{ 
                             color: '#155724', 
                             margin: '0 0 5px 0',
-                            fontSize: '18px',
+                            fontSize: 'clamp(16px, 4vw, 18px)',
                             fontWeight: '700'
                           }}>
                             Payment Received Successfully!
                           </h4>
-                          <p style={{ color: '#155724', margin: 0, fontSize: '14px', opacity: 0.9 }}>
+                          <p style={{ color: '#155724', margin: 0, fontSize: 'clamp(12px, 2.5vw, 14px)', opacity: 0.9 }}>
                             Your payment has been processed and confirmed by our payment gateway.
                           </p>
                         </div>
@@ -575,15 +541,15 @@ export default function CheckoutPage() {
                       background: "linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%)",
                       border: "2px solid #dc3545",
                       borderRadius: "12px",
-                      padding: "20px 25px",
-                      marginBottom: "35px",
+                      padding: "clamp(16px, 4vw, 20px) clamp(16px, 4vw, 25px)",
+                      marginBottom: "clamp(24px, 5vw, 35px)",
                       textAlign: "left",
                       boxShadow: "0 4px 12px rgba(220, 53, 69, 0.15)"
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'clamp(12px, 3vw, 15px)', flexWrap: 'wrap' }}>
                         <div style={{
-                          width: "50px",
-                          height: "50px",
+                          width: "clamp(45px, 10vw, 50px)",
+                          height: "clamp(45px, 10vw, 50px)",
                           borderRadius: "50%",
                           background: "#dc3545",
                           display: "flex",
@@ -594,19 +560,19 @@ export default function CheckoutPage() {
                         }}>
                           <i 
                             className="fal fa-exclamation-triangle" 
-                            style={{ fontSize: '24px', color: '#ffffff' }}
+                            style={{ fontSize: 'clamp(18px, 4vw, 24px)', color: '#ffffff' }}
                           ></i>
                         </div>
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: 1, minWidth: '200px' }}>
                           <h4 style={{ 
                             color: '#721c24', 
                             margin: '0 0 5px 0',
-                            fontSize: '18px',
+                            fontSize: 'clamp(16px, 4vw, 18px)',
                             fontWeight: '700'
                           }}>
                             Payment Failed
                           </h4>
-                          <p style={{ color: '#721c24', margin: 0, fontSize: '14px', opacity: 0.9 }}>
+                          <p style={{ color: '#721c24', margin: 0, fontSize: 'clamp(12px, 2.5vw, 14px)', opacity: 0.9 }}>
                             {paymentError}
                           </p>
                         </div>
@@ -616,9 +582,9 @@ export default function CheckoutPage() {
 
                   {/* Success Icon */}
                   <div style={{
-                    width: "100px",
-                    height: "100px",
-                    margin: "0 auto 25px",
+                    width: "clamp(70px, 15vw, 100px)",
+                    height: "clamp(70px, 15vw, 100px)",
+                    margin: "0 auto clamp(20px, 4vw, 25px)",
                     background: "linear-gradient(135deg, #2d5016 0%, #4a7c2e 100%)",
                     borderRadius: "50%",
                     display: "flex",
@@ -629,14 +595,14 @@ export default function CheckoutPage() {
                   }}>
                     <i
                       className="fal fa-badge-check"
-                      style={{ fontSize: "50px", color: "#ffffff" }}
+                      style={{ fontSize: "clamp(35px, 8vw, 50px)", color: "#ffffff" }}
                     ></i>
                   </div>
 
                   {/* Main Heading */}
                   <h2 style={{ 
                     marginBottom: "15px",
-                    fontSize: "32px",
+                    fontSize: "clamp(24px, 6vw, 32px)",
                     fontWeight: "800",
                     color: "#2d5016",
                     letterSpacing: "-0.5px"
@@ -647,7 +613,7 @@ export default function CheckoutPage() {
                   {/* Subheading */}
                   <p style={{ 
                     color: "#6b8e23", 
-                    fontSize: "18px", 
+                    fontSize: "clamp(16px, 4vw, 18px)", 
                     marginBottom: "15px",
                     fontWeight: "500"
                   }}>
@@ -659,13 +625,13 @@ export default function CheckoutPage() {
                     background: "linear-gradient(135deg, #f8fef5 0%, #e8f5e3 100%)",
                     border: "2px solid #c3e6cb",
                     borderRadius: "12px",
-                    padding: "20px",
-                    margin: "25px 0",
+                    padding: "clamp(16px, 4vw, 20px)",
+                    margin: "clamp(16px, 4vw, 25px) auto",
                     display: "inline-block",
-                    minWidth: "300px"
+                    minWidth: "clamp(250px, 90%, 300px)"
                   }}>
                     <p style={{ 
-                      fontSize: "14px", 
+                      fontSize: "clamp(12px, 3vw, 14px)", 
                       color: "#6b8e23", 
                       margin: "0 0 8px 0",
                       textTransform: "uppercase",
@@ -675,12 +641,13 @@ export default function CheckoutPage() {
                       Order ID
                     </p>
                     <p style={{ 
-                      fontSize: "24px", 
+                      fontSize: "clamp(18px, 5vw, 24px)", 
                       fontWeight: "800", 
                       margin: 0,
                       color: "#2d5016",
                       fontFamily: "monospace",
-                      letterSpacing: "1px"
+                      letterSpacing: "1px",
+                      wordBreak: "break-all"
                     }}>
                       {orderId}
                     </p>
@@ -692,24 +659,24 @@ export default function CheckoutPage() {
                       background: "linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%)",
                       border: "2px solid #b8daff",
                       borderRadius: "12px",
-                      padding: "20px",
-                      margin: "20px 0",
+                      padding: "clamp(16px, 4vw, 20px)",
+                      margin: "clamp(16px, 4vw, 20px) auto",
                       textAlign: "left",
-                      maxWidth: "500px",
-                      marginLeft: "auto",
-                      marginRight: "auto"
+                      maxWidth: "100%",
+                      width: "clamp(250px, 95%, 500px)"
                     }}>
                       <div style={{
                         display: "flex",
                         alignItems: "center",
                         gap: "8px",
-                        marginBottom: "15px"
+                        marginBottom: "15px",
+                        justifyContent:'center'
                       }}>
                         <i className="fal fa-receipt" style={{ color: "#0056b3", fontSize: "18px" }}></i>
                         <h4 style={{ 
                           color: "#0056b3", 
                           margin: 0,
-                          fontSize: "16px",
+                          fontSize: "clamp(14px, 3.5vw, 16px)",
                           fontWeight: "700"
                         }}>
                           Payment Transaction Details
@@ -717,9 +684,11 @@ export default function CheckoutPage() {
                       </div>
                       
                       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
+                        flexDirection:'column'      
+                        }}>
                           <span style={{ 
-                            fontSize: "13px", 
+                            fontSize: "clamp(11px, 2.5vw, 13px)", 
                             color: "#555", 
                             fontWeight: "600",
                             textTransform: "uppercase",
@@ -728,22 +697,25 @@ export default function CheckoutPage() {
                             Merchant Transaction ID:
                           </span>
                           <span style={{ 
-                            fontSize: "14px", 
+                            fontSize: "clamp(12px, 3vw, 14px)", 
                             fontWeight: "700", 
                             color: "#0056b3",
                             fontFamily: "monospace",
                             background: "#ffffff",
                             padding: "4px 8px",
                             borderRadius: "4px",
-                            border: "1px solid #b8daff"
+                            border: "1px solid #b8daff",
+                            marginTop: "4px",
+                            wordBreak: "break-all"
                           }}>
                             {paymentTransactionIds.merchantTxnId}
                           </span>
                         </div>
                         
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" ,
+                        flexDirection:'column' }}>
                           <span style={{ 
-                            fontSize: "13px", 
+                            fontSize: "clamp(11px, 2.5vw, 13px)", 
                             color: "#555", 
                             fontWeight: "600",
                             textTransform: "uppercase",
@@ -752,14 +724,16 @@ export default function CheckoutPage() {
                             Atom Transaction ID:
                           </span>
                           <span style={{ 
-                            fontSize: "14px", 
+                            fontSize: "clamp(12px, 3vw, 14px)", 
                             fontWeight: "700", 
                             color: "#0056b3",
                             fontFamily: "monospace",
                             background: "#ffffff",
                             padding: "4px 8px",
                             borderRadius: "4px",
-                            border: "1px solid #b8daff"
+                            border: "1px solid #b8daff",
+                            marginTop: "4px",
+                            wordBreak: "break-all"
                           }}>
                             {paymentTransactionIds.atomTxnId}
                           </span>
@@ -772,7 +746,7 @@ export default function CheckoutPage() {
                         background: "#ffffff",
                         borderRadius: "6px",
                         border: "1px solid #b8daff",
-                        fontSize: "11px",
+                        fontSize: "clamp(10px, 2.5vw, 11px)",
                         color: "#666",
                         textAlign: "center"
                       }}>
@@ -785,7 +759,7 @@ export default function CheckoutPage() {
                   {/* Description */}
                   <p style={{ 
                     color: "#666", 
-                    fontSize: "15px",
+                    fontSize: "clamp(13px, 3vw, 15px)",
                     lineHeight: "1.8",
                     margin: "30px auto",
                     maxWidth: "500px"
@@ -804,7 +778,7 @@ export default function CheckoutPage() {
                   {/* Action Buttons */}
                   <div style={{
                     display: "flex",
-                    gap: "15px",
+                    gap: "clamp(8px, 3vw, 15px)",
                     justifyContent: "center",
                     flexWrap: "wrap",
                     marginTop: "30px"
@@ -815,11 +789,12 @@ export default function CheckoutPage() {
                       style={{
                         background: "linear-gradient(135deg, #2d5016 0%, #4a7c2e 100%)",
                         border: "none",
-                        padding: "14px 30px",
-                        fontSize: "15px",
+                        padding: "clamp(12px, 3vw, 14px) clamp(20px, 4vw, 30px)",
+                        fontSize: "clamp(13px, 3vw, 15px)",
                         fontWeight: "600",
                         boxShadow: "0 4px 15px rgba(45, 80, 22, 0.3)",
-                        transition: "all 0.3s ease"
+                        transition: "all 0.3s ease",
+                        whiteSpace: "nowrap"
                       }}
                     >
                       <i className="fal fa-box-check" style={{ marginRight: "8px" }}></i>
@@ -829,9 +804,10 @@ export default function CheckoutPage() {
                       href="/products" 
                       className="vs-btn style2"
                       style={{
-                        padding: "14px 30px",
-                        fontSize: "15px",
-                        fontWeight: "600"
+                        padding: "clamp(12px, 3vw, 14px) clamp(20px, 4vw, 30px)",
+                        fontSize: "clamp(13px, 3vw, 15px)",
+                        fontWeight: "600",
+                        whiteSpace: "nowrap"
                       }}
                     >
                       <i className="fal fa-shopping-bag" style={{ marginRight: "8px" }}></i>
@@ -842,13 +818,13 @@ export default function CheckoutPage() {
                   {/* Support Info */}
                   <div style={{
                     marginTop: "40px",
-                    padding: "20px",
+                    padding: "clamp(16px, 4vw, 20px)",
                     background: "#f8f9fa",
                     borderRadius: "10px",
                     textAlign: "left"
                   }}>
                     <p style={{
-                      fontSize: "13px",
+                      fontSize: "clamp(12px, 2.5vw, 13px)",
                       color: "#666",
                       margin: "0 0 10px 0",
                       display: "flex",
@@ -859,7 +835,7 @@ export default function CheckoutPage() {
                       <strong>Need Help?</strong>
                     </p>
                     <p style={{
-                      fontSize: "13px",
+                      fontSize: "clamp(12px, 2.5vw, 13px)",
                       color: "#666",
                       margin: 0,
                       lineHeight: "1.6"

@@ -1,0 +1,73 @@
+{
+  "info": {
+    "name": "NDPS Transaction Verification - New Transaction",
+    "description": "Verify the new failed transaction from NDPS report",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Verify New Transaction (11000383860835)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"merchTxnId\": \"NURSERY_3_muaxr3ek\",\n  \"atomTxnId\": \"11000383860835\",\n  \"amount\": 51.00,\n  \"merchTxnDate\": \"2026-09-21\"\n}"
+        },
+        "url": {
+          "raw": "https://api.awantikaseeds.com/api/ndps/verify-transaction",
+          "protocol": "https",
+          "host": [
+            "api",
+            "awantikaseeds",
+            "com"
+          ],
+          "path": [
+            "api",
+            "ndps",
+            "verify-transaction"
+          ]
+        },
+        "description": "Verify transaction with NDPS\nAtom Txn ID: 11000383860835\nMerchant Txn ID: NURSERY_3_muaxr3ek\nAmount: ₹51.00\nDate: 2026-09-21 13:35:49"
+      },
+      "response": []
+    },
+    {
+      "name": "Verify Previous Transaction (11000383853212)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"merchTxnId\": \"NURSERY_3_muaxr3ek\",\n  \"atomTxnId\": \"11000383853212\",\n  \"amount\": 51.00,\n  \"merchTxnDate\": \"2026-09-21\"\n}"
+        },
+        "url": {
+          "raw": "https://api.awantikaseeds.com/api/ndps/verify-transaction",
+          "protocol": "https",
+          "host": [
+            "api",
+            "awantikaseeds",
+            "com"
+          ],
+          "path": [
+            "api",
+            "ndps",
+            "verify-transaction"
+          ]
+        },
+        "description": "Verify previous transaction with NDPS\nAtom Txn ID: 11000383853212\nMerchant Txn ID: NURSERY_3_muaxr3ek\nAmount: ₹51.00\nDate: 2026-09-21 13:10:38"
+      },
+      "response": []
+    }
+  ]
+}

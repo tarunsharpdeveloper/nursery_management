@@ -1,0 +1,192 @@
+{
+  "info": {
+    "name": "Admin Email & Password Change APIs",
+    "description": "Collection for changing admin passwords and emails",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Change Password Only",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"owner@nursery.local\",\n  \"newPassword\": \"NewPassword123\",\n  \"secretKey\": \"YOUR_PRODUCTION_SECRET_KEY\"\n}"
+        },
+        "url": {
+          "raw": "https://api.awantikaseeds.com/api/auth/admin-password-change",
+          "protocol": "https",
+          "host": [
+            "api",
+            "awantikaseeds",
+            "com"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "admin-password-change"
+          ]
+        },
+        "description": "Change only the password for an admin user"
+      }
+    },
+    {
+      "name": "Change Email Only",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"owner@nursery.local\",\n  \"newEmail\": \"admin@company.com\",\n  \"secretKey\": \"YOUR_PRODUCTION_SECRET_KEY\"\n}"
+        },
+        "url": {
+          "raw": "https://api.awantikaseeds.com/api/auth/admin-change-email-password",
+          "protocol": "https",
+          "host": [
+            "api",
+            "awantikaseeds",
+            "com"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "admin-change-email-password"
+          ]
+        },
+        "description": "Change only the email for an admin user"
+      }
+    },
+    {
+      "name": "Change Both Email & Password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"owner@nursery.local\",\n  \"newEmail\": \"admin@company.com\",\n  \"newPassword\": \"NewPassword123\",\n  \"secretKey\": \"YOUR_PRODUCTION_SECRET_KEY\"\n}"
+        },
+        "url": {
+          "raw": "https://api.awantikaseeds.com/api/auth/admin-change-email-password",
+          "protocol": "https",
+          "host": [
+            "api",
+            "awantikaseeds",
+            "com"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "admin-change-email-password"
+          ]
+        },
+        "description": "Change both email and password for an admin user"
+      }
+    },
+    {
+      "name": "Change Password Only (Local)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"owner@nursery.local\",\n  \"newPassword\": \"NewPassword123\",\n  \"secretKey\": \"MySecureAdminKey2024!\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:4000/api/auth/admin-password-change",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4000",
+          "path": [
+            "api",
+            "auth",
+            "admin-password-change"
+          ]
+        },
+        "description": "Change only the password for an admin user (LOCAL)"
+      }
+    },
+    {
+      "name": "Change Email Only (Local)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"owner@nursery.local\",\n  \"newEmail\": \"admin@company.com\",\n  \"secretKey\": \"MySecureAdminKey2024!\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:4000/api/auth/admin-change-email-password",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4000",
+          "path": [
+            "api",
+            "auth",
+            "admin-change-email-password"
+          ]
+        },
+        "description": "Change only the email for an admin user (LOCAL)"
+      }
+    },
+    {
+      "name": "Change Both Email & Password (Local)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"owner@nursery.local\",\n  \"newEmail\": \"admin@company.com\",\n  \"newPassword\": \"NewPassword123\",\n  \"secretKey\": \"MySecureAdminKey2024!\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:4000/api/auth/admin-change-email-password",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4000",
+          "path": [
+            "api",
+            "auth",
+            "admin-change-email-password"
+          ]
+        },
+        "description": "Change both email and password for an admin user (LOCAL)"
+      }
+    }
+  ]
+}

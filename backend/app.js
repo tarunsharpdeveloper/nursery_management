@@ -14,7 +14,7 @@ const { createEmployee, saveAttendance, saveBulkAttendance, editEmployee, toggle
 const { calculateWages, recordPayout, getEmployeePayoutHistory } = require("./routes/wages");
 const { getLedger, getCustomerLedgerDetails, getReport, payCustomerLedger } = require("./routes/reports");
 const { getReviews, submitReview, getReviewStats } = require("./routes/reviews");
-const { listGalleryItems, createGalleryItem, editGalleryItem, toggleGalleryItem, deleteGalleryItem } = require("./routes/gallery");
+const { listGalleryItems, createGalleryItem, editGalleryItem, toggleGalleryItem, deleteGalleryItem, updateVideoThumbnail } = require("./routes/gallery");
 const { getFavorites, toggleFavorite } = require("./routes/favorites");
 const { initiateNDPSPayment, handleNDPSResponse, checkPaymentStatus, requeryTransactionStatus, handleNDPSPopupResponse } = require("./routes/ndps-payments");
 const { ensureAdminSchema } = require("./migrate");
@@ -152,6 +152,7 @@ const routes = [
   ["PATCH", "/api/gallery", null, editGalleryItem],
   ["PATCH", "/api/gallery/toggle", null, toggleGalleryItem],
   ["POST", "/api/gallery/delete", null, deleteGalleryItem],
+  ["PATCH", "/api/gallery/update-thumbnail", null, updateVideoThumbnail],
   // Contact Us Routes
   ["POST", "/api/contact/submit", null, submitContact],
   ["GET", "/api/contact/messages", "contacts:read", listContactMessages],

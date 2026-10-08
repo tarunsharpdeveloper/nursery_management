@@ -442,36 +442,40 @@
       const payment = paymentRows[0];
       let newStatus = 'pending';
 
-      // Map NDPS status codes to payment status
-      // SUCCESS codes
+      // Map NDPS status codes to payment status (OFFICIAL NDPS DOCUMENTATION)
+      // Reference: https://www.atomtech.in/
+      // 
+      eloper-docs
+      
+      // ✅ SUCCESS codes - Mark as PAID
       if (statusCode === 'OTS0000') {
         newStatus = 'paid';
-        console.log('✅ Payment successful (OTS0000)');
+        console.log('✅ Payment successful - Challan generated successfully (OTS0000)');
       } else if (statusCode === 'OTS0002') {
         newStatus = 'paid';
         console.log('✅ Transaction force success (OTS0002)');
       }
-      // PENDING codes
+      // ⏳ PENDING codes - Keep as PENDING (await further updates)
       else if (statusCode === 'OTS0201') {
         newStatus = 'pending';
-        console.log('⏳ Transaction timeout (OTS0201)');
+        console.log('⏳ Transaction timeout - Payment pending (OTS0201)');
       } else if (statusCode === 'OTS0301') {
         newStatus = 'pending';
-        console.log('⏳ Transaction initialized (OTS0301)');
+        console.log('⏳ Transaction initialized - Payment pending (OTS0301)');
       } else if (statusCode === 'OTS0351') {
         newStatus = 'pending';
-        console.log('⏳ Transaction initiated (OTS0351)');
+        console.log('⏳ Transaction initiated - Payment pending (OTS0351)');
       } else if (statusCode === 'OTS0551') {
         newStatus = 'pending';
-        console.log('⏳ Pending from bank (OTS0551)');
+        console.log('⏳ Transaction pending from bank (OTS0551)');
       }
-      // FAILED codes
+      // ❌ FAILED/ABORTED codes - Mark as FAILED
       else if (statusCode === 'OTS0001') {
         newStatus = 'failed';
-        console.log('❌ Auto reversal (OTS0001)');
+        console.log('❌ Transaction auto reversal (OTS0001)');
       } else if (statusCode === 'OTS0101') {
         newStatus = 'failed';
-        console.log('❌ User cancelled payment (OTS0101)');
+        console.log('❌ Transaction cancelled by user on payment page (OTS0101)');
       } else if (statusCode === 'OTS0401') {
         newStatus = 'failed';
         console.log('❌ Data not found (OTS0401)');
@@ -486,13 +490,13 @@
         console.log('❌ Signature mismatched (OTS0506)');
       } else if (statusCode === 'OTS0507') {
         newStatus = 'failed';
-        console.log('❌ Invalid transaction date format (OTS0507)');
+        console.log('❌ Invalid merchTxnDate format (OTS0507)');
       } else if (statusCode === 'OTS0508') {
         newStatus = 'failed';
-        console.log('❌ Invalid currency (OTS0508)');
+        console.log('❌ Invalid transaction currency (OTS0508)');
       } else if (statusCode === 'OTS0509') {
         newStatus = 'failed';
-        console.log('❌ Invalid amount (OTS0509)');
+        console.log('❌ Invalid transaction amount (OTS0509)');
       } else if (statusCode === 'OTS0510') {
         newStatus = 'failed';
         console.log('❌ Invalid transaction date (OTS0510)');
@@ -509,7 +513,7 @@
       // Default to failed for any unknown code
       else {
         newStatus = 'failed';
-        console.log('❌ Payment failed (Unknown code):', statusCode);
+        console.log('❌ Payment failed (Unknown status code):', statusCode);
       }
 
       // Update payment record with full details
@@ -881,7 +885,10 @@
       let newStatus = 'pending';
       let redirectUrl = `${frontendUrl}/checkout?payment=failed`;
 
-      // Map status code to payment status
+      // Map NDPS status codes to payment status (OFFICIAL NDPS DOCUMENTATION)
+      // Reference: https://www.atomtech.in/developer-docs
+      
+      // ✅ SUCCESS codes - Mark as PAID
       if (statusCode === 'OTS0000') {
         newStatus = 'paid';
         // Create transaction details for frontend
@@ -892,14 +899,46 @@
           atomTxnId: atomTxnId || 'N/A',
           amount: totalAmount?.toString() || payment.amount.toString()
         });
-        // Redirect directly to checkout page with success params
         redirectUrl = `${frontendUrl}/checkout?${transactionParams.toString()}`;
-        console.log('✅ Payment successful');
-      } else {
+        console.log('✅ Payment successful - Challan generated successfully (OTS0000)');
+      } else if (statusCode === 'OTS0002') {
+        newStatus = 'paid';
+        const transactionParams = new URLSearchParams({
+          orderNumber: payment.order_number,
+          success: 'true',
+          merchantTxnId: merchTxnId,
+          atomTxnId: atomTxnId || 'N/A',
+          amount: totalAmount?.toString() || payment.amount.toString()
+        });
+        redirectUrl = `${frontendUrl}/checkout?${transactionParams.toString()}`;
+        console.log('✅ Transaction force success (OTS0002)');
+      }
+      // ⏳ PENDING codes - Keep as PENDING (redirect to checkout with pending message)
+      else if (['OTS0201', 'OTS0301', 'OTS0351', 'OTS0551'].includes(statusCode)) {
+        newStatus = 'pending';
+        redirectUrl = `${frontendUrl}/checkout?payment=pending&message=${encodeURIComponent(statusMessage)}&orderNumber=${payment.order_number}`;
+        console.log(`⏳ Payment pending (${statusCode}): ${statusMessage}`);
+      }
+      // ❌ FAILED/ABORTED codes - Mark as FAILED
+      else {
         newStatus = 'failed';
-        // Redirect directly to checkout page with failure params
         redirectUrl = `${frontendUrl}/checkout?payment=failed&message=${encodeURIComponent(statusMessage)}`;
-        console.log('❌ Payment failed:', statusMessage);
+        const failureReasons = {
+          'OTS0001': 'Transaction auto reversal',
+          'OTS0101': 'Transaction cancelled by user',
+          'OTS0401': 'Data not found',
+          'OTS0503': 'API name exceeds 20 characters',
+          'OTS0504': 'Invalid API name',
+          'OTS0506': 'Signature mismatched',
+          'OTS0507': 'Invalid merchTxnDate format',
+          'OTS0508': 'Invalid transaction currency',
+          'OTS0509': 'Invalid transaction amount',
+          'OTS0510': 'Invalid transaction date',
+          'OTS0522': 'Invalid password',
+          'OTS0600': 'Transaction aborted/failed',
+          'OTS0951': 'Something went wrong'
+        };
+        console.log(`❌ Payment failed (${statusCode}): ${failureReasons[statusCode] || 'Unknown error'}`);
       }
 
       // Update payment record with full details

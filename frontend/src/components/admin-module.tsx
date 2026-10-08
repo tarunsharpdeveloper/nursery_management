@@ -194,6 +194,19 @@ export function AdminModule({
     loadRows();
   }, [listPath, currentPage, debouncedSearch, filterValue]);
 
+  // Add debounce effect for search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      // Reset to page 1 when search query changes
+      if (searchQuery !== debouncedSearch) {
+        setCurrentPage(1);
+      }
+    }, 500); // 500ms debounce delay
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, debouncedSearch]);
+
   return (
     <React.Fragment>
       <div className="section-header">
@@ -213,10 +226,10 @@ export function AdminModule({
             </button>
           )}
           {headerActions}
-          {/* <button className="button secondary" type="button" onClick={loadRows} disabled={busy}>
+          <button className="button secondary" type="button" onClick={loadRows} disabled={busy}>
             <RefreshCw size={17} />
             Refresh
-          </button> */}
+          </button>
         </div>
       </div>
 

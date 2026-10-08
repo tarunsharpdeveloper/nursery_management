@@ -62,9 +62,11 @@ export default function CheckoutPage() {
       const orderNumber = searchParams.get('orderNumber');
       const success = searchParams.get('success');
       const failed = searchParams.get('payment');
+      const pending = failed === 'pending';
       const merchantTxnId = searchParams.get('merchantTxnId');
       const atomTxnId = searchParams.get('atomTxnId');
       const amount = searchParams.get('amount');
+      const message = searchParams.get('message');
 
       if (success === 'true' && orderNumber) {
         setPaymentSuccess(true);
@@ -98,8 +100,15 @@ export default function CheckoutPage() {
         
         // Clean URL
         window.history.replaceState({}, document.title, '/checkout');
+      } else if (pending && orderNumber) {
+        // Payment is pending
+        setPaymentError(`Payment is being processed. ${message || 'Please check back in a few minutes or contact us for confirmation.'}`);
+        setOrderId(orderNumber);
+        // Don't clear cart yet - payment might still complete
+        // Clean URL
+        window.history.replaceState({}, document.title, '/checkout');
       } else if (failed === 'failed') {
-        setPaymentError('Payment failed. Please try another payment method or try again.');
+        setPaymentError(message || 'Payment failed. Please try another payment method or try again.');
         // Clean URL
         window.history.replaceState({}, document.title, '/checkout');
       }

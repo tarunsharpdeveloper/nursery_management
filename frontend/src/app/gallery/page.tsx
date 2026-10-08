@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { apiRequest, getMediaUrl } from "@/lib/api";
-import { Image as ImageIcon, Video as VideoIcon, Play, X, Eye, Film, Sparkles } from "lucide-react";
+import { Image as ImageIcon, Video as VideoIcon, Play, X, Eye } from "lucide-react";
 
 function GalleryContent() {
   const searchParams = useSearchParams();
@@ -36,9 +36,6 @@ function GalleryContent() {
     fetchGallery();
   }, [activeTab]);
 
-  const imagesCount = galleryItems.filter((item) => item.media_type === "image").length;
-  const videosCount = galleryItems.filter((item) => item.media_type === "video").length;
-
   const renderMediaPreview = (item: any) => {
     const isVideo = item.media_type === "video";
     const mediaUrl = getMediaUrl(item.media_url);
@@ -53,35 +50,57 @@ function GalleryContent() {
       );
     }
 
-    if (item.thumbnail_url && item.thumbnail_url !== item.media_url) {
+    // For videos, try to get a proper thumbnail (only if it's an image file)
+    if (item.thumbnail_url && 
+        item.thumbnail_url !== item.media_url && 
+        !item.thumbnail_url.match(/\.(mp4|webm|ogg|avi|mov)$/i)) {
       return (
         <img
           src={getMediaUrl(item.thumbnail_url)}
           alt={item.title}
-          style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.9 }}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
         />
       );
     }
 
+    // Check if it's a YouTube URL
     const ytMatch = item.media_url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([a-zA-Z0-9_-]{11})/);
     if (ytMatch && ytMatch[1]) {
       return (
         <img
-          src={`https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`}
+          src={`https://img.youtube.com/vi/${ytMatch[1]}/maxresdefault.jpg`}
+          onError={(e) => {
+            // Fallback to lower quality thumbnail if maxresdefault doesn't exist
+            (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+          }}
           alt={item.title}
-          style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.9 }}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
         />
       );
     }
 
+    // For self-hosted videos without thumbnails, load and display video
     return (
       <video
-        src={mediaUrl}
-        preload="metadata"
+        preload="auto"
         muted
         playsInline
-        style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }}
-      />
+        onLoadedData={(e) => {
+          // Seek to 2 seconds for a better frame
+          const video = e.target as HTMLVideoElement;
+          if (video.duration > 2) {
+            video.currentTime = 2;
+          }
+        }}
+        style={{ 
+          width: "100%", 
+          height: "100%", 
+          objectFit: "cover",
+          background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)"
+        }}
+      >
+        <source src={mediaUrl} type="video/mp4" />
+      </video>
     );
   };
 
@@ -336,16 +355,25 @@ function GalleryContent() {
                       )}
                     </div>
 
-                    {/* Center Floating Icon (Hover Only - Without Background) */}
+                    {/* Center Floating Icon (Always visible for videos, hover only for images) */}
                     <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: 2 }}>
                       <div
-                        className="gallery-center-icon"
+                        className={isVideo ? "" : "gallery-center-icon"}
                         style={{
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           color: "#ffffff",
-                          filter: "drop-shadow(0 4px 14px rgba(0, 0, 0, 0.7))"
+                          filter: "drop-shadow(0 4px 14px rgba(0, 0, 0, 0.7))",
+                          opacity: isVideo ? 1 : undefined,
+                          transform: isVideo ? "scale(1)" : undefined,
+                          transition: isVideo ? "none" : "opacity 0.35s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+                          background: isVideo ? "rgba(255, 255, 255, 0.15)" : "transparent",
+                          backdropFilter: isVideo ? "blur(8px)" : "none",
+                          borderRadius: isVideo ? "50%" : "0",
+                          width: isVideo ? "80px" : "auto",
+                          height: isVideo ? "80px" : "auto",
+                          border: isVideo ? "2px solid rgba(255, 255, 255, 0.4)" : "none"
                         }}
                       >
                         {isVideo ? (

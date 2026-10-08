@@ -23,6 +23,7 @@ export default function AdminGalleryPage() {
   const [isActive, setIsActive] = useState(true);
 
   const [uploading, setUploading] = useState(false);
+  const [uploadingFormThumbnail, setUploadingFormThumbnail] = useState(false);
   const [busy, setBusy] = useState(false);
   const [modalError, setModalError] = useState("");
   const [modalSuccess, setModalSuccess] = useState("");
@@ -36,7 +37,15 @@ export default function AdminGalleryPage() {
   const [deleteModalItem, setDeleteModalItem] = useState<any | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
 
+  // Thumbnail Upload State
+  const [thumbnailModalItem, setThumbnailModalItem] = useState<any | null>(null);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [thumbnailSuccess, setThumbnailSuccess] = useState("");
+  const [thumbnailError, setThumbnailError] = useState("");
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  const thumbnailFormInputRef = useRef<HTMLInputElement>(null);
 
   const openAddModal = () => {
     setEditingItem(null);
@@ -50,6 +59,8 @@ export default function AdminGalleryPage() {
     setModalError("");
     setModalSuccess("");
     setIsModalOpen(true);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (thumbnailFormInputRef.current) thumbnailFormInputRef.current.value = "";
   };
 
   const openEditModal = (item: any) => {
@@ -64,6 +75,74 @@ export default function AdminGalleryPage() {
     setModalError("");
     setModalSuccess("");
     setIsModalOpen(true);
+  };
+
+  const openThumbnailModal = (item: any) => {
+    setThumbnailModalItem(item);
+    setThumbnailSuccess("");
+    setThumbnailError("");
+  };
+
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    if (!file.type.startsWith("image/")) {
+      setThumbnailError("Please select an image file for the thumbnail.");
+      if (thumbnailInputRef.current) thumbnailInputRef.current.value = "";
+      return;
+    }
+
+    setUploadingThumbnail(true);
+    setThumbnailError("");
+    setThumbnailSuccess("");
+
+    try {
+      // Upload the image file
+      const formData = new FormData();
+      formData.append("files", file);
+
+      const uploadRes = await apiRequest<{ urls: string[] }>("/api/upload", {
+        method: "POST",
+        body: formData
+      });
+
+      if (!uploadRes.urls || uploadRes.urls.length === 0) {
+        throw new Error("Upload failed - no URL returned");
+      }
+
+      const thumbnailUrl = uploadRes.urls[0];
+
+      // Update the video thumbnail in database
+      console.log('Calling API with:', {
+        id: thumbnailModalItem.id,
+        thumbnailUrl: thumbnailUrl
+      });
+
+      const updateRes = await apiRequest("/api/gallery/update-thumbnail", {
+        method: "PATCH",
+        body: JSON.stringify({
+          id: thumbnailModalItem.id,
+          thumbnailUrl: thumbnailUrl
+        })
+      });
+
+      setThumbnailSuccess("Thumbnail uploaded successfully!");
+      setReloadKey(prev => prev + 1); // Refresh gallery list
+      
+      // Close modal after 1.5 seconds
+      setTimeout(() => {
+        setThumbnailModalItem(null);
+        setThumbnailSuccess("");
+      }, 1500);
+
+    } catch (error: any) {
+      setThumbnailError(error.message || "Failed to upload thumbnail");
+    } finally {
+      setUploadingThumbnail(false);
+      if (thumbnailInputRef.current) thumbnailInputRef.current.value = "";
+    }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,6 +189,41 @@ export default function AdminGalleryPage() {
       setModalError(err.message || "Failed to upload file");
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleThumbnailFormChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    if (!file.type.startsWith("image/")) {
+      setModalError("Invalid File Type! Please select an Image file for the thumbnail.");
+      if (thumbnailFormInputRef.current) thumbnailFormInputRef.current.value = "";
+      return;
+    }
+
+    setUploadingFormThumbnail(true);
+    setModalError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("files", file);
+
+      const res = await apiRequest<{ urls: string[] }>("/api/upload", {
+        method: "POST",
+        body: formData
+      });
+
+      if (res.urls && res.urls.length > 0) {
+        const uploadedPath = `/uploads/${res.urls[0]}`;
+        setThumbnailUrl(uploadedPath);
+      }
+    } catch (err: any) {
+      console.error("Thumbnail upload error:", err);
+      setModalError(err.message || "Failed to upload thumbnail");
+    } finally {
+      setUploadingFormThumbnail(false);
     }
   };
 
@@ -367,6 +481,21 @@ export default function AdminGalleryPage() {
                           Edit Item
                         </button>
 
+                        {row.media_type === "video" && (
+                          <button
+                            className="button secondary actions-dropdown-item"
+                            type="button"
+                            onClick={() => {
+                              setOpenActionId(null);
+                              openThumbnailModal(row);
+                            }}
+                            style={{ whiteSpace: "nowrap" }}
+                          >
+                            <ImageIcon size={15} style={{ marginRight: 8, color: "#059669", flexShrink: 0 }} />
+                            Upload Thumbnail
+                          </button>
+                        )}
+
                         <button
                           className="button secondary actions-dropdown-item"
                           type="button"
@@ -459,6 +588,7 @@ export default function AdminGalleryPage() {
                     setThumbnailUrl("");
                     setModalError("");
                     if (fileInputRef.current) fileInputRef.current.value = "";
+                    if (thumbnailFormInputRef.current) thumbnailFormInputRef.current.value = "";
                   }}
                   style={{ padding: "10px", borderRadius: "8px", border: "1px solid var(--line)" }}
                 >
@@ -588,6 +718,76 @@ export default function AdminGalleryPage() {
                 style={{ padding: "10px", borderRadius: "8px", border: "1px solid var(--line)" }}
               />
             </label>
+
+            {/* Thumbnail Upload Field - Only for videos */}
+            {mediaType === "video" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <span style={{ fontWeight: 600, fontSize: "14px" }}>
+                  Custom Thumbnail Image <span style={{ color: "#16a34a", fontSize: "12px", fontWeight: 500 }}>(Recommended for videos)</span>
+                </span>
+                
+                <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "var(--muted)" }}>
+                  Upload a custom thumbnail image that will be displayed as the preview for this video in the gallery.
+                </p>
+
+                <div
+                  onClick={() => thumbnailFormInputRef.current?.click()}
+                  style={{
+                    border: "2px dashed #cbd5e1",
+                    borderRadius: "12px", 
+                    padding: "20px",
+                    textAlign: "center",
+                    background: "#f8fafc",
+                    cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "#16a34a";
+                    e.currentTarget.style.background = "#f0fdf4";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "#cbd5e1";
+                    e.currentTarget.style.background = "#f8fafc";
+                  }}
+                >
+                  <input
+                    ref={thumbnailFormInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                    onChange={handleThumbnailFormChange}
+                    style={{ display: "none" }}
+                  />
+
+                  {uploadingFormThumbnail ? (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", color: "var(--muted)" }}>
+                      <RefreshCw size={24} className="spin" color="#16a34a" />
+                      <span style={{ fontWeight: 600, fontSize: "14px" }}>Uploading thumbnail...</span>
+                    </div>
+                  ) : thumbnailUrl && thumbnailUrl !== mediaUrl ? (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+                      <img
+                        src={getMediaUrl(thumbnailUrl)}
+                        alt="Thumbnail Preview"
+                        style={{ maxHeight: "100px", borderRadius: "6px", objectFit: "contain", border: "1px solid #e2e8f0" }}
+                      />
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#16a34a", fontSize: "13px", fontWeight: 600 }}>
+                        <CheckCircle size={16} /> Custom Thumbnail Uploaded! Click to change.
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", color: "var(--muted)" }}>
+                      <ImageIcon size={32} color="#16a34a" />
+                      <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--text)" }}>
+                        Click to upload thumbnail image
+                      </span>
+                      <span style={{ fontSize: "12px" }}>
+                        Supports .jpg, .jpeg, .png, .webp (Max 5MB)
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </form>
       </FormModal>
@@ -650,30 +850,140 @@ export default function AdminGalleryPage() {
               <button className="button secondary" type="button" onClick={() => setDeleteModalItem(null)} disabled={actionBusy}>
                 Cancel
               </button>
-              <button
-                className="button danger"
-                type="button"
-                onClick={confirmDelete}
-                disabled={actionBusy}
-                style={{ background: "#dc2626", borderColor: "#b91c1c", color: "white" }}
-              >
-                <Trash2 size={16} />
+              <button className="button danger" type="button" onClick={confirmDelete} disabled={actionBusy}>
                 {actionBusy ? "Deleting..." : "Delete Item"}
               </button>
             </div>
           }
         >
           <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", padding: "10px 0" }}>
-            <div style={{ background: "#fee2e2", color: "#991b1b", padding: "12px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <AlertTriangle size={24} />
+            <div style={{ background: "#fee2e2", color: "#dc2626", padding: "12px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Trash2 size={24} />
             </div>
             <div>
               <p style={{ margin: "0 0 8px 0", fontSize: "15px", fontWeight: 600, color: "var(--text)" }}>
                 Are you sure you want to delete &quot;{deleteModalItem.title}&quot;?
               </p>
               <p style={{ margin: 0, fontSize: "13px", color: "var(--muted)" }}>
-                This action cannot be undone. The photo/video item will be permanently removed from the gallery.
+                This action cannot be undone. The gallery item will be permanently removed from the system.
               </p>
+            </div>
+          </div>
+        </FormModal>
+      )}
+
+      {/* Thumbnail Upload Modal */}
+      {thumbnailModalItem && (
+        <FormModal
+          isOpen={true}
+          onClose={() => setThumbnailModalItem(null)}
+          title={`Upload Thumbnail for "${thumbnailModalItem.title}"`}
+          maxWidth={500}
+          footer={
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", width: "100%" }}>
+              <button className="button secondary" type="button" onClick={() => setThumbnailModalItem(null)} disabled={uploadingThumbnail}>
+                Cancel
+              </button>
+            </div>
+          }
+        >
+          <div style={{ padding: "10px 0" }}>
+            {thumbnailError && (
+              <div style={{ padding: "10px 14px", background: "#fee2e2", border: "1px solid #fca5a5", color: "#b91c1c", borderRadius: "6px", fontSize: "14px", marginBottom: "16px" }}>
+                {thumbnailError}
+              </div>
+            )}
+            {thumbnailSuccess && (
+              <div style={{ padding: "10px 14px", background: "#dcfce7", border: "1px solid #86efac", color: "#15803d", borderRadius: "6px", fontSize: "14px", marginBottom: "16px" }}>
+                {thumbnailSuccess}
+              </div>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {/* Current Video Info */}
+              <div style={{ padding: "12px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                <h4 style={{ margin: "0 0 8px 0", fontSize: "14px", fontWeight: 600, color: "var(--text)" }}>Current Video:</h4>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{ width: "80px", height: "60px", borderRadius: "6px", overflow: "hidden", background: "#0f172a", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <video src={getMediaUrl(thumbnailModalItem.media_url)} preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  </div>
+                  <div>
+                    <p style={{ margin: "0 0 4px 0", fontSize: "13px", fontWeight: 600 }}>{thumbnailModalItem.title}</p>
+                    <p style={{ margin: 0, fontSize: "12px", color: "var(--muted)" }}>Category: {thumbnailModalItem.category}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Thumbnail Upload Area */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <span style={{ fontWeight: 600, fontSize: "14px" }}>
+                  Select Thumbnail Image <span style={{ color: "#ef4444" }}>*</span>
+                </span>
+                <p style={{ margin: 0, fontSize: "12px", color: "var(--muted)" }}>
+                  Upload an image that will be displayed as the thumbnail preview for this video in the gallery.
+                </p>
+
+                <div
+                  onClick={() => thumbnailInputRef.current?.click()}
+                  style={{
+                    border: "2px dashed #cbd5e1",
+                    borderRadius: "12px",
+                    padding: "24px",
+                    textAlign: "center",
+                    background: "#f8fafc",
+                    cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "#2f6b3f";
+                    e.currentTarget.style.background = "#f0fdf4";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "#cbd5e1";
+                    e.currentTarget.style.background = "#f8fafc";
+                  }}
+                >
+                  <input
+                    ref={thumbnailInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                    onChange={handleThumbnailUpload}
+                    style={{ display: "none" }}
+                  />
+
+                  {uploadingThumbnail ? (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", color: "var(--muted)" }}>
+                      <RefreshCw size={28} className="spin" color="#2f6b3f" />
+                      <span style={{ fontWeight: 600 }}>Uploading thumbnail...</span>
+                      <span style={{ fontSize: "12px" }}>Please wait while we save your image</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", color: "var(--muted)" }}>
+                      <ImageIcon size={36} color="#2f6b3f" />
+                      <span style={{ fontWeight: 600, fontSize: "15px", color: "var(--text)" }}>
+                        Click to choose thumbnail image
+                      </span>
+                      <span style={{ fontSize: "12px" }}>
+                        Supports .jpg, .jpeg, .png, .webp (Max 5MB)
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Current Thumbnail Preview */}
+              {thumbnailModalItem.thumbnail_url && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <span style={{ fontWeight: 600, fontSize: "14px" }}>Current Thumbnail:</span>
+                  <div style={{ width: "120px", height: "90px", borderRadius: "8px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
+                    <img 
+                      src={getMediaUrl(thumbnailModalItem.thumbnail_url)} 
+                      alt="Current thumbnail" 
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </FormModal>

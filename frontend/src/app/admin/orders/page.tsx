@@ -14,6 +14,15 @@ export default function OrdersPage() {
   const [openActionId, setOpenActionId] = useState<number | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [busy, setBusy] = useState(false);
+  const [responseModal, setResponseModal] = useState<{
+    isOpen: boolean;
+    response: any;
+    orderId: string;
+  }>({
+    isOpen: false,
+    response: null,
+    orderId: ""
+  });
   const [confirmState, setConfirmState] = useState<{
     isOpen: boolean;
     title: string;
@@ -225,6 +234,35 @@ export default function OrdersPage() {
                     <Eye size={16} color="#3b82f6" style={{ marginRight: 8 }} />
                     View
                   </Link>
+                  {row.ndps_response && (
+                    <button 
+                      className="button secondary actions-dropdown-item" 
+                      title="View NDPS Response"
+                      type="button"
+                      onClick={() => {
+                        setOpenActionId(null);
+                        try {
+                          const response = typeof row.ndps_response === 'string' 
+                            ? JSON.parse(row.ndps_response) 
+                            : row.ndps_response;
+                          setResponseModal({
+                            isOpen: true,
+                            response: response,
+                            orderId: row.order_number || row.id
+                          });
+                        } catch (error) {
+                          setResponseModal({
+                            isOpen: true,
+                            response: { error: "Invalid JSON", raw: row.ndps_response },
+                            orderId: row.order_number || row.id
+                          });
+                        }
+                      }}
+                    >
+                      <Search size={16} color="#059669" style={{ marginRight: 8 }} />
+                      NDPS Response
+                    </button>
+                  )}
                   <button 
                     className="button secondary actions-dropdown-item danger" 
                     title="Delete Order"
@@ -273,6 +311,174 @@ export default function OrdersPage() {
         onConfirm={confirmState.action}
         onCancel={() => setConfirmState(prev => ({ ...prev, isOpen: false }))}
       />
+
+      {/* NDPS Response Modal */}
+      {responseModal.isOpen && typeof document !== 'undefined' && createPortal(
+        <div 
+          className="modal-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10002,
+          }}
+          onClick={() => setResponseModal(prev => ({ ...prev, isOpen: false }))}
+        >
+          <div 
+            className="modal-content"
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '800px',
+              maxHeight: '80vh',
+              overflow: 'auto',
+              margin: '20px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0, color: '#1f2937', fontSize: '20px', fontWeight: '600' }}>
+                NDPS Response - Order {responseModal.orderId}
+              </h2>
+              <button 
+                onClick={() => setResponseModal(prev => ({ ...prev, isOpen: false }))}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#9ca3af',
+                  padding: '4px',
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {responseModal.response?.error ? (
+              <div>
+                <div style={{ 
+                  backgroundColor: '#fee2e2', 
+                  border: '1px solid #fecaca', 
+                  borderRadius: '8px', 
+                  padding: '16px', 
+                  marginBottom: '16px' 
+                }}>
+                  <h3 style={{ color: '#dc2626', margin: '0 0 8px 0', fontSize: '16px' }}>
+                    Error: {responseModal.response.error}
+                  </h3>
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ color: '#374151', fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                    Raw Response:
+                  </h4>
+                  <pre style={{
+                    backgroundColor: '#f9fafb',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    fontSize: '12px',
+                    fontFamily: 'monospace',
+                    overflow: 'auto',
+                    whiteSpace: 'pre-wrap',
+                  }}>
+                    {responseModal.response.raw}
+                  </pre>
+                </div>
+              </div>
+            ) : (
+              <div>
+                {/* Status Summary */}
+                {responseModal.response?.payInstrument?.[0]?.responseDetails && (
+                  <div style={{ marginBottom: '24px' }}>
+                    <div style={{ 
+                      backgroundColor: '#f0fdf4', 
+                      border: '1px solid #bbf7d0', 
+                      borderRadius: '8px', 
+                      padding: '16px' 
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div>
+                          <div style={{ fontSize: '18px', fontWeight: '700', fontFamily: 'monospace', color: '#059669' }}>
+                            {responseModal.response.payInstrument[0].responseDetails.statusCode}
+                          </div>
+                          <div style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>
+                            {responseModal.response.payInstrument[0].responseDetails.message || 'No message'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Formatted Response */}
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ color: '#374151', fontSize: '16px', fontWeight: '600', marginBottom: '12px' }}>
+                    Complete NDPS Response:
+                  </h4>
+                  <pre style={{
+                    backgroundColor: '#f9fafb',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    padding: '20px',
+                    fontSize: '12px',
+                    fontFamily: 'monospace',
+                    overflow: 'auto',
+                    maxHeight: '400px',
+                    lineHeight: '1.5',
+                  }}>
+                    {JSON.stringify(responseModal.response, null, 2)}
+                  </pre>
+                </div>
+
+                {/* Key Details */}
+                {responseModal.response?.payInstrument?.[0] && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <h4 style={{ color: '#374151', fontSize: '16px', fontWeight: '600', marginBottom: '12px' }}>
+                      Key Details:
+                    </h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px' }}>
+                      {Object.entries(responseModal.response.payInstrument[0]).map(([key, value]) => (
+                        <div key={key} style={{
+                          backgroundColor: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '6px',
+                          padding: '12px',
+                        }}>
+                          <div style={{ fontSize: '12px', fontWeight: '600', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            {key}
+                          </div>
+                          <div style={{ fontSize: '13px', color: '#1f2937', marginTop: '4px', fontFamily: 'monospace' }}>
+                            {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+              <button 
+                className="button secondary"
+                onClick={() => setResponseModal(prev => ({ ...prev, isOpen: false }))}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </>
   );
 }
